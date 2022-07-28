@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-  <node name="navigator" pkg="wing_navigator" type="executable"  output="log" respawn="false" respawn_delay="0">
-    
-  </node>
-  
-
-</launch>

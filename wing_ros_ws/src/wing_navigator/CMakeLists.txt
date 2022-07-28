@@ -174,6 +174,7 @@ include_directories(
 # )
 catkin_install_python(PROGRAMS
   scripts/test_target_getter.py
+  scripts/test_target_getter_demo_app.py
   scripts/navigator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
