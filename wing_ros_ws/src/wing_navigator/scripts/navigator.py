@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-
 import rospy
 import argparse
 # from wing_navigator.srv import *
 # from dronekit import connect, VehicleMode, LocationGlobalRelative
-from wing_modules.navigator import navigator
+from wing_modules.navigator_modules.navigator import navigator
 
 # def simple_goto_handler(req):
 #   try:
