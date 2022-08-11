@@ -3,3 +3,8 @@ build/
 compile_commands.json
 .catkin_workspace
 .vscode
+eeprom.bin
+defaults.parm
+logs/
+mav.parm
+terrain/

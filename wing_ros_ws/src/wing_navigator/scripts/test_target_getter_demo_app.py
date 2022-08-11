@@ -32,6 +32,8 @@ class Ui(QtWidgets.QMainWindow):
         self.lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_2')
         self.alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_3')
         self.gz_world_address = self.findChild(QtWidgets.QLineEdit, 'lineEdit_4')
+        self.sim_map_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox')
+        self.sim_console_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_2')
 
         self.show()
 
@@ -41,7 +43,9 @@ class Ui(QtWidgets.QMainWindow):
             self.gz_world_address.setText(worldfile)
 
     def run_simulation(self):
-        sp.check_call(["/home/areza/Documents/funnywing/wing_ros_ws/src/wing_navigator/scripts/run_simulation.sh"])
+        args = []
+        args.append("/home/areza/Documents/funnywing/wing_ros_ws/src/wing_navigator/scripts/run_simulation.bash")
+        sp.check_call(args)
 
     def pushButtonPressed(self):
         # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
