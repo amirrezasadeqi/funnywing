@@ -22,18 +22,23 @@ class Ui(QtWidgets.QMainWindow):
 
         self.button = self.findChild(QtWidgets.QPushButton, 'pushButton')
         self.button.clicked.connect(self.pushButtonPressed)
-        self.gzworld_button = self.findChild(QtWidgets.QPushButton, 'pushButton_3')
-        self.gzworld_button.clicked.connect(self.get_gazebo_world_file)
-        self.sim_button = self.findChild(QtWidgets.QPushButton, 'pushButton_2')
-        self.sim_button.clicked.connect(self.run_simulation)
         
         
         self.lat = self.findChild(QtWidgets.QLineEdit, 'lineEdit')
         self.lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_2')
         self.alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_3')
+
+        # Simulation Tab objects
         self.gz_world_address = self.findChild(QtWidgets.QLineEdit, 'lineEdit_4')
         self.sim_map_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox')
         self.sim_console_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_2')
+        self.sim_multi_vehicle_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_3')
+        self.sim_osd_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_4')
+        self.sim_loc_combo = self.findChild(QtWidgets.QComboBox, 'comboBox')
+        self.gzworld_button = self.findChild(QtWidgets.QPushButton, 'pushButton_3')
+        self.gzworld_button.clicked.connect(self.get_gazebo_world_file)
+        self.sim_button = self.findChild(QtWidgets.QPushButton, 'pushButton_2')
+        self.sim_button.clicked.connect(self.run_simulation)
 
         self.show()
 
@@ -45,6 +50,17 @@ class Ui(QtWidgets.QMainWindow):
     def run_simulation(self):
         args = []
         args.append("/home/areza/Documents/funnywing/wing_ros_ws/src/wing_navigator/scripts/run_simulation.bash")
+
+        if sim_map_chbox.isChecked():
+            args.append("-m")
+        if sim_console_chbox.isChecked():
+            args.append("-c")
+        if sim_osd_chbox.isChecked():
+            args.append("-o")
+        if sim_multi_vehicle_chbox.isChecked():
+            args.append("-s")
+        # Location of SITL simulation
+        args.append(sim_loc_combo.currentText())
         sp.check_call(args)
 
     def pushButtonPressed(self):
