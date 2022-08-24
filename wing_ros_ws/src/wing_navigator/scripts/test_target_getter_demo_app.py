@@ -6,6 +6,16 @@ from wing_navigator.srv import *
 import sys
 import subprocess as sp
 
+def abbreviate_location(long_loc):
+    if long_loc == "Imam Khomeini Airport":
+        return "IKA"
+    elif long_loc == "Mehrabad Airport":
+        return "MA"
+    elif long_loc == "SWITehran":
+        return "SWIT"
+    else:
+        print("Please Enter a Valid Location!")
+
 def simple_goto_client(req):
   rospy.wait_for_service("/simple_goto")
   try:
@@ -51,16 +61,19 @@ class Ui(QtWidgets.QMainWindow):
         args = []
         args.append("/home/areza/Documents/funnywing/wing_ros_ws/src/wing_navigator/scripts/run_simulation.bash")
 
-        if sim_map_chbox.isChecked():
+        if self.sim_map_chbox.isChecked():
             args.append("-m")
-        if sim_console_chbox.isChecked():
+        if self.sim_console_chbox.isChecked():
             args.append("-c")
-        if sim_osd_chbox.isChecked():
+        if self.sim_osd_chbox.isChecked():
             args.append("-o")
-        if sim_multi_vehicle_chbox.isChecked():
+        if self.sim_multi_vehicle_chbox.isChecked():
             args.append("-s")
+
         # Location of SITL simulation
-        args.append(sim_loc_combo.currentText())
+        args.append(abbreviate_location(self.sim_loc_combo.currentText()))
+        # Gazebo world file
+        args.append(self.gz_world_address.text())
         sp.check_call(args)
 
     def pushButtonPressed(self):
