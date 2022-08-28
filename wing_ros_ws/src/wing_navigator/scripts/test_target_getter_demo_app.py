@@ -2,7 +2,7 @@
 
 import rospy
 from PyQt5 import QtWidgets, uic
-from wing_navigator.srv import *
+from wing_navigator.srv import SimpleGoto, SimpleGotoRequest #, SimpleGotoResponse
 import sys
 import subprocess as sp
 from os.path import expanduser, exists
@@ -48,14 +48,6 @@ class Ui(QtWidgets.QMainWindow):
         uilink_path = uilink_if_needed()
         uic.loadUi(uilink_path, self)
 
-        self.button = self.findChild(QtWidgets.QPushButton, 'pushButton')
-        self.button.clicked.connect(self.pushButtonPressed)
-        
-        
-        self.lat = self.findChild(QtWidgets.QLineEdit, 'lineEdit')
-        self.lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_2')
-        self.alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_3')
-
         # Simulation Tab objects
         self.gz_world_address = self.findChild(QtWidgets.QLineEdit, 'lineEdit_4')
         self.sim_map_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox')
@@ -67,6 +59,73 @@ class Ui(QtWidgets.QMainWindow):
         self.gzworld_button.clicked.connect(self.get_gazebo_world_file)
         self.sim_button = self.findChild(QtWidgets.QPushButton, 'pushButton_2')
         self.sim_button.clicked.connect(self.run_simulation)
+
+        # Navigatin Center Tab objects
+        ## Fixed-Wing Navigatin Dashboard
+        ### Mode and Arm/Takeoff ...
+        self.fw_mode_name_text_in = self.findChild(QtWidgets.QLineEdit, 'lineEdit_9')
+        self.fw_mode_name_combo_box = self.findChild(QtWidgets.QComboBox, 'comboBox_2')
+        self.fw_active_mode_button = self.findChild(QtWidgets.QPushButton, 'pushButton_11')
+        self.fw_active_mode_button.clicked.connect(self.fw_active_mode)
+        self.fw_arm_takeoff_button = self.findChild(QtWidgets.QPushButton, 'pushButton_12')
+        self.fw_arm_takeoff_button.clicked.connect(self.fw_arm_takeoff)
+        self.fw_return_home_button = self.findChild(QtWidgets.QPushButton, 'pushButton_13')
+        self.fw_return_home_button.clicked.connect(self.fw_return_home)
+
+        ### Goto Service
+        self.fw_goto_button = self.findChild(QtWidgets.QPushButton, 'pushButton')
+        self.fw_goto_button.clicked.connect(self.fw_gotoButtonPressed)
+        
+        self.fw_goto_lat = self.findChild(QtWidgets.QLineEdit, 'lineEdit')
+        self.fw_goto_lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_2')
+        self.fw_goto_alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_3')
+
+        ## Target Navigatin Dashboard
+        ### Mode and Arm/Takeoff ...
+        self.tg_mode_name_text_in = self.findChild(QtWidgets.QLineEdit, 'lineEdit_17')
+        self.tg_mode_name_combo_box = self.findChild(QtWidgets.QComboBox, 'comboBox_4')
+        self.tg_active_mode_button = self.findChild(QtWidgets.QPushButton, 'pushButton_21')
+        self.tg_active_mode_button.clicked.connect(self.tg_active_mode)
+        self.tg_arm_takeoff_button = self.findChild(QtWidgets.QPushButton, 'pushButton_19')
+        self.tg_arm_takeoff_button.clicked.connect(self.tg_arm_takeoff)
+        self.tg_return_home_button = self.findChild(QtWidgets.QPushButton, 'pushButton_20')
+        self.tg_return_home_button.clicked.connect(self.tg_return_home)
+
+        ### Goto Service
+        self.tg_goto_button = self.findChild(QtWidgets.QPushButton, 'pushButton_18')
+        self.tg_goto_button.clicked.connect(self.tg_gotoButtonPressed)
+        
+        self.tg_goto_lat = self.findChild(QtWidgets.QLineEdit, 'lineEdit_15')
+        self.tg_goto_lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_14')
+        self.tg_goto_alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_16')
+
+        # Mission Management Tab objects
+        ## Import/Export and Pre-Defined Missions
+        ### Mission File
+        self.fw_mission_file_address = self.findChild(QtWidgets.QLineEdit, 'lineEdit_8')
+        self.fw_mission_file_browse_button = self.findChild(QtWidgets.QPushButton, 'pushButton_6')
+        self.fw_mission_file_browse_button.clicked.connect(self.get_fw_mission_file)
+        self.fw_save_current_mission_button = self.findChild(QtWidgets.QPushButton, 'pushButton_7')
+        self.fw_save_current_mission_button.clicked.connect(self.fw_save_current_mission)
+        self.fw_upload_mission_file_button = self.findChild(QtWidgets.QPushButton, 'pushButton_8')
+        self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file)
+        
+        ### Pre-Defined Missions
+        self.fw_square_mission_radio_button = self.findChild(QtWidgets.QRadioButton, 'radioButton')
+        self.tg_mission_radio_button = self.findChild(QtWidgets.QRadioButton, 'radioButton_2')
+        self.upload_predefined_mission_button = self.findChild(QtWidgets.QPushButton, 'pushButton_9')
+        self.upload_predefined_mission_button.clicked.connect(self.upload_predefined_mission)
+
+        ## Custom Missions
+        self.fw_wp_lat = self.findChild(QtWidgets.QLineEdit, 'lineEdit_5')
+        self.fw_wp_lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_6')
+        self.fw_wp_alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_7')
+        self.fw_clear_wp_button = self.findChild(QtWidgets.QPushButton, 'pushButton_4')
+        self.fw_clear_wp_button.clicked.connect(self.fw_clear_wp)
+        self.fw_add_wp_button = self.findChild(QtWidgets.QPushButton, 'pushButton_5')
+        self.fw_add_wp_button.clicked.connect(self.fw_add_wp_button)
+        self.fw_upload_custom_mission_button = self.findChild(QtWidgets.QPushButton, 'pushButton_10')
+        self.fw_upload_custom_mission_button.clicked.connect(self.fw_upload_custom_mission)
 
         self.show()
 
@@ -94,15 +153,38 @@ class Ui(QtWidgets.QMainWindow):
         args.append(self.gz_world_address.text())
         sp.check_call(args)
 
-    def pushButtonPressed(self):
+    def fw_active_mode(self):
+        return
+    def fw_arm_takeoff(self):
+        return
+    def fw_return_home(self):
+        return
+    def fw_gotoButtonPressed(self):
         # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
         req = SimpleGotoRequest()
-        req.lat = float(self.lat.text())
-        req.lon = float(self.lon.text())
-        req.alt = float(self.alt.text())
+        req.lat = float(self.fw_goto_lat.text())
+        req.lon = float(self.fw_goto_lon.text())
+        req.alt = float(self.fw_goto_alt.text())
         print("Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
         print("Request Result: %s"%simple_goto_client(req))
 
+    def tg_active_mode(self):
+        return
+    def tg_arm_takeoff(self):
+        return
+    def tg_return_home(self):
+        return
+    def tg_gotoButtonPressed(self):
+        # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
+        req = SimpleGotoRequest()
+        req.lat = float(self.tg_goto_lat.text())
+        req.lon = float(self.tg_goto_lon.text())
+        req.alt = float(self.tg_goto_alt.text())
+        print("Target Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
+        print("Target Request Result: %s"%simple_goto_client(req))
+
+    def get_fw_mission_file(self):
+        return
 
 if __name__ == "__main__":
     rospy.init_node("clien_app")
