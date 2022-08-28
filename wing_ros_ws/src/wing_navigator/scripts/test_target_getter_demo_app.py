@@ -2,7 +2,7 @@
 
 import rospy
 from PyQt5 import QtWidgets, uic
-from wing_navigator.srv import SimpleGoto, SimpleGotoRequest #, SimpleGotoResponse
+from wing_navigator.srv import SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest #, SimpleGotoResponse
 import sys
 import subprocess as sp
 from os.path import expanduser, exists
@@ -33,11 +33,29 @@ def abbreviate_location(long_loc):
     else:
         print("Please Enter a Valid Location!")
 
+def active_mode_client(req):
+    rospy.wait_for_service("/active_mode")
+    try:
+        active_mode_service = rospy.ServiceProxy("/active_mode", ActiveMode)
+        response = active_mode_service(req)
+        return response.accepted
+    except rospy.ServiceException as e:
+        print("Service Call Failed: %s"%e)
+
 def simple_goto_client(req):
   rospy.wait_for_service("/simple_goto")
   try:
     simple_goto_service = rospy.ServiceProxy("/simple_goto", SimpleGoto)
     response = simple_goto_service(req)
+    return response.accepted
+  except rospy.ServiceException as e:
+    print("Service Call Failed: %s"%e)
+
+def arm_takeoff_client(req):
+  rospy.wait_for_service("/arm_takeoff")
+  try:
+    arm_takeoff_service = rospy.ServiceProxy("/arm_takeoff", ArmTakeoff)
+    response = arm_takeoff_service(req)
     return response.accepted
   except rospy.ServiceException as e:
     print("Service Call Failed: %s"%e)
@@ -60,10 +78,10 @@ class Ui(QtWidgets.QMainWindow):
         self.sim_button = self.findChild(QtWidgets.QPushButton, 'pushButton_2')
         self.sim_button.clicked.connect(self.run_simulation)
 
-        # Navigatin Center Tab objects
-        ## Fixed-Wing Navigatin Dashboard
+        # Navigation Center Tab objects
+        ## Fixed-Wing Navigation Dashboard
         ### Mode and Arm/Takeoff ...
-        self.fw_mode_name_text_in = self.findChild(QtWidgets.QLineEdit, 'lineEdit_9')
+        # self.fw_mode_name_text_in = self.findChild(QtWidgets.QLineEdit, 'lineEdit_9')
         self.fw_mode_name_combo_box = self.findChild(QtWidgets.QComboBox, 'comboBox_2')
         self.fw_active_mode_button = self.findChild(QtWidgets.QPushButton, 'pushButton_11')
         self.fw_active_mode_button.clicked.connect(self.fw_active_mode)
@@ -80,7 +98,7 @@ class Ui(QtWidgets.QMainWindow):
         self.fw_goto_lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_2')
         self.fw_goto_alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_3')
 
-        ## Target Navigatin Dashboard
+        ## Target Navigation Dashboard
         ### Mode and Arm/Takeoff ...
         self.tg_mode_name_text_in = self.findChild(QtWidgets.QLineEdit, 'lineEdit_17')
         self.tg_mode_name_combo_box = self.findChild(QtWidgets.QComboBox, 'comboBox_4')
@@ -155,11 +173,22 @@ class Ui(QtWidgets.QMainWindow):
         sp.check_call(args)
 
     def fw_active_mode(self):
-        return
+        req = ActiveModeRequest(self.fw_mode_name_combo_box.currentText())
+        # req.mode = bytes(self.fw_mode_name_combo_box.currentText().encode('utf-8'))
+        print(f"Requesting to for Mode Activation service for Activating the {req.mode} Flight mode.")
+        print("Request Result: %s"%active_mode_client(req))
+
     def fw_arm_takeoff(self):
-        return
+        req = ArmTakeoffRequest()
+        print("Request for Arm and Takeoff vehicle")
+        print("Request Result: %s"%arm_takeoff_client(req))
+
     def fw_return_home(self):
-        return
+        req = ActiveModeRequest("RTL")
+        # req.mode = bytes(self.fw_mode_name_combo_box.currentText().encode('utf-8'))
+        print("Request for going back to home")
+        print("Request Result: %s"%active_mode_client(req))
+
     def fw_gotoButtonPressed(self):
         # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
         req = SimpleGotoRequest()

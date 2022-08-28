@@ -27,7 +27,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
@@ -353,7 +353,7 @@
          <property name="geometry">
           <rect>
            <x>60</x>
-           <y>40</y>
+           <y>50</y>
            <width>791</width>
            <height>25</height>
           </rect>
@@ -361,8 +361,15 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <widget class="QLineEdit" name="lineEdit_9"/>
          <widget class="QComboBox" name="comboBox_2">
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+          <item>
+           <property name="text">
+            <string>MANUAL</string>
+           </property>
+          </item>
           <item>
            <property name="text">
             <string>AUTO</string>
@@ -400,11 +407,6 @@
           </item>
           <item>
            <property name="text">
-            <string>MANUAL</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
             <string>FBWA</string>
            </property>
           </item>
@@ -422,8 +424,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>98</width>
-         <height>28</height>
+         <width>100</width>
+         <height>30</height>
         </rect>
        </property>
        <attribute name="label">
@@ -612,8 +614,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>98</width>
-         <height>28</height>
+         <width>100</width>
+         <height>30</height>
         </rect>
        </property>
        <attribute name="label">
