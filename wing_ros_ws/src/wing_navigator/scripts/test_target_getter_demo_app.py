@@ -123,9 +123,10 @@ class Ui(QtWidgets.QMainWindow):
         self.fw_clear_wp_button = self.findChild(QtWidgets.QPushButton, 'pushButton_4')
         self.fw_clear_wp_button.clicked.connect(self.fw_clear_wp)
         self.fw_add_wp_button = self.findChild(QtWidgets.QPushButton, 'pushButton_5')
-        self.fw_add_wp_button.clicked.connect(self.fw_add_wp_button)
+        self.fw_add_wp_button.clicked.connect(self.fw_add_wp)
         self.fw_upload_custom_mission_button = self.findChild(QtWidgets.QPushButton, 'pushButton_10')
         self.fw_upload_custom_mission_button.clicked.connect(self.fw_upload_custom_mission)
+
 
         self.show()
 
@@ -184,6 +185,18 @@ class Ui(QtWidgets.QMainWindow):
         print("Target Request Result: %s"%simple_goto_client(req))
 
     def get_fw_mission_file(self):
+        return
+    def fw_save_current_mission(self):
+        return
+    def fw_upload_mission_file(self):
+        return
+    def upload_predefined_mission(self):
+        return
+    def fw_clear_wp(self):
+        return
+    def fw_add_wp(self):
+        return
+    def fw_upload_custom_mission(self):
         return
 
 if __name__ == "__main__":
