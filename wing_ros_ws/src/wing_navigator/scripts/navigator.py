@@ -42,14 +42,14 @@ if __name__ == '__main__':
   # This part is experimental
   #######################################################################
   # For more Info goto the navigator class implementation
-  # list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
-  #                         {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
-  #                         {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]
+  list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
+                          {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
+                          {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]
 
   # nav_agent = navigator("flying_wing", connection_string, list_of_servers_dict)
-  fw_nav_agent = fw_navigator("wing", connection_string)
+  fw_nav_agent = fw_navigator("wing", connection_string, list_of_servers_dict)
   if copter_connection_string:
-      copter_nav_agent = copter_navigator("target", copter_connection_string)
+      copter_nav_agent = copter_navigator("target", copter_connection_string, list_of_servers_dict)
   
   ########################################################################
 
@@ -64,7 +64,8 @@ if __name__ == '__main__':
   
   rospy.spin() # This may be moved into navigator class for better code base(more extensibility!)
 
-  print("Close Vehicle connection object!")
+  # closing the vehicle moved into navigator destructors
+  # print("Close Vehicle connection object!")
   # vehicle.close()
   # nav_agent.vehicle.close()
 

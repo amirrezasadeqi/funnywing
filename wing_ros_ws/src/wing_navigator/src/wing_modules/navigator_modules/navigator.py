@@ -16,6 +16,7 @@ class navigator:
     def __init__(self, agent_name, connection_string, list_of_servers_dict):
         print(f"Connecting to {agent_name} on: {connection_string}")
         self.vehicle = connect(connection_string, wait_ready=True)
+        self.agent_name = agent_name
         # handler function mapping dictionary
         self.handler_mapping = {"simple_goto": self.simple_goto_handler,
                                 "active_mode": self.active_mode_handler,
@@ -39,6 +40,10 @@ class navigator:
     #     print("Activation Mode Server is at your service!")
     #     self.arm_takeoff_server = rospy.Service("/arm_takeoff", ArmTakeoff, self.arm_takeoff_handler)
     #     print("Arm and Takeoff Server is at your service!")
+
+    def __del__(self):
+        print(f"Close {self.agent_name} Vehicle connection object!")
+        self.vehicle.close()
 
     def arm_takeoff_handler(self, req):
         # resp = ArmTakeoffResponse()
@@ -100,11 +105,13 @@ class navigator:
 
 
 class fw_navigator(navigator):
-    def __ini__(self, agent_name, connection_string, list_of_servers_dict=[{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
-                                                                           {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
-                                                                           {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]):
-        # Using navigator class constructor
-        super().__init__(agent_name, connection_string, list_of_servers_dict)
+    # TODO: Can't give default values to the constructor of this subclasse and I don't know why!?
+    # Please check this out when you have time!
+    # def __ini__(self, agent_name, connection_string, list_of_servers_dict=[{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
+    #                                                                        {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
+    #                                                                        {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]):
+    #     # Using navigator class constructor
+    #     super().__init__(agent_name, connection_string, list_of_servers_dict)
 
     # TODO: I think this does not need to be overriden but there is not time to check it, so check it later!
     def arm_takeoff_handler(self, req):
@@ -130,11 +137,13 @@ class fw_navigator(navigator):
       self.vehicle.arm()
 
 class copter_navigator(navigator):
-    def __ini__(self, agent_name, connection_string, list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
-                                                                             {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
-                                                                             {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]):
-        # Using navigator class constructor
-        super().__init__(agent_name, connection_string, list_of_servers_dict)
+    # TODO: Can't give default values to the constructor of this subclasse and I don't know why!?
+    # Please check this out when you have time!
+    # def __ini__(self, agent_name, connection_string, list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
+    #                                                                          {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
+    #                                                                          {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]):
+    #     # Using navigator class constructor
+    #     super().__init__(agent_name, connection_string, list_of_servers_dict)
 
     # TODO: I think this does not need to be overriden but there is not time to check it, so check it later!
     def arm_takeoff_handler(self, req):

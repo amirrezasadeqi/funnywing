@@ -424,8 +424,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>98</width>
-         <height>28</height>
+         <width>971</width>
+         <height>429</height>
         </rect>
        </property>
        <attribute name="label">
@@ -581,8 +581,36 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
-         <widget class="QLineEdit" name="lineEdit_17"/>
-         <widget class="QComboBox" name="comboBox_4"/>
+         <widget class="QComboBox" name="comboBox_4">
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+          <item>
+           <property name="text">
+            <string>MANUAL</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>AUTO</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>GUIDED</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RTL</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>LOITER</string>
+           </property>
+          </item>
+         </widget>
          <widget class="QPushButton" name="pushButton_21">
           <property name="text">
            <string>Activate Mode</string>
@@ -614,8 +642,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>951</width>
-         <height>429</height>
+         <width>98</width>
+         <height>28</height>
         </rect>
        </property>
        <attribute name="label">

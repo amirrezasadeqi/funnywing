@@ -2,11 +2,34 @@
 
 import rospy
 from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from wing_navigator.srv import SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest #, SimpleGotoResponse
+from wing_modules.navigator_modules.navigator_client import navigator_client
 import sys
 import subprocess as sp
 from os.path import expanduser, exists
 from os import symlink, makedirs
+
+# Threading Experimental
+# Note that the errors produced in the virtual texts are not really important
+# and this is a bug in PyQt5
+#############################################################################
+class client_worker(QObject):
+    finished = pyqtSignal()
+
+    def run(self):
+        """
+            Do the works that must be done by clicking here
+        """
+        req = ArmTakeoffRequest()
+        tg_client = navigator_client("target")
+        print(f"{tg_client.name} Requests for Arm and Takeoff vehicle")
+        # print("Request Result: %s"%arm_takeoff_client(req))
+        print("Request Result: %s"%tg_client.arm_takeoff_client(req))
+        self.finished.emit()
+
+#############################################################################
+
 
 def uilink_if_needed():
     # Address of symlink to ui file
@@ -33,32 +56,32 @@ def abbreviate_location(long_loc):
     else:
         print("Please Enter a Valid Location!")
 
-def active_mode_client(req):
-    rospy.wait_for_service("/active_mode")
-    try:
-        active_mode_service = rospy.ServiceProxy("/active_mode", ActiveMode)
-        response = active_mode_service(req)
-        return response.accepted
-    except rospy.ServiceException as e:
-        print("Service Call Failed: %s"%e)
+# def active_mode_client(req):
+#     rospy.wait_for_service("/active_mode")
+#     try:
+#         active_mode_service = rospy.ServiceProxy("/active_mode", ActiveMode)
+#         response = active_mode_service(req)
+#         return response.accepted
+#     except rospy.ServiceException as e:
+#         print("Service Call Failed: %s"%e)
 
-def simple_goto_client(req):
-  rospy.wait_for_service("/simple_goto")
-  try:
-    simple_goto_service = rospy.ServiceProxy("/simple_goto", SimpleGoto)
-    response = simple_goto_service(req)
-    return response.accepted
-  except rospy.ServiceException as e:
-    print("Service Call Failed: %s"%e)
+# def simple_goto_client(req):
+#   rospy.wait_for_service("/simple_goto")
+#   try:
+#     simple_goto_service = rospy.ServiceProxy("/simple_goto", SimpleGoto)
+#     response = simple_goto_service(req)
+#     return response.accepted
+#   except rospy.ServiceException as e:
+#     print("Service Call Failed: %s"%e)
 
-def arm_takeoff_client(req):
-  rospy.wait_for_service("/arm_takeoff")
-  try:
-    arm_takeoff_service = rospy.ServiceProxy("/arm_takeoff", ArmTakeoff)
-    response = arm_takeoff_service(req)
-    return response.accepted
-  except rospy.ServiceException as e:
-    print("Service Call Failed: %s"%e)
+# def arm_takeoff_client(req):
+#   rospy.wait_for_service("/arm_takeoff")
+#   try:
+#     arm_takeoff_service = rospy.ServiceProxy("/arm_takeoff", ArmTakeoff)
+#     response = arm_takeoff_service(req)
+#     return response.accepted
+#   except rospy.ServiceException as e:
+#     print("Service Call Failed: %s"%e)
 
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
@@ -66,11 +89,15 @@ class Ui(QtWidgets.QMainWindow):
         uilink_path = uilink_if_needed()
         uic.loadUi(uilink_path, self)
 
+        # fixed wing client objects
+        self.fw_client = navigator_client("wing")
+
         # Simulation Tab objects
         self.gz_world_address = self.findChild(QtWidgets.QLineEdit, 'lineEdit_4')
         self.sim_map_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox')
         self.sim_console_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_2')
         self.sim_multi_vehicle_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_3')
+        # self.sim_multi_vehicle_chbox.stateChanged.connect(self.sim_multi_vehicle_chbox_toggle_handler)
         self.sim_osd_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_4')
         self.sim_loc_combo = self.findChild(QtWidgets.QComboBox, 'comboBox')
         self.gzworld_button = self.findChild(QtWidgets.QPushButton, 'pushButton_3')
@@ -174,20 +201,24 @@ class Ui(QtWidgets.QMainWindow):
 
     def fw_active_mode(self):
         req = ActiveModeRequest(self.fw_mode_name_combo_box.currentText())
+
         # req.mode = bytes(self.fw_mode_name_combo_box.currentText().encode('utf-8'))
         print(f"Requesting to for Mode Activation service for Activating the {req.mode} Flight mode.")
-        print("Request Result: %s"%active_mode_client(req))
+        # print("Request Result: %s"%active_mode_client(req))
+        print("Request Result: %s"%self.fw_client.active_mode_client(req))
 
     def fw_arm_takeoff(self):
         req = ArmTakeoffRequest()
-        print("Request for Arm and Takeoff vehicle")
-        print("Request Result: %s"%arm_takeoff_client(req))
+        print(f"{self.fw_client} Requests for Arm and Takeoff vehicle")
+        # print("Request Result: %s"%arm_takeoff_client(req))
+        print("Request Result: %s"%self.fw_client.arm_takeoff_client(req))
 
     def fw_return_home(self):
         req = ActiveModeRequest("RTL")
         # req.mode = bytes(self.fw_mode_name_combo_box.currentText().encode('utf-8'))
-        print("Request for going back to home")
-        print("Request Result: %s"%active_mode_client(req))
+        print(f"{self.fw_client} Requests for going back to home")
+        # print("Request Result: %s"%active_mode_client(req))
+        print("Request Result: %s"%self.fw_client.active_mode_client(req))
 
     def fw_gotoButtonPressed(self):
         # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
@@ -195,23 +226,58 @@ class Ui(QtWidgets.QMainWindow):
         req.lat = float(self.fw_goto_lat.text())
         req.lon = float(self.fw_goto_lon.text())
         req.alt = float(self.fw_goto_alt.text())
-        print("Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
-        print("Request Result: %s"%simple_goto_client(req))
+        print(f"{self.fw_client} is Requesting for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
+        print("Request Result: %s"%self.fw_client.simple_goto_client(req))
+
+    # def sim_multi_vehicle_chbox_toggle_handler(self):
+    #     if self.sim_multi_vehicle_chbox.isChecked():
+    #         if not self.tg_client:
+    #             self.tg_client = navigator_client("target")
+    #     else:
+    #         if self.tg_client:
+    #             del self.tg_client
 
     def tg_active_mode(self):
         return
+    # def tg_arm_takeoff(self):
+    #     req = ArmTakeoffRequest()
+    #     tg_client = navigator_client("target")
+    #     print(f"{tg_client.name} Requests for Arm and Takeoff vehicle")
+    #     # print("Request Result: %s"%arm_takeoff_client(req))
+    #     print("Request Result: %s"%tg_client.arm_takeoff_client(req))
+
+    # Using QThread to prevent GUI freezes
     def tg_arm_takeoff(self):
-        return
+        self.thread = QThread()
+        self.tg_client_worker = client_worker()
+        self.tg_client_worker.moveToThread(self.thread)
+        self.thread.started.connect(self.tg_client_worker.run)
+        self.thread.finished.connect(self.thread.quit)
+        self.tg_client_worker.finished.connect(self.tg_client_worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.thread.start()
+
+        # TODO: This reset does not work currently because dronekit takeoff does not compelete
+        # and I think the thread does not finish. Solve it later! for now just reactivate the
+        # button on other events.
+        # disable the button arm and takeoff button to prevent wrong click events
+        # self.tg_arm_takeoff_button.setEnabled(False)
+        # self.thread.finished.connect(
+        #         # activate the button after thread job is done.
+        #         lambda : self.tg_arm_takeoff_button.setEnabled(True)
+        #         )
+
     def tg_return_home(self):
         return
     def tg_gotoButtonPressed(self):
-        # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
-        req = SimpleGotoRequest()
-        req.lat = float(self.tg_goto_lat.text())
-        req.lon = float(self.tg_goto_lon.text())
-        req.alt = float(self.tg_goto_alt.text())
-        print("Target Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
-        print("Target Request Result: %s"%simple_goto_client(req))
+        return
+    #     # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
+    #     req = SimpleGotoRequest()
+    #     req.lat = float(self.tg_goto_lat.text())
+    #     req.lon = float(self.tg_goto_lon.text())
+    #     req.alt = float(self.tg_goto_alt.text())
+    #     print("Target Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
+    #     print("Target Request Result: %s"%simple_goto_client(req))
 
     def get_fw_mission_file(self):
         return
