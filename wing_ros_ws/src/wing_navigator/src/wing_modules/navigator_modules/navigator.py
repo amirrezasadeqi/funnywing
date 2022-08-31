@@ -1,8 +1,157 @@
-from dronekit import LocationGlobalRelative, connect, VehicleMode
+from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, LocationGlobal
 import rospy
-import time
-from wing_navigator.srv import SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse
+from pymavlink import mavutil
+import time, math
+from wing_navigator.srv import SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
                                
+# Using this function for just Determining of the Lat/Lon and for Alt we would use the Relative Alt as you will see in the following
+def get_location_meteres(original_location, dNorth, dEast):
+  """
+  Returns a LocationGlobal object containing the latitude/longitude `dNorth` and `dEast` metres from the 
+  specified `original_location`. The returned Location has the same `alt` value
+  as `original_location`.
+  The function is useful when you want to move the vehicle around specifying locations relative to 
+  the current vehicle position.
+  The algorithm is relatively accurate over small distances (10m within 1km) except close to the poles.
+  For more information see:
+  http://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
+  """
+  earth_radius=6378137.0 #Radius of "spherical" earth
+  #Coordinate offsets in radians
+  dLat = dNorth/earth_radius
+  dLon = dEast/(earth_radius*math.cos(math.pi*original_location.lat/180))
+
+  #New position in decimal degrees
+  newlat = original_location.lat + (dLat * 180/math.pi)
+  newlon = original_location.lon + (dLon * 180/math.pi)
+  return LocationGlobal(newlat, newlon,original_location.alt)
+
+def demo_launch_mission(aLocation, vehicle, aSize = 500, land_incline = 0.06):
+  """
+  Creates a simple mission for demo purpose!
+  """
+  cmds = vehicle.commands
+  print("Clearing Any Existing Commands")
+  cmds.clear()
+  print("Adding New Commands for Our Demo Mission!")
+
+  # the first point (home point) would define in Absolute Global Frame! The rest will be global with relative altitude!
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 1, 0, 0, 0, 0, 0, aLocation.lat, aLocation.lon, aLocation.alt))
+
+  # Add take off command. Actually as I checked the lat and lon of this command has no effect in the result at least for the
+  # Fix-Wings. In another words I set them to zero, values based on heading and first waypoint location. In all cases it just
+  # follow the altitude and nothing more. But Any way, here I would use a waypoint in the way of the first real waypoint.
+  wp_tkoff = get_location_meteres(aLocation, 5, -5)
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, wp_tkoff.lat, wp_tkoff.lon, 10))
+ 
+  # Adding other waypoints
+  wp1 = get_location_meteres(aLocation, aSize, -aSize)
+  wp2 = get_location_meteres(aLocation, aSize, aSize)
+  wp3 = get_location_meteres(aLocation, -aSize, aSize)
+  wp4 = get_location_meteres(aLocation, -aSize, -aSize)
+  # Determine Operating altitude based on the landing path lenght:
+  land_alt = 2 * math.sqrt(2) * aSize * land_incline
+  # take care about the altitude of the landing starting point. I think you should determine it based on the proper inclination of the landing rootself.
+  # as I tested in SITL too steep landings after a while cause the plane go over the landing point and the landing would take place with a small pitch angle which takes too mauch time.
+  # on the other hand as I tested for 0.18 inclination the plane tries to land exactly on the landing point and there were some oscillations in pitch angle. Also test for 6% inclination
+  # and it has accurate and oscillations free land maneuver. I don't know exactly that these oscillations are for bad tune or something else but in future ... .
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp1.lat, wp1.lon, land_alt))
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp2.lat, wp2.lon, land_alt))
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp3.lat, wp3.lon, land_alt))
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp4.lat, wp4.lon, land_alt))
+
+  # Adding Landing waypoint at home location
+  # cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, aLocation.lat, aLocation.lon, 0))
+  cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, wp2.lat, wp2.lon, 0))
+  
+  print("Upload New Commands to Vehicle!")
+  cmds.upload()
+
+def readmission(aFileName):
+    """
+    Load a mission from a file into a list. The mission definition is in the Waypoint file
+    format (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
+    This function is used by upload_mission().
+    """
+    print("\nReading mission from file: %s" % aFileName)
+    missionlist=[]
+    with open(aFileName) as f:
+        for i, line in enumerate(f):
+            if i==0:
+                if not line.startswith('QGC WPL 110'):
+                    raise Exception('File is not supported WP version')
+            else:
+                linearray=line.split('\t')
+                ln_index=int(linearray[0])
+                ln_currentwp=int(linearray[1])
+                ln_frame=int(linearray[2])
+                ln_command=int(linearray[3])
+                ln_param1=float(linearray[4])
+                ln_param2=float(linearray[5])
+                ln_param3=float(linearray[6])
+                ln_param4=float(linearray[7])
+                ln_param5=float(linearray[8])
+                ln_param6=float(linearray[9])
+                ln_param7=float(linearray[10])
+                ln_autocontinue=int(linearray[11].strip())
+                cmd = Command( 0, 0, 0, ln_frame, ln_command, ln_currentwp, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_param5, ln_param6, ln_param7)
+                missionlist.append(cmd)
+    return missionlist
+
+def upload_mission(aFileName, vehicle):
+    """
+    Upload a mission from a file.
+    """
+    #Read mission from file
+    missionlist = readmission(aFileName)
+
+    #Clear existing mission from vehicle
+    print(' Clear Already Uploaded Mission')
+    cmds = vehicle.commands
+    cmds.clear()
+
+    print("\nUpload mission from a file: %s" % aFileName)
+    #Add new mission to vehicle
+    for command in missionlist:
+        cmds.add(command)
+    print(' Upload mission')
+    vehicle.commands.upload()
+
+def download_mission(vehicle):
+    """
+    Downloads the current mission and returns it in a list.
+    It is used in save_mission() to get the file information to save.
+    """
+    print(" Download mission from vehicle")
+    missionlist=[]
+    cmds = vehicle.commands
+    cmds.download()
+    cmds.wait_ready()
+    for cmd in cmds:
+        missionlist.append(cmd)
+    return missionlist
+
+def save_mission(aFileName, vehicle):
+    """
+    Save a mission in the Waypoint file format 
+    (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
+    """
+    print("\nSave mission from Vehicle to file: %s" % aFileName)    
+    #Download mission from vehicle
+    missionlist = download_mission(vehicle)
+    #Add file-format information
+    output='QGC WPL 110\n'
+    #Add home location as 0th waypoint
+    home = vehicle.home_location
+    output+="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (0,1,0,16,0,0,0,0,home.lat,home.lon,home.alt,1)
+    #Add commands
+    for cmd in missionlist:
+        commandline="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cmd.seq,cmd.current,cmd.frame,cmd.command,cmd.param1,cmd.param2,cmd.param3,cmd.param4,cmd.x,cmd.y,cmd.z,cmd.autocontinue)
+        output+=commandline
+    with open(aFileName, 'w') as file_:
+        print(" Write mission to file")
+        file_.write(output)
+
 
 class navigator:
     """
@@ -20,7 +169,9 @@ class navigator:
         # handler function mapping dictionary
         self.handler_mapping = {"simple_goto": self.simple_goto_handler,
                                 "active_mode": self.active_mode_handler,
-                                "arm_takeoff": self.arm_takeoff_handler}
+                                "arm_takeoff": self.arm_takeoff_handler,
+                                "save_mission": self.save_mission,
+                                "upload_mission": self.upload_mission}
         # Dictionary of servers
         self.dict_servers = {}
 
@@ -103,6 +254,25 @@ class navigator:
 
       print("Pre-Flight Checks Passed!")
 
+    def save_mission(self, req):
+        res = MissionInOutResponse()
+        try:
+            save_mission(req.filename, self.vehicle)
+            res.accepted = True
+            return res
+        except:
+            res.accepted = False
+            return res
+
+    def upload_mission(self, req):
+        res = MissionInOutResponse()
+        try:
+            upload_mission(req.filename, self.vehicle)
+            res.accepted = True
+            return res
+        except:
+            res.accepted = False
+            return res
 
 class fw_navigator(navigator):
     # TODO: Can't give default values to the constructor of this subclasse and I don't know why!?

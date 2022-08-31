@@ -3,7 +3,7 @@
 import rospy
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
-from wing_navigator.srv import SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest #, SimpleGotoResponse
+from wing_navigator.srv import SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest, MissionInOut, MissionInOutRequest #, SimpleGotoResponse
 from wing_modules.navigator_modules.navigator_client import navigator_client
 import sys
 import subprocess as sp
@@ -30,7 +30,6 @@ class client_worker(QObject):
 
 #############################################################################
 
-
 def uilink_if_needed():
     # Address of symlink to ui file
     uilink_path = expanduser("~/.ros/demo_app/demo_app.ui")
@@ -44,7 +43,6 @@ def uilink_if_needed():
         symlink(uifile_path, uilink_path)
 
     return uilink_path
-
 
 def abbreviate_location(long_loc):
     if long_loc == "Imam Khomeini Airport":
@@ -238,7 +236,13 @@ class Ui(QtWidgets.QMainWindow):
     #             del self.tg_client
 
     def tg_active_mode(self):
-        return
+        req = ActiveModeRequest(self.tg_mode_name_combo_box.currentText())
+        tg_client = navigator_client("target")
+        # req.mode = bytes(self.fw_mode_name_combo_box.currentText().encode('utf-8'))
+        print(f"Requesting to for Mode Activation service for Activating the {req.mode} Flight mode.")
+        # print("Request Result: %s"%active_mode_client(req))
+        print("Request Result: %s"%tg_client.active_mode_client(req))
+        
     # def tg_arm_takeoff(self):
     #     req = ArmTakeoffRequest()
     #     tg_client = navigator_client("target")
@@ -268,25 +272,48 @@ class Ui(QtWidgets.QMainWindow):
         #         )
 
     def tg_return_home(self):
-        return
+        req = ActiveModeRequest("RTL")
+        tg_client = navigator_client("target")
+        # req.mode = bytes(self.fw_mode_name_combo_box.currentText().encode('utf-8'))
+        print(f"{tg_client.name} Requests for going back to home")
+        # print("Request Result: %s"%active_mode_client(req))
+        print("Request Result: %s"%tg_client.active_mode_client(req))
+
     def tg_gotoButtonPressed(self):
-        return
-    #     # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
-    #     req = SimpleGotoRequest()
-    #     req.lat = float(self.tg_goto_lat.text())
-    #     req.lon = float(self.tg_goto_lon.text())
-    #     req.alt = float(self.tg_goto_alt.text())
-    #     print("Target Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
-    #     print("Target Request Result: %s"%simple_goto_client(req))
+        # sp.check_call(["./demo_app.bash", self.lat.text(), self.lon.text(), self.alt.text()])
+        req = SimpleGotoRequest()
+        tg_client = navigator_client("target")
+        req.lat = float(self.tg_goto_lat.text())
+        req.lon = float(self.tg_goto_lon.text())
+        req.alt = float(self.tg_goto_alt.text())
+        print("Target Requesting to for Simple goto service to point (lat:%s, lon:%s, alt:%s)"%(req.lat, req.lon, req.alt))
+        print("Target Request Result: %s"%tg_client.simple_goto_client(req))
 
     def get_fw_mission_file(self):
-        return
+        fw_mission_file, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Single File', expanduser("~"), '*.txt')
+        if fw_mission_file:
+            self.fw_mission_file_address.setText(fw_mission_file)
+
     def fw_save_current_mission(self):
-        return
+        req = MissionInOutRequest()
+        tg_client = navigator_client("wing")
+        req.filename = self.fw_mission_file_address.text()
+        print("Requesting to for save current mission service")
+        print("Request Result: %s"%tg_client.save_mission_client(req))
+
+
     def fw_upload_mission_file(self):
-        return
+        mission_file = self.fw_mission_file_address.text()
+        req = MissionInOutRequest()
+        tg_client = navigator_client("wing")
+        req.filename = mission_file
+        print("Requesting to for upload mission file service")
+        print("Request Result: %s"%tg_client.upload_mission_client(req))
+
     def upload_predefined_mission(self):
-        return
+        if self.fw_square_mission_radio_button.isChecked():
+            self.tg_mission_radio_button.setChecked(False)
+            req
     def fw_clear_wp(self):
         return
     def fw_add_wp(self):

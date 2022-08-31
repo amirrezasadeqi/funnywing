@@ -65,6 +65,7 @@ add_service_files(
   SimpleGoto.srv
   ActiveMode.srv
   ArmTakeoff.srv
+  MissionInOut.srv
   )
 
 ## Generate actions in the 'action' folder

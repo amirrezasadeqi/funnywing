@@ -3,7 +3,7 @@
 import rospy
 import argparse
 
-from wing_navigator.srv import ActiveMode, ArmTakeoff, SimpleGoto
+from wing_navigator.srv import ActiveMode, ArmTakeoff, SimpleGoto, MissionInOut
 # from wing_navigator.srv import *
 # from dronekit import connect, VehicleMode, LocationGlobalRelative
 from wing_modules.navigator_modules.navigator import copter_navigator, fw_navigator, navigator
@@ -44,7 +44,9 @@ if __name__ == '__main__':
   # For more Info goto the navigator class implementation
   list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
                           {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
-                          {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]
+                          {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"},
+                          {"server_name": "save_mission", "server_data_type": MissionInOut, "server_handler_type": "save_mission"},
+                          {"server_name": "upload_mission", "server_data_type": MissionInOut, "server_handler_type": "upload_mission"}]
 
   # nav_agent = navigator("flying_wing", connection_string, list_of_servers_dict)
   fw_nav_agent = fw_navigator("wing", connection_string, list_of_servers_dict)
