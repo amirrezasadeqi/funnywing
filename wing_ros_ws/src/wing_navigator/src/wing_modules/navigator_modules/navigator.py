@@ -4,6 +4,11 @@ from pymavlink import mavutil
 import time, math
 from wing_navigator.srv import SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
                                
+#### Test for custom service for mission ####
+from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
+from wing_navigator.msg import MissionCommand
+#############################################
+
 # Using this function for just Determining of the Lat/Lon and for Alt we would use the Relative Alt as you will see in the following
 def get_location_meteres(original_location, dNorth, dEast):
   """
@@ -171,7 +176,11 @@ class navigator:
                                 "active_mode": self.active_mode_handler,
                                 "arm_takeoff": self.arm_takeoff_handler,
                                 "save_mission": self.save_mission,
-                                "upload_mission": self.upload_mission}
+                                "upload_mission": self.upload_mission,
+                                ## these are for test
+                                "save_mission_ros": self.save_mission_ros,
+                                "upload_mission_ros": self.upload_mission_ros}
+                                ##
         # Dictionary of servers
         self.dict_servers = {}
 
@@ -268,6 +277,76 @@ class navigator:
         res = MissionInOutResponse()
         try:
             upload_mission(req.filename, self.vehicle)
+            res.accepted = True
+            return res
+        except:
+            res.accepted = False
+            return res
+
+    def save_mission_ros(self, req):
+        res = WP_list_saveResponse()
+        res.waypoints = []
+        try:
+            print(f"Serving the request {req.req_message}")
+            mission_list = download_mission(self.vehicle)
+            home = self.vehicle.home_location
+            res.home_lat = float(home.lat)
+            res.home_lon = float(home_lon)
+            res.home_alt = float(home_alt)
+            for cmd in mission_list:
+                wp = MissionCommand()
+                wp.ln_0 = int(cmd.target_system)
+                wp.ln_1 = int(cmd.target_component)
+                wp.ln_2 = int(cmd.seq)
+                wp.ln_frame = int(cmd.frame)
+                wp.ln_command = int(cmd.command)
+                wp.ln_currentwp = int(cmd.current)
+                wp.ln_autocontinue = int(cmd.autocontinue)
+                wp.ln_param1 = float(cmd.param1)
+                wp.ln_param2 = float(cmd.param2)
+                wp.ln_param3 = float(cmd.param3)
+                wp.ln_param4 = float(cmd.param4)
+                wp.ln_param5 = float(cmd.x)
+                wp.ln_param6 = float(cmd.y)
+                wp.ln_param7 = float(cmd.z)
+                res.waypoints.append(wp)
+
+            return res
+        except:
+            return res
+
+    def upload_mission_ros(self, req):
+        res = WP_list_uploadResponse()
+        try:
+            waypoints = req.waypoints
+            mission_list = []
+            for wp in waypoints:
+                ln_frame = wp.ln_frame
+                ln_command = wp.ln_command
+                ln_currentwp = wp.ln_currentwp
+                ln_autocontinue = wp.ln_autocontinue
+                ln_param1 = wp.ln_param1
+                ln_param2 = wp.ln_param2
+                ln_param3 = wp.ln_param3
+                ln_param4 = wp.ln_param4
+                ln_param5 = wp.ln_param5
+                ln_param6 = wp.ln_param6
+                ln_param7 = wp.ln_param7
+                cmd = Command(0, 0, 0, ln_frame, ln_command, ln_currentwp, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_param5, ln_param6, ln_param7)
+                mission_list.append(cmd)
+            
+            #Clear existing mission from vehicle
+            print('Clear existing mission from vehicle')
+            cmds = self.vehicle.commands
+            cmds.clear()
+
+            #Add new mission to vehicle
+            for command in mission_list:
+                cmds.add(command)
+
+            print(' Upload  new mission')
+            self.vehicle.commands.upload()
+
             res.accepted = True
             return res
         except:

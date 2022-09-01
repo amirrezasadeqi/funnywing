@@ -53,6 +53,10 @@ catkin_python_setup()
 #   Message1.msg
 #   Message2.msg
 # )
+add_message_files(
+  FILES
+  MissionCommand.msg
+  )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -66,6 +70,8 @@ add_service_files(
   ActiveMode.srv
   ArmTakeoff.srv
   MissionInOut.srv
+  WP_list_save.srv
+  WP_list_upload.srv
   )
 
 ## Generate actions in the 'action' folder
@@ -120,6 +126,9 @@ catkin_package(
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+  )
 
 ###########
 ## Build ##

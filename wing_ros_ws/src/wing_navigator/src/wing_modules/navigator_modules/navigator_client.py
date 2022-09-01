@@ -1,5 +1,5 @@
 import rospy
-from wing_navigator.srv import ActiveMode, SimpleGoto, ArmTakeoff, MissionInOut
+from wing_navigator.srv import ActiveMode, SimpleGoto, ArmTakeoff, MissionInOut, WP_list_save, WP_list_upload
 
 # from wing_modules.navigator_modules.navigator import upload_mission
 
@@ -49,6 +49,16 @@ class navigator_client:
         return response.accepted
       except rospy.ServiceException as e:
         print("Service Call Failed: %s"%e)
+    
+    def save_mission_ros_client(self, req):
+      server_name = f"/{self.name}_save_mission_ros"
+      rospy.wait_for_service(server_name)
+      try:
+        save_mission_ros_service = rospy.ServiceProxy(server_name, WP_list_save)
+        response = save_mission_ros_service(req)
+        return response
+      except rospy.ServiceException as e:
+        print("Service Call Failed: %s"%e)
 
     def upload_mission_client(self, req):
       server_name = f"/{self.name}_upload_mission"
@@ -56,6 +66,16 @@ class navigator_client:
       try:
         upload_mission_service = rospy.ServiceProxy(server_name, MissionInOut)
         response = upload_mission_service(req)
+        return response.accepted
+      except rospy.ServiceException as e:
+        print("Service Call Failed: %s"%e)
+
+    def upload_mission_ros_client(self, req):
+      server_name = f"/{self.name}_upload_mission_ros"
+      rospy.wait_for_service(server_name)
+      try:
+        upload_mission_ros_service = rospy.ServiceProxy(server_name, WP_list_upload)
+        response = upload_mission_ros_service(req)
         return response.accepted
       except rospy.ServiceException as e:
         print("Service Call Failed: %s"%e)

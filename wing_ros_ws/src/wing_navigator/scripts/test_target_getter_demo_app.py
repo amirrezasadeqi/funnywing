@@ -9,6 +9,11 @@ import sys
 import subprocess as sp
 from os.path import expanduser, exists
 from os import symlink, makedirs
+#### Test for custom service for mission ####
+from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload, WP_list_uploadRequest
+from dronekit import Command
+from wing_navigator.msg import MissionCommand
+#############################################
 
 # Threading Experimental
 # Note that the errors produced in the virtual texts are not really important
@@ -29,6 +34,37 @@ class client_worker(QObject):
         self.finished.emit()
 
 #############################################################################
+
+def readmission(aFileName):
+    """
+    Load a mission from a file into a list. The mission definition is in the Waypoint file
+    format (http://qgroundcontrol.org/mavlink/waypoint_protocol#waypoint_file_format).
+    This function is used by upload_mission().
+    """
+    print("\nReading mission from file: %s" % aFileName)
+    missionlist=[]
+    with open(aFileName) as f:
+        for i, line in enumerate(f):
+            if i==0:
+                if not line.startswith('QGC WPL 110'):
+                    raise Exception('File is not supported WP version')
+            else:
+                linearray=line.split('\t')
+                ln_index=int(linearray[0])
+                ln_currentwp=int(linearray[1])
+                ln_frame=int(linearray[2])
+                ln_command=int(linearray[3])
+                ln_param1=float(linearray[4])
+                ln_param2=float(linearray[5])
+                ln_param3=float(linearray[6])
+                ln_param4=float(linearray[7])
+                ln_param5=float(linearray[8])
+                ln_param6=float(linearray[9])
+                ln_param7=float(linearray[10])
+                ln_autocontinue=int(linearray[11].strip())
+                cmd = Command( 0, 0, 0, ln_frame, ln_command, ln_currentwp, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_param5, ln_param6, ln_param7)
+                missionlist.append(cmd)
+    return missionlist
 
 def uilink_if_needed():
     # Address of symlink to ui file
@@ -149,9 +185,11 @@ class Ui(QtWidgets.QMainWindow):
         self.fw_mission_file_browse_button = self.findChild(QtWidgets.QPushButton, 'pushButton_6')
         self.fw_mission_file_browse_button.clicked.connect(self.get_fw_mission_file)
         self.fw_save_current_mission_button = self.findChild(QtWidgets.QPushButton, 'pushButton_7')
-        self.fw_save_current_mission_button.clicked.connect(self.fw_save_current_mission)
+        # self.fw_save_current_mission_button.clicked.connect(self.fw_save_current_mission)
+        self.fw_save_current_mission_button.clicked.connect(self.fw_save_current_mission_ros)
         self.fw_upload_mission_file_button = self.findChild(QtWidgets.QPushButton, 'pushButton_8')
-        self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file)
+        # self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file)
+        self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file_ros)
         
         ### Pre-Defined Missions
         self.fw_square_mission_radio_button = self.findChild(QtWidgets.QRadioButton, 'radioButton')
@@ -296,10 +334,37 @@ class Ui(QtWidgets.QMainWindow):
 
     def fw_save_current_mission(self):
         req = MissionInOutRequest()
-        tg_client = navigator_client("wing")
+        fw_client = navigator_client("wing")
         req.filename = self.fw_mission_file_address.text()
         print("Requesting to for save current mission service")
-        print("Request Result: %s"%tg_client.save_mission_client(req))
+        print("Request Result: %s"%fw_client.save_mission_client(req))
+
+    def fw_save_current_mission_ros(self):
+        req = WP_list_saveRequest()
+        fw_client = navigator_client("wing")
+        req.req_message = f"{fw_client.name} requests to save the current vehicle mission to local file: {self.fw_mission_file_address.text()}"
+        #Fetching mission from vehicle with custom service format
+        response = fw_client.save_mission_ros_client(req)
+        mission_list_resp = response.waypoints
+        # print("Request Result: %s"%tg_client.save_mission_client(req))
+        ####################################################################
+        #Add file-format information
+        output='QGC WPL 110\n'
+        #Add home location as 0th waypoint
+        home_lat = response.home_lat
+        home_lon = response.home_lon
+        home_alt = response.home_alt
+        output+="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (0,1,0,16,0,0,0,0,home_lat,home_lon,home_alt,1)
+        #Add commands
+        for cmd in mission_list_resp:
+            commandline="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cmd.seq,cmd.current,cmd.frame,cmd.command,cmd.param1,cmd.param2,cmd.param3,cmd.param4,cmd.x,cmd.y,cmd.z,cmd.autocontinue)
+            output+=commandline
+
+        aFileName = self.fw_mission_file_address.text()
+        with open(aFileName, 'w') as file_:
+            print(" Write mission to file")
+            file_.write(output)
+        #############################################################################
 
 
     def fw_upload_mission_file(self):
@@ -310,10 +375,38 @@ class Ui(QtWidgets.QMainWindow):
         print("Requesting to for upload mission file service")
         print("Request Result: %s"%tg_client.upload_mission_client(req))
 
+    def fw_upload_mission_file_ros(self):
+        mission_file = self.fw_mission_file_address.text()
+        mission_list = readmission(mission_file)
+        req = WP_list_uploadRequest()
+        req.waypoints = []
+        for cmd in mission_list:
+            wp = MissionCommand()
+            wp.ln_0 = int(cmd.target_system)
+            wp.ln_1 = int(cmd.target_component)
+            wp.ln_2 = int(cmd.seq)
+            wp.ln_frame = int(cmd.frame)
+            wp.ln_command = int(cmd.command)
+            wp.ln_currentwp = int(cmd.current)
+            wp.ln_autocontinue = int(cmd.autocontinue)
+            wp.ln_param1 = float(cmd.param1)
+            wp.ln_param2 = float(cmd.param2)
+            wp.ln_param3 = float(cmd.param3)
+            wp.ln_param4 = float(cmd.param4)
+            wp.ln_param5 = float(cmd.x)
+            wp.ln_param6 = float(cmd.y)
+            wp.ln_param7 = float(cmd.z)
+            req.waypoints.append(wp)
+
+        fw_client = navigator_client("wing")
+        print(f"{fw_client.name} Requesting for over ros network upload mission file service!")
+        print("Request Result: %s"%fw_client.upload_mission_ros_client(req))
+
     def upload_predefined_mission(self):
-        if self.fw_square_mission_radio_button.isChecked():
-            self.tg_mission_radio_button.setChecked(False)
-            req
+        # if self.fw_square_mission_radio_button.isChecked():
+        #     self.tg_mission_radio_button.setChecked(False)
+        #     req
+        return
     def fw_clear_wp(self):
         return
     def fw_add_wp(self):
