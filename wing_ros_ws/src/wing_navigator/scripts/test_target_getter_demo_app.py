@@ -14,6 +14,10 @@ from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload
 from dronekit import Command
 from wing_navigator.msg import MissionCommand
 #############################################
+### TODO: Experimental Usage of pickle ############
+import pickle
+from wing_navigator.srv import TestPickleUpload, TestPickleUploadRequest
+#############################################
 
 # Threading Experimental
 # Note that the errors produced in the virtual texts are not really important
@@ -190,6 +194,9 @@ class Ui(QtWidgets.QMainWindow):
         self.fw_upload_mission_file_button = self.findChild(QtWidgets.QPushButton, 'pushButton_8')
         # self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file)
         self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file_ros)
+        ###### TODO: Experimental upload using pickle ########################
+        # self.fw_upload_mission_file_button.clicked.connect(self.fw_upload_mission_file_pickle)
+        ################################################################
         
         ### Pre-Defined Missions
         self.fw_square_mission_radio_button = self.findChild(QtWidgets.QRadioButton, 'radioButton')
@@ -357,7 +364,8 @@ class Ui(QtWidgets.QMainWindow):
         output+="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (0,1,0,16,0,0,0,0,home_lat,home_lon,home_alt,1)
         #Add commands
         for cmd in mission_list_resp:
-            commandline="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cmd.seq,cmd.current,cmd.frame,cmd.command,cmd.param1,cmd.param2,cmd.param3,cmd.param4,cmd.x,cmd.y,cmd.z,cmd.autocontinue)
+            # commandline="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cmd.seq,cmd.current,cmd.frame,cmd.command,cmd.param1,cmd.param2,cmd.param3,cmd.param4,cmd.x,cmd.y,cmd.z,cmd.autocontinue)
+            commandline="%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (cmd.ln_2, cmd.ln_currentwp, cmd.ln_frame, cmd.ln_command, cmd.ln_param1, cmd.ln_param2, cmd.ln_param3, cmd.ln_param4, cmd.ln_param5, cmd.ln_param6, cmd.ln_param7, cmd.ln_autocontinue)
             output+=commandline
 
         aFileName = self.fw_mission_file_address.text()
@@ -412,6 +420,10 @@ class Ui(QtWidgets.QMainWindow):
     def fw_add_wp(self):
         return
     def fw_upload_custom_mission(self):
+        return
+
+    # TODO
+    def fw_upload_mission_file_pickle(self):
         return
 
 if __name__ == "__main__":

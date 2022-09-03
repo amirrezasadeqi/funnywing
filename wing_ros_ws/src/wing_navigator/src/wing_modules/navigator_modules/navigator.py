@@ -8,6 +8,10 @@ from wing_navigator.srv import SimpleGoto, SimpleGotoResponse, ActiveMode, Activ
 from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
 from wing_navigator.msg import MissionCommand
 #############################################
+### Experimental Usage of pickle ############
+import pickle
+from wing_navigator.srv import TestPickleUpload, TestPickleUploadResponse
+#############################################
 
 # Using this function for just Determining of the Lat/Lon and for Alt we would use the Relative Alt as you will see in the following
 def get_location_meteres(original_location, dNorth, dEast):
@@ -179,8 +183,12 @@ class navigator:
                                 "upload_mission": self.upload_mission,
                                 ## these are for test
                                 "save_mission_ros": self.save_mission_ros,
-                                "upload_mission_ros": self.upload_mission_ros}
+                                "upload_mission_ros": self.upload_mission_ros
                                 ##
+                                ## Experimental pickle ##
+                                # "save_mission_pickle": self.save_mission_pickle,
+                                # "upload_mission_pickle": self.upload_mission_pickle
+                                }
         # Dictionary of servers
         self.dict_servers = {}
 
@@ -291,8 +299,8 @@ class navigator:
             mission_list = download_mission(self.vehicle)
             home = self.vehicle.home_location
             res.home_lat = float(home.lat)
-            res.home_lon = float(home_lon)
-            res.home_alt = float(home_alt)
+            res.home_lon = float(home.lon)
+            res.home_alt = float(home.alt)
             for cmd in mission_list:
                 wp = MissionCommand()
                 wp.ln_0 = int(cmd.target_system)
@@ -313,6 +321,7 @@ class navigator:
 
             return res
         except:
+            print(f"There is some problems in fetching current mission on {self.agent_name}")
             return res
 
     def upload_mission_ros(self, req):
@@ -335,6 +344,31 @@ class navigator:
                 cmd = Command(0, 0, 0, ln_frame, ln_command, ln_currentwp, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_param5, ln_param6, ln_param7)
                 mission_list.append(cmd)
             
+            #Clear existing mission from vehicle
+            print('Clear existing mission from vehicle')
+            cmds = self.vehicle.commands
+            cmds.clear()
+
+            #Add new mission to vehicle
+            for command in mission_list:
+                cmds.add(command)
+
+            print(' Upload  new mission')
+            self.vehicle.commands.upload()
+
+            res.accepted = True
+            return res
+        except:
+            res.accepted = False
+            return res
+
+    def save_mission_pickle(self, req):
+        res = TestPickleUploadResponse()
+        try:
+            # do your job
+            serialized_mission = req.serialized_mission
+            mission_list = pickle.loads(serialized_mission)
+
             #Clear existing mission from vehicle
             print('Clear existing mission from vehicle')
             cmds = self.vehicle.commands

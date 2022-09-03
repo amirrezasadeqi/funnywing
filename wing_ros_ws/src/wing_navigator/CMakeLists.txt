@@ -72,6 +72,7 @@ add_service_files(
   MissionInOut.srv
   WP_list_save.srv
   WP_list_upload.srv
+  TestPickleUpload.srv
   )
 
 ## Generate actions in the 'action' folder
