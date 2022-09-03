@@ -2,7 +2,7 @@ from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, Loca
 import rospy
 from pymavlink import mavutil
 import time, math
-from wing_navigator.srv import SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
+from wing_navigator.srv import PreDefMissionResponse, SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
                                
 #### Test for custom service for mission ####
 from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
@@ -183,7 +183,8 @@ class navigator:
                                 "upload_mission": self.upload_mission,
                                 ## these are for test
                                 "save_mission_ros": self.save_mission_ros,
-                                "upload_mission_ros": self.upload_mission_ros
+                                "upload_mission_ros": self.upload_mission_ros,
+                                "upload_predefined_mission": self.upload_predefined_mission
                                 ##
                                 ## Experimental pickle ##
                                 # "save_mission_pickle": self.save_mission_pickle,
@@ -386,6 +387,90 @@ class navigator:
         except:
             res.accepted = False
             return res
+
+    def upload_predefined_mission(self, req):
+        # dictionary to map predefined mission names to their mission cunstructors
+        mission_constructor_map = {
+                    "square_mission": self.square_mission_constructor,
+                    "target_mission": self.target_mission_constructor
+                    }
+        res = PreDefMissionResponse()
+
+        try:
+            mission_list = mission_constructor_map[req.mission_type]()
+
+            #Clear existing mission from vehicle
+            print('Clear existing mission from vehicle')
+            cmds = self.vehicle.commands
+            cmds.clear()
+
+            #Add new mission to vehicle
+            for command in mission_list:
+                cmds.add(command)
+
+            print(' Upload  new mission')
+            self.vehicle.commands.upload()
+
+            res.accepted = True
+            return res
+        except:
+            res.accepted = False
+            return res
+    
+    def square_mission_constructor(self, aSize=500, land_incline=0.06):
+
+        mission_list = []
+        aLocation = self.vehicle.location.global_frame
+        # the first point (home point) would define in Absolute Global Frame! The rest will be global with relative altitude!
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 1, 0, 0, 0, 0, 0, aLocation.lat, aLocation.lon, aLocation.alt))
+        
+        # Add take off command. Actually as I checked the lat and lon of this command has no effect in the result at least for the
+        # Fix-Wings. In another words I set them to zero, values based on heading and first waypoint location. In all cases it just
+        # follow the altitude and nothing more. But Any way, here I would use a waypoint in the way of the first real waypoint.
+        wp_tkoff = get_location_meteres(aLocation, 5, -5)
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, wp_tkoff.lat, wp_tkoff.lon, 10))
+        
+        # Adding other waypoints
+        wp1 = get_location_meteres(aLocation, aSize, -aSize)
+        wp2 = get_location_meteres(aLocation, aSize, aSize)
+        wp3 = get_location_meteres(aLocation, -aSize, aSize)
+        wp4 = get_location_meteres(aLocation, -aSize, -aSize)
+        # Determine Operating altitude based on the landing path lenght:
+        land_alt = 2 * math.sqrt(2) * aSize * land_incline
+        # take care about the altitude of the landing starting point. I think you should determine it based on the proper inclination of the landing rootself.
+        # as I tested in SITL too steep landings after a while cause the plane go over the landing point and the landing would take place with a small pitch angle which takes too mauch time.
+        # on the other hand as I tested for 0.18 inclination the plane tries to land exactly on the landing point and there were some oscillations in pitch angle. Also test for 6% inclination
+        # and it has accurate and oscillations free land maneuver. I don't know exactly that these oscillations are for bad tune or something else but in future ... .
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp1.lat, wp1.lon, land_alt))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp2.lat, wp2.lon, land_alt))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp3.lat, wp3.lon, land_alt))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp4.lat, wp4.lon, land_alt))
+        
+        # Adding Landing waypoint at home location
+        # cmds.add(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, aLocation.lat, aLocation.lon, 0))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, wp2.lat, wp2.lon, 0))
+  
+        return mission_list
+
+    def target_mission_constructor(self):
+        mission_list = []
+        ### TODO: here bellow is something to just test. later you should implement a suitable mission for your simulation situation
+        aLocation = self.vehicle.location.global_frame
+        # Adding other waypoints
+        aSize = 500
+        wp1 = get_location_meteres(aLocation, aSize, -aSize)
+        wp2 = get_location_meteres(aLocation, aSize, aSize)
+        wp3 = get_location_meteres(aLocation, -aSize, aSize)
+        wp4 = get_location_meteres(aLocation, -aSize, -aSize)
+
+        land_alt = 30
+
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp1.lat, wp1.lon, land_alt))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp2.lat, wp2.lon, land_alt))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp3.lat, wp3.lon, land_alt))
+        mission_list.append(Command(0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp4.lat, wp4.lon, land_alt))
+
+        return mission_list
 
 class fw_navigator(navigator):
     # TODO: Can't give default values to the constructor of this subclasse and I don't know why!?

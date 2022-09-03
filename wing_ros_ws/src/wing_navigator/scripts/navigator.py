@@ -3,7 +3,7 @@
 import rospy
 import argparse
 
-from wing_navigator.srv import ActiveMode, ArmTakeoff, SimpleGoto, MissionInOut, WP_list_save, WP_list_upload
+from wing_navigator.srv import ActiveMode, ArmTakeoff, PreDefMission, SimpleGoto, MissionInOut, WP_list_save, WP_list_upload
 # from wing_navigator.srv import *
 # from dronekit import connect, VehicleMode, LocationGlobalRelative
 from wing_modules.navigator_modules.navigator import copter_navigator, fw_navigator, navigator
@@ -48,7 +48,8 @@ if __name__ == '__main__':
                           {"server_name": "save_mission", "server_data_type": MissionInOut, "server_handler_type": "save_mission"},
                           {"server_name": "upload_mission", "server_data_type": MissionInOut, "server_handler_type": "upload_mission"},
                           {"server_name": "save_mission_ros", "server_data_type": WP_list_save, "server_handler_type": "save_mission_ros"},
-                          {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload, "server_handler_type": "upload_mission_ros"}]
+                          {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload, "server_handler_type": "upload_mission_ros"},
+                          {"server_name": "upload_predefined_mission", "server_data_type": PreDefMission, "server_handler_type": "upload_predefined_mission"}]
                           # {"server_name": "save_mission_ros", "server_data_type": WP_list_save, "server_handler_type": "save_mission"},
                           # {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload, "server_handler_type": "upload_mission"}]
 

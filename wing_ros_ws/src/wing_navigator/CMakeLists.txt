@@ -73,6 +73,7 @@ add_service_files(
   WP_list_save.srv
   WP_list_upload.srv
   TestPickleUpload.srv
+  PreDefMission.srv
   )
 
 ## Generate actions in the 'action' folder

@@ -3,7 +3,7 @@
 import rospy
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
-from wing_navigator.srv import SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest, MissionInOut, MissionInOutRequest #, SimpleGotoResponse
+from wing_navigator.srv import PreDefMissionRequest, SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest, MissionInOut, MissionInOutRequest #, SimpleGotoResponse
 from wing_modules.navigator_modules.navigator_client import navigator_client
 import sys
 import subprocess as sp
@@ -201,6 +201,8 @@ class Ui(QtWidgets.QMainWindow):
         ### Pre-Defined Missions
         self.fw_square_mission_radio_button = self.findChild(QtWidgets.QRadioButton, 'radioButton')
         self.tg_mission_radio_button = self.findChild(QtWidgets.QRadioButton, 'radioButton_2')
+        if not self.sim_multi_vehicle_chbox.isChecked():
+            self.tg_mission_radio_button.setEnabled(False)
         self.upload_predefined_mission_button = self.findChild(QtWidgets.QPushButton, 'pushButton_9')
         self.upload_predefined_mission_button.clicked.connect(self.upload_predefined_mission)
 
@@ -411,10 +413,21 @@ class Ui(QtWidgets.QMainWindow):
         print("Request Result: %s"%fw_client.upload_mission_ros_client(req))
 
     def upload_predefined_mission(self):
-        # if self.fw_square_mission_radio_button.isChecked():
-        #     self.tg_mission_radio_button.setChecked(False)
-        #     req
-        return
+        req = PreDefMissionRequest()
+        if self.fw_square_mission_radio_button.isChecked():
+            fw_client = navigator_client("wing")
+            req.mission_type = "square_mission"
+            print(f"{fw_client.name} Requesting for Upload Predefined Mission {req.mission_type} service!")
+            response = fw_client.upload_predefined_mission_client(req)
+            print("Request Result: %s"%response.accepted)
+        if (self.tg_mission_radio_button.isEnabled()) and (self.tg_mission_radio_button.isChecked()):
+            tg_client = navigator_client("target")
+            req.mission_type = "target_mission"
+            print(f"{tg_client.name} Requesting for Upload Predefined Mission {req.mission_type} service!")
+            response = tg_client.upload_predefined_mission_client(req)
+            print("Request Result: %s"%response.accepted)
+
+
     def fw_clear_wp(self):
         return
     def fw_add_wp(self):
