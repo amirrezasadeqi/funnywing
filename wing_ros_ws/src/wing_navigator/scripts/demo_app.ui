@@ -424,8 +424,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>971</width>
-         <height>429</height>
+         <width>98</width>
+         <height>28</height>
         </rect>
        </property>
        <attribute name="label">
@@ -837,10 +837,10 @@
        <widget class="QFrame" name="frame_3">
         <property name="geometry">
          <rect>
-          <x>20</x>
+          <x>60</x>
           <y>190</y>
-          <width>831</width>
-          <height>151</height>
+          <width>791</width>
+          <height>171</height>
          </rect>
         </property>
         <property name="frameShape">
@@ -849,12 +849,68 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
+        <widget class="QTableWidget" name="tableWidget">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>10</y>
+           <width>751</width>
+           <height>151</height>
+          </rect>
+         </property>
+         <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="horizontalHeaderStretchLastSection">
+          <bool>false</bool>
+         </attribute>
+         <row>
+          <property name="text">
+           <string>1</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>2</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>3</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>4</string>
+          </property>
+         </row>
+         <column>
+          <property name="text">
+           <string>type</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Latitude</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Longitude</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Altitude</string>
+          </property>
+         </column>
+        </widget>
        </widget>
        <widget class="QPushButton" name="pushButton_10">
         <property name="geometry">
          <rect>
           <x>290</x>
-          <y>360</y>
+          <y>380</y>
           <width>301</width>
           <height>25</height>
          </rect>

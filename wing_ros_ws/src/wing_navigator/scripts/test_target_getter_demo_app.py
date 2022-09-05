@@ -9,9 +9,10 @@ import sys
 import subprocess as sp
 from os.path import expanduser, exists
 from os import symlink, makedirs
+from pymavlink import mavutil
 #### Test for custom service for mission ####
 from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload, WP_list_uploadRequest
-from dronekit import Command
+from dronekit import Command, LocationGlobal
 from wing_navigator.msg import MissionCommand
 #############################################
 ### TODO: Experimental Usage of pickle ############
@@ -130,12 +131,15 @@ class Ui(QtWidgets.QMainWindow):
         # fixed wing client objects
         self.fw_client = navigator_client("wing")
 
+        # Adding A mission list to save custom waypoints
+        self.custom_mission_list = []
+
         # Simulation Tab objects
         self.gz_world_address = self.findChild(QtWidgets.QLineEdit, 'lineEdit_4')
         self.sim_map_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox')
         self.sim_console_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_2')
         self.sim_multi_vehicle_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_3')
-        # self.sim_multi_vehicle_chbox.stateChanged.connect(self.sim_multi_vehicle_chbox_toggle_handler)
+        self.sim_multi_vehicle_chbox.stateChanged.connect(self.sim_multi_vehicle_chbox_toggle_handler)
         self.sim_osd_chbox = self.findChild(QtWidgets.QCheckBox, 'checkBox_4')
         self.sim_loc_combo = self.findChild(QtWidgets.QComboBox, 'comboBox')
         self.gzworld_button = self.findChild(QtWidgets.QPushButton, 'pushButton_3')
@@ -210,6 +214,15 @@ class Ui(QtWidgets.QMainWindow):
         self.fw_wp_lat = self.findChild(QtWidgets.QLineEdit, 'lineEdit_5')
         self.fw_wp_lon = self.findChild(QtWidgets.QLineEdit, 'lineEdit_6')
         self.fw_wp_alt = self.findChild(QtWidgets.QLineEdit, 'lineEdit_7')
+        self.fw_wp_table = self.findChild(QtWidgets.QTableWidget, 'tableWidget')
+        #Table will fit the screen horizontally
+        self.fw_wp_table.horizontalHeader().setStretchLastSection(True)
+        self.fw_wp_table.horizontalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.Stretch)
+        self.fw_wp_table.verticalHeader().setStretchLastSection(True)
+        self.fw_wp_table.verticalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.Stretch)
+
         self.fw_clear_wp_button = self.findChild(QtWidgets.QPushButton, 'pushButton_4')
         self.fw_clear_wp_button.clicked.connect(self.fw_clear_wp)
         self.fw_add_wp_button = self.findChild(QtWidgets.QPushButton, 'pushButton_5')
@@ -281,6 +294,12 @@ class Ui(QtWidgets.QMainWindow):
     #     else:
     #         if self.tg_client:
     #             del self.tg_client
+    
+    def sim_multi_vehicle_chbox_toggle_handler(self):
+        if self.sim_multi_vehicle_chbox.isChecked():
+            self.tg_mission_radio_button.setEnabled(True)
+        else:
+            self.tg_mission_radio_button.setEnabled(False)
 
     def tg_active_mode(self):
         req = ActiveModeRequest(self.tg_mode_name_combo_box.currentText())
@@ -427,13 +446,57 @@ class Ui(QtWidgets.QMainWindow):
             response = tg_client.upload_predefined_mission_client(req)
             print("Request Result: %s"%response.accepted)
 
+    def update_custom_waypoint_table(self):
+        row_count = self.fw_wp_table.rowCount()
+        for row, wp in enumerate(self.custom_mission_list):
+            if row < row_count:
+                self.fw_wp_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(wp.command)))
+                self.fw_wp_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(wp.x)))
+                self.fw_wp_table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(wp.y)))
+                self.fw_wp_table.setItem(row, 3, QtWidgets.QTableWidgetItem(str(wp.z)))
+            else:
+                self.fw_wp_table.insertRow(row)
+                self.fw_wp_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(wp.command)))
+                self.fw_wp_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(wp.x)))
+                self.fw_wp_table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(wp.y)))
+                self.fw_wp_table.setItem(row, 3, QtWidgets.QTableWidgetItem(str(wp.y)))
+
 
     def fw_clear_wp(self):
-        return
+        self.custom_mission_list = []
+        self.fw_wp_table.clearContents()
+
     def fw_add_wp(self):
-        return
+        loc = LocationGlobal(float(self.fw_wp_lat.text()), float(self.fw_wp_lon.text()), float(self.fw_wp_alt.text()))
+        wp = Command( 0, 0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT, mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, loc.lat, loc.lon, loc.alt)
+        self.custom_mission_list.append(wp)
+        self.update_custom_waypoint_table()
+
     def fw_upload_custom_mission(self):
-        return
+        mission_list = self.custom_mission_list
+        req = WP_list_uploadRequest()
+        req.waypoints = []
+        for cmd in mission_list:
+            wp = MissionCommand()
+            wp.ln_0 = int(cmd.target_system)
+            wp.ln_1 = int(cmd.target_component)
+            wp.ln_2 = int(cmd.seq)
+            wp.ln_frame = int(cmd.frame)
+            wp.ln_command = int(cmd.command)
+            wp.ln_currentwp = int(cmd.current)
+            wp.ln_autocontinue = int(cmd.autocontinue)
+            wp.ln_param1 = float(cmd.param1)
+            wp.ln_param2 = float(cmd.param2)
+            wp.ln_param3 = float(cmd.param3)
+            wp.ln_param4 = float(cmd.param4)
+            wp.ln_param5 = float(cmd.x)
+            wp.ln_param6 = float(cmd.y)
+            wp.ln_param7 = float(cmd.z)
+            req.waypoints.append(wp)
+
+        fw_client = navigator_client("wing")
+        print(f"{fw_client.name} Requesting for over ros network upload mission file service!")
+        print("Request Result: %s"%fw_client.upload_mission_ros_client(req))
 
     # TODO
     def fw_upload_mission_file_pickle(self):
@@ -443,7 +506,7 @@ if __name__ == "__main__":
     rospy.init_node("clien_app")
     app = QtWidgets.QApplication(sys.argv)
     window = Ui()
-    app.exec_()
+    sys.exit(app.exec_())
 
 
 
