@@ -2059,8 +2059,8 @@
         <fdm_addr>127.0.0.1</fdm_addr>
         <fdm_port_in>9012</fdm_port_in>
         <fdm_port_out>9013</fdm_port_out>
-        <modelXYZToAirplaneXForwardZDown>0 0 0 3.141593 0 0</modelXYZToAirplaneXForwardZDown>
-        <gazeboXYZToNED>0 0 0 3.141593 0 0</gazeboXYZToNED>
+        <modelXYZToAirplaneXForwardZDown>0 0 0 3.141593 0 -1.57079</modelXYZToAirplaneXForwardZDown>
+        <gazeboXYZToNED>0 0 0 3.141593 0 -1.57079</gazeboXYZToNED>
         <imuName>iris_demo::iris::iris/imu_link::imu_sensor</imuName>
         <connectionTimeoutMaxCount>5</connectionTimeoutMaxCount>
         <control channel='0'>
