@@ -66,19 +66,18 @@ if __name__ == '__main__':
     # TODO: complete this part for publish and subscribe data
     list_of_publisher_dict = [
         {"publisher_name": "gps_publisher", "topic_name": "gps_data",
-            "publisher_data_type": String, "queue_size": 5}
+            "publisher_data_type": String, "rate": 3, "queue_size": 1}
     ]
 
-    list_of_publisher_dict = [
-        {}
+    list_of_subscriber_dict = [
     ]
 
     # nav_agent = navigator("flying_wing", connection_string, list_of_servers_dict)
     fw_nav_agent = fw_navigator(
-        "wing", connection_string, list_of_servers_dict)
+        "wing", connection_string, list_of_servers_dict, list_of_publisher_dict, list_of_subscriber_dict)
     if copter_connection_string:
         copter_nav_agent = copter_navigator(
-            "target", copter_connection_string, list_of_servers_dict)
+            "target", copter_connection_string, list_of_servers_dict, list_of_publisher_dict, list_of_subscriber_dict)
 
     ########################################################################
 

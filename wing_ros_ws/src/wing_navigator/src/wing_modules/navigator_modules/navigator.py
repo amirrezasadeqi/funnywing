@@ -189,7 +189,7 @@ class navigator:
         {"handler_type": handler_function}
     """
 
-    def __init__(self, agent_name, connection_string, list_of_servers_dict):
+    def __init__(self, agent_name, connection_string, list_of_servers_dict, list_of_pubs_dict, list_of_subs_dict):
         print(f"Connecting to {agent_name} on: {connection_string}")
         self.vehicle = connect(connection_string, wait_ready=True)
         self.agent_name = agent_name
@@ -202,7 +202,8 @@ class navigator:
                                 # these are for test
                                 "save_mission_ros": self.save_mission_ros,
                                 "upload_mission_ros": self.upload_mission_ros,
-                                "upload_predefined_mission": self.upload_predefined_mission
+                                "upload_predefined_mission": self.upload_predefined_mission,
+                                ""
                                 ##
                                 ## Experimental pickle ##
                                 # "save_mission_pickle": self.save_mission_pickle,
@@ -213,10 +214,10 @@ class navigator:
 
         # Dictionary of publishers
         # TODO: using rospy.timer for asynchronous pulishing of data
-        self.dict_pub = {}
+        self.dict_pubs = {}
 
         # Dictionary of subscribers
-        self.dict_sub = {}
+        self.dict_subs = {}
 
         for server in list_of_servers_dict:
             server_name = server["server_name"]
@@ -224,6 +225,14 @@ class navigator:
             self.dict_servers[server_name] = rospy.Service(
                 server_name, server["server_data_type"], self.handler_mapping[server["server_handler_type"]])
             print(f"{server_name} server is at your service!")
+        for pub in list_of_pubs_dict:
+            pub_name = pub["publisher_name"]
+            pub_name = f"/{agent_name}_{pub_name}"
+            topic_name = pub["topic_name"]
+            topic_name = f"/{agent_name}_{topic_name}"
+            # TODO: update the GPS sensor data type to sensor_msgs/NavSatFix message
+            self.dict_pubs[pub_name] = rospy.Publisher(
+                topic_name, pub["publisher_data_type"], )
 
     # def __init__(self, connection_string):
     #     print("Connecting to vehicle on: %s" % connection_string)
