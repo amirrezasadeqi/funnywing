@@ -1,9 +1,11 @@
 from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, LocationGlobal
 import rospy
+from sensor_msgs.msg import NavSatFix, NavSatStatus
 from pymavlink import mavutil
 import time
 import math
 from wing_navigator.srv import PreDefMissionResponse, SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
+
 
 #### Test for custom service for mission ####
 from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
@@ -203,7 +205,6 @@ class navigator:
                                 "save_mission_ros": self.save_mission_ros,
                                 "upload_mission_ros": self.upload_mission_ros,
                                 "upload_predefined_mission": self.upload_predefined_mission,
-                                ""
                                 ##
                                 ## Experimental pickle ##
                                 # "save_mission_pickle": self.save_mission_pickle,
@@ -214,6 +215,7 @@ class navigator:
 
         # Dictionary of publishers
         # TODO: using rospy.timer for asynchronous pulishing of data
+        # {<publisher_name: pulisher_object}
         self.dict_pubs = {}
 
         # Dictionary of subscribers
@@ -225,6 +227,7 @@ class navigator:
             self.dict_servers[server_name] = rospy.Service(
                 server_name, server["server_data_type"], self.handler_mapping[server["server_handler_type"]])
             print(f"{server_name} server is at your service!")
+
         for pub in list_of_pubs_dict:
             pub_name = pub["publisher_name"]
             pub_name = f"/{agent_name}_{pub_name}"
@@ -232,7 +235,8 @@ class navigator:
             topic_name = f"/{agent_name}_{topic_name}"
             # TODO: update the GPS sensor data type to sensor_msgs/NavSatFix message
             self.dict_pubs[pub_name] = rospy.Publisher(
-                topic_name, pub["publisher_data_type"], )
+                topic_name, pub["publisher_data_type"], pub["queue_size"])
+            rospy.Timer(rospy.Duration(pub["rate"]), self.fw_gps_publisher)
 
     # def __init__(self, connection_string):
     #     print("Connecting to vehicle on: %s" % connection_string)
@@ -518,6 +522,32 @@ class navigator:
                             mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0, 0, 0, 0, wp4.lat, wp4.lon, land_alt))
 
         return mission_list
+
+    def fw_gps_publisher(self, event=None):
+        """
+            Read and pulisher GPS sensor data on rospy.Timer callbacks
+        """
+
+        # Reading data and substitude it in the msg container
+        location = self.vehicle.location.global_relative_frame
+
+        msg = NavSatFix()
+        msg.header = self.__get_header__()
+        msg.header.frame_id = 'gps'
+        msg.latitude = float(location.lat)
+        msg.longitude = float(location.lon)
+        msg.altitude = float(location.alt)
+        msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+        msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+        return
+
+    def __get_header__(self):
+        """
+        Returns ROS message header
+        """
+        header = Header()
+        header.stamp = rospy.Time.from_sec(self.timestamp)
+        return header
 
 
 class fw_navigator(navigator):
