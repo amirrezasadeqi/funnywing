@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # TODO: complete this part for publish and subscribe data
     list_of_publisher_dict = [
         {"publisher_name": "gps_publisher", "topic_name": "gps_data",
-            "publisher_data_type": String, "rate": 3, "queue_size": 1}
+            "publisher_data_type": String, "rate": 3.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
     ]
 
     list_of_subscriber_dict = [

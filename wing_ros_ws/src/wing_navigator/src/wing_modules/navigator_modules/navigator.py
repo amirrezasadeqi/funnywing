@@ -1,6 +1,7 @@
 from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, LocationGlobal
 import rospy
 from sensor_msgs.msg import NavSatFix, NavSatStatus
+from std_msgs.msg import String
 from pymavlink import mavutil
 import time
 import math
@@ -192,6 +193,11 @@ class navigator:
     """
 
     def __init__(self, agent_name, connection_string, list_of_servers_dict, list_of_pubs_dict, list_of_subs_dict):
+
+        # TODO: delete this
+        self.test_counter = 0
+        ################
+
         print(f"Connecting to {agent_name} on: {connection_string}")
         self.vehicle = connect(connection_string, wait_ready=True)
         self.agent_name = agent_name
@@ -205,7 +211,8 @@ class navigator:
                                 "save_mission_ros": self.save_mission_ros,
                                 "upload_mission_ros": self.upload_mission_ros,
                                 "upload_predefined_mission": self.upload_predefined_mission,
-                                ##
+                                # Handler functions relating to publishers
+                                "gps_pub_handler": self.gps_pub_handler
                                 ## Experimental pickle ##
                                 # "save_mission_pickle": self.save_mission_pickle,
                                 # "upload_mission_pickle": self.upload_mission_pickle
@@ -214,8 +221,14 @@ class navigator:
         self.dict_servers = {}
 
         # Dictionary of publishers
-        # TODO: using rospy.timer for asynchronous pulishing of data
-        # {<publisher_name: pulisher_object}
+        # {publisher_name: {"pulisher_object": publisher_object, "publisher_timer": publisher_timer, "publisher_callback_args": (<Tuple of necessary args)}}
+        # the tuple added for the cases that multiple publishers use the same callback function but they need to pass arguments to the callback function which
+        # are specific to that specific publisher. TODO: Actually I don't know this way of passing arguments, but the rospy.Timer initializer does not allow to
+        # directly apass args, so oneway could be customize rospy.Timer class by inheritance which I will try it in future.
+        # TODO: the problem of unknown gps publisher exists yet an solutions can be:
+        # 1. Using lamda as the callback function maybe a good choice
+        # 2. In callback function we should detect who is the caller
+        # so we can publish data with proper publisher object
         self.dict_pubs = {}
 
         # Dictionary of subscribers
@@ -234,9 +247,13 @@ class navigator:
             topic_name = pub["topic_name"]
             topic_name = f"/{agent_name}_{topic_name}"
             # TODO: update the GPS sensor data type to sensor_msgs/NavSatFix message
-            self.dict_pubs[pub_name] = rospy.Publisher(
+            self.dict_pubs[pub_name]["publisher_object"] = rospy.Publisher(
                 topic_name, pub["publisher_data_type"], pub["queue_size"])
-            rospy.Timer(rospy.Duration(pub["rate"]), self.fw_gps_publisher)
+            # Duration[nano seconds]
+            self.dict_pubs[pub_name]["publisher_timer"] = rospy.Timer(rospy.Duration(
+                0, pow(10.0, 9.0) / pub["rate"]), self.handler_mapping[pub["pub_handler_type"]])
+            # Empty tuple at the moment but it may be necessary in future
+            self.dict_pubs[pub_name]["publisher_callback_args"] = ()
 
     # def __init__(self, connection_string):
     #     print("Connecting to vehicle on: %s" % connection_string)
@@ -523,37 +540,46 @@ class navigator:
 
         return mission_list
 
-    def fw_gps_publisher(self, event=None):
-        """
-            Read and pulisher GPS sensor data on rospy.Timer callbacks
-        """
+    # def fw_gps_publisher(self, event=None):
+    #     """
+    #         Read and pulisher GPS sensor data on rospy.Timer callbacks
+    #     """
 
-        # Reading data and substitude it in the msg container
-        location = self.vehicle.location.global_relative_frame
+    #     # Reading data and substitude it in the msg container
+    #     location = self.vehicle.location.global_relative_frame
 
-        msg = NavSatFix()
-        msg.header = self.__get_header__()
-        msg.header.frame_id = 'gps'
-        msg.latitude = float(location.lat)
-        msg.longitude = float(location.lon)
-        msg.altitude = float(location.alt)
-        msg.status.status = NavSatStatus.STATUS_SBAS_FIX
-        msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+    #     msg = NavSatFix()
+    #     msg.header = self.__get_header__()
+    #     Msg.header.frame_id = 'gps'
+    #     msg.latitude = float(location.lat)
+    #     msg.longitude = float(location.lon)
+    #     msg.altitude = float(location.alt)
+    #     msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+    #     msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+    #     return
+
+    # def __get_header__(self):
+    #     """
+    #     Returns ROS message header
+    #     """
+    #     header = Header()
+    #     header.stamp = rospy.Time.from_sec(self.timestamp)
+    #     return header
+
+    def gps_pub_handler(self, event=None):
+        """
+            Read and publish the GPS sensor data on rospy.Timer callbacks
+        """
+        msg = String()
+        self.test_counter += 1
+        msg.data = f"{self.test_counter}: Hello World wing publisher!"
         return
-
-    def __get_header__(self):
-        """
-        Returns ROS message header
-        """
-        header = Header()
-        header.stamp = rospy.Time.from_sec(self.timestamp)
-        return header
 
 
 class fw_navigator(navigator):
     # TODO: Can't give default values to the constructor of this subclasse and I don't know why!?
     # Please check this out when you have time!
-    # def __ini__(self, agent_name, connection_string, list_of_servers_dict=[{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
+    # def __init__(self, agent_name, connection_string, list_of_servers_dict=[{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
     #                                                                        {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
     #                                                                        {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]):
     #     # Using navigator class constructor
