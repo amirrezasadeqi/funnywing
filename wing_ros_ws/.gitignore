@@ -8,3 +8,4 @@ defaults.parm
 logs/
 mav.parm
 terrain/
+src/wing_navigator/src/wing_modules/navigator_modules/__pycache__/

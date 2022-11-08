@@ -6,7 +6,7 @@ from pymavlink import mavutil
 import time
 import math
 from wing_navigator.srv import PreDefMissionResponse, SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
-
+from wing_modules.navigator_modules.TimerAP import TimerAP
 
 #### Test for custom service for mission ####
 from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
@@ -247,11 +247,30 @@ class navigator:
             topic_name = pub["topic_name"]
             topic_name = f"/{agent_name}_{topic_name}"
             # TODO: update the GPS sensor data type to sensor_msgs/NavSatFix message
+            self.dict_pubs[pub_name] = {}
             self.dict_pubs[pub_name]["publisher_object"] = rospy.Publisher(
-                topic_name, pub["publisher_data_type"], pub["queue_size"])
+                topic_name, pub["publisher_data_type"], queue_size=pub["queue_size"])
+
             # Duration[nano seconds]
-            self.dict_pubs[pub_name]["publisher_timer"] = rospy.Timer(rospy.Duration(
-                0, pow(10.0, 9.0) / pub["rate"]), self.handler_mapping[pub["pub_handler_type"]])
+            self.dict_pubs[pub_name]["publisher_timer"] = TimerAP(rospy.Duration(0, pow(
+                10.0, 9.0) / pub["rate"]), self.handler_mapping[pub["pub_handler_type"]], [pub_name])
+            # Duration[nano seconds]
+            # self.dict_pubs[pub_name]["publisher_timer"] = rospy.Timer(rospy.Duration(
+            #     0, pow(10.0, 9.0) / pub["rate"]), self.handler_mapping[pub["pub_handler_type"]])
+
+            #######################################################################################
+            #                       Test for using Lambda for passign args to callback
+            #######################################################################################
+            # self.dict_pubs["pub_name"]["publisher_timer"] = rospy.Timer(rospy.Duration(
+            #     0, pow(10.0, 9.0) / pub["rate"]), lambda: self.handle_callback_invokation(pub_name, self.handler_mapping[pub["pub_handler_type"]]))
+
+            # self.dict_pubs[pub_name]["publisher_timer"] = rospy.Timer(rospy.Duration(
+            #     0, pow(10.0, 9.0) / pub["rate"]), lambda: self.handler_mapping[pub["pub_handler_type"]](pub_name))
+
+            #######################################################################################
+            #       Test Overriding of the Timer class (TimerAP) for passing args to callback
+            #######################################################################################
+
             # Empty tuple at the moment but it may be necessary in future
             self.dict_pubs[pub_name]["publisher_callback_args"] = ()
 
@@ -268,6 +287,19 @@ class navigator:
     def __del__(self):
         print(f"Close {self.agent_name} Vehicle connection object!")
         self.vehicle.close()
+
+    # def handle_callback_invokation(self, pub_name, pub_handler):
+    #     return
+
+    def gps_pub_handler(self, arg_list, event=None):
+        """
+            Read and publish the GPS sensor data on rospy.Timer callbacks
+        """
+        publisher_object = self.dict_pubs[arg_list[0]]["publisher_object"]
+        msg = String()
+        self.test_counter += 1
+        msg.data = f"{self.test_counter}: Hello World wing publisher!"
+        publisher_object.publish(msg)
 
     def arm_takeoff_handler(self, req):
         # resp = ArmTakeoffResponse()
@@ -565,15 +597,6 @@ class navigator:
     #     header = Header()
     #     header.stamp = rospy.Time.from_sec(self.timestamp)
     #     return header
-
-    def gps_pub_handler(self, event=None):
-        """
-            Read and publish the GPS sensor data on rospy.Timer callbacks
-        """
-        msg = String()
-        self.test_counter += 1
-        msg.data = f"{self.test_counter}: Hello World wing publisher!"
-        return
 
 
 class fw_navigator(navigator):
