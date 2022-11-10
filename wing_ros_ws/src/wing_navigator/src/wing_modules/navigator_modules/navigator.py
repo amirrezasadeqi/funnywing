@@ -274,6 +274,15 @@ class navigator:
             # Empty tuple at the moment but it may be necessary in future
             self.dict_pubs[pub_name]["publisher_callback_args"] = ()
 
+        for sub in list_of_subs_dict:
+            sub_name = sub["subscriber_name"]
+            sub_name = f"/{agent_name}_{sub_name}"
+            topic_name = sub["topic_name"]
+            topic_name = f"/{agent_name}_{topic_name}"
+            self.dict_subs[sub_name] = {}
+            self.dict_subs[sub_name]["subscriber_object"] = rospy.Subscriber(
+                topic_name, sub["subscriber_data_type"], callback.func)
+
     # def __init__(self, connection_string):
     #     print("Connecting to vehicle on: %s" % connection_string)
     #     self.vehicle = connect(connection_string, wait_ready=True)
