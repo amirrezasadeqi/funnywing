@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     list_of_subscriber_dict = [
         {"subscriber_name": "BP_subscriber", "topic_name": "BP_data",
-            "subscriber_data_type": String, }
+            "subscriber_data_type": String, "sub_handler_type": "bp_sub_handler"}
     ]
 
     # nav_agent = navigator("flying_wing", connection_string, list_of_servers_dict)

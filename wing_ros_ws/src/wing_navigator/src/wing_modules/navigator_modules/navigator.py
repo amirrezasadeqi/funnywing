@@ -212,7 +212,9 @@ class navigator:
                                 "upload_mission_ros": self.upload_mission_ros,
                                 "upload_predefined_mission": self.upload_predefined_mission,
                                 # Handler functions relating to publishers
-                                "gps_pub_handler": self.gps_pub_handler
+                                "gps_pub_handler": self.gps_pub_handler,
+                                # Handler functions relating to subscribers
+                                "bp_sub_handler": self.bp_sub_handler
                                 ## Experimental pickle ##
                                 # "save_mission_pickle": self.save_mission_pickle,
                                 # "upload_mission_pickle": self.upload_mission_pickle
@@ -254,26 +256,14 @@ class navigator:
             # Duration[nano seconds]
             self.dict_pubs[pub_name]["publisher_timer"] = TimerAP(rospy.Duration(0, pow(
                 10.0, 9.0) / pub["rate"]), self.handler_mapping[pub["pub_handler_type"]], [pub_name])
-            # Duration[nano seconds]
-            # self.dict_pubs[pub_name]["publisher_timer"] = rospy.Timer(rospy.Duration(
-            #     0, pow(10.0, 9.0) / pub["rate"]), self.handler_mapping[pub["pub_handler_type"]])
-
-            #######################################################################################
-            #                       Test for using Lambda for passign args to callback
-            #######################################################################################
-            # self.dict_pubs["pub_name"]["publisher_timer"] = rospy.Timer(rospy.Duration(
-            #     0, pow(10.0, 9.0) / pub["rate"]), lambda: self.handle_callback_invokation(pub_name, self.handler_mapping[pub["pub_handler_type"]]))
-
-            # self.dict_pubs[pub_name]["publisher_timer"] = rospy.Timer(rospy.Duration(
-            #     0, pow(10.0, 9.0) / pub["rate"]), lambda: self.handler_mapping[pub["pub_handler_type"]](pub_name))
-
-            #######################################################################################
-            #       Test Overriding of the Timer class (TimerAP) for passing args to callback
-            #######################################################################################
 
             # Empty tuple at the moment but it may be necessary in future
             self.dict_pubs[pub_name]["publisher_callback_args"] = ()
 
+        # TODO: At the moment it is not possible to implement a subscriber object with control over the rate of
+        # subscribing. To do this, there are two ways:
+        #   1. Implementing the rospy subscriber and topic classes from the base (not feasible)
+        #   2. Reading the data and save it into a list and use it with control over the timing of the data access.(implement this if necessary!)
         for sub in list_of_subs_dict:
             sub_name = sub["subscriber_name"]
             sub_name = f"/{agent_name}_{sub_name}"
@@ -281,7 +271,8 @@ class navigator:
             topic_name = f"/{agent_name}_{topic_name}"
             self.dict_subs[sub_name] = {}
             self.dict_subs[sub_name]["subscriber_object"] = rospy.Subscriber(
-                topic_name, sub["subscriber_data_type"], callback.func)
+                topic_name, sub["subscriber_data_type"], self.handler_mapping[sub["sub_handler_type"]])
+            self.dict_subs[sub_name]["subscriber_callback_args"] = ()
 
     # def __init__(self, connection_string):
     #     print("Connecting to vehicle on: %s" % connection_string)
@@ -297,8 +288,8 @@ class navigator:
         print(f"Close {self.agent_name} Vehicle connection object!")
         self.vehicle.close()
 
-    # def handle_callback_invokation(self, pub_name, pub_handler):
-    #     return
+    def bp_sub_handler(self, msg):
+        rospy.loginfo(f"Boiler-Plate subscriber data: {msg.data}")
 
     def gps_pub_handler(self, arg_list, event=None):
         """
@@ -644,7 +635,7 @@ class fw_navigator(navigator):
 class copter_navigator(navigator):
     # TODO: Can't give default values to the constructor of this subclasse and I don't know why!?
     # Please check this out when you have time!
-    # def __ini__(self, agent_name, connection_string, list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
+    # def __init__(self, agent_name, connection_string, list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
     #                                                                          {"server_name": "active_mode", "server_data_type": ActiveMode, "server_handler_type": "active_mode"},
     #                                                                          {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff, "server_handler_type": "arm_takeoff"}]):
     #     # Using navigator class constructor
