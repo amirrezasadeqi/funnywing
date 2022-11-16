@@ -1,7 +1,7 @@
 from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, LocationGlobal
 import rospy
 from sensor_msgs.msg import NavSatFix, NavSatStatus
-from std_msgs.msg import String
+from std_msgs.msg import String, Header
 from pymavlink import mavutil
 import time
 import math
@@ -212,6 +212,7 @@ class navigator:
                                 "upload_mission_ros": self.upload_mission_ros,
                                 "upload_predefined_mission": self.upload_predefined_mission,
                                 # Handler functions relating to publishers
+                                "bp_pub_handler": self.bp_pub_handler,
                                 "gps_pub_handler": self.gps_pub_handler,
                                 # Handler functions relating to subscribers
                                 "bp_sub_handler": self.bp_sub_handler
@@ -287,19 +288,6 @@ class navigator:
     def __del__(self):
         print(f"Close {self.agent_name} Vehicle connection object!")
         self.vehicle.close()
-
-    def bp_sub_handler(self, msg):
-        rospy.loginfo(f"Boiler-Plate subscriber data: {msg.data}")
-
-    def gps_pub_handler(self, arg_list, event=None):
-        """
-            Read and publish the GPS sensor data on rospy.Timer callbacks
-        """
-        publisher_object = self.dict_pubs[arg_list[0]]["publisher_object"]
-        msg = String()
-        self.test_counter += 1
-        msg.data = f"{self.test_counter}: Hello World wing publisher!"
-        publisher_object.publish(msg)
 
     def arm_takeoff_handler(self, req):
         # resp = ArmTakeoffResponse()
@@ -572,31 +560,46 @@ class navigator:
 
         return mission_list
 
-    # def fw_gps_publisher(self, event=None):
-    #     """
-    #         Read and pulisher GPS sensor data on rospy.Timer callbacks
-    #     """
+    def bp_sub_handler(self, msg):
+        rospy.loginfo(f"Boiler-Plate subscriber data: {msg.data}")
 
-    #     # Reading data and substitude it in the msg container
-    #     location = self.vehicle.location.global_relative_frame
+    def bp_pub_handler(self, arg_list, event=None):
+        """
+            Read and publish the dummy sensor data on rospy.Timer callbacks
+        """
+        publisher_object = self.dict_pubs[arg_list[0]]["publisher_object"]
+        msg = String()
+        self.test_counter += 1
+        msg.data = f"{self.test_counter}: Hello World wing publisher!"
+        publisher_object.publish(msg)
 
-    #     msg = NavSatFix()
-    #     msg.header = self.__get_header__()
-    #     Msg.header.frame_id = 'gps'
-    #     msg.latitude = float(location.lat)
-    #     msg.longitude = float(location.lon)
-    #     msg.altitude = float(location.alt)
-    #     msg.status.status = NavSatStatus.STATUS_SBAS_FIX
-    #     msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
-    #     return
+    def __get_header__(self):
+        """
+        Returns ROS message header
+        """
+        header = Header()
+        header.stamp = rospy.Time.now()
+        return header
 
-    # def __get_header__(self):
-    #     """
-    #     Returns ROS message header
-    #     """
-    #     header = Header()
-    #     header.stamp = rospy.Time.from_sec(self.timestamp)
-    #     return header
+    def gps_pub_handler(self, arg_list, event=None):
+        """
+            Read and publish GPS sensor data on rospy.TimerAP callbacks
+        """
+        # Reading data and substitude it in the msg container
+        location = self.vehicle.location.global_relative_frame
+
+        msg = NavSatFix()
+        msg.header = self.__get_header__()
+        msg.header.frame_id = 'gps'
+        msg.latitude = float(location.lat)
+        msg.longitude = float(location.lon)
+        msg.altitude = float(location.alt)
+        msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+        msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+
+        publisher_object = self.dict_pubs[arg_list[0]]["publisher_object"]
+        # Publishing the GPS message
+        publisher_object.publish(msg)
 
 
 class fw_navigator(navigator):

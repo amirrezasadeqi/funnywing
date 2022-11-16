@@ -4,6 +4,7 @@ import rospy
 import argparse
 # test
 from std_msgs.msg import String
+from sensor_msgs.msg import NavSatFix
 
 from wing_navigator.srv import ActiveMode, ArmTakeoff, PreDefMission, SimpleGoto, MissionInOut, WP_list_save, WP_list_upload
 # from wing_navigator.srv import *
@@ -62,15 +63,16 @@ if __name__ == '__main__':
     # {"server_name": "save_mission_ros", "server_data_type": WP_list_save, "server_handler_type": "save_mission"},
     # {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload, "server_handler_type": "upload_mission"}]
 
-    # Adding pub/sub capabillity to navigator agents, e.g. for reading GPS data of the drone
-    # TODO: complete this part for publish and subscribe data
+    # Adding pub/sub capabillity to navigator agents, e.g. for monitoring drone status, like getting GPS data
     list_of_publisher_dict = [
-        {"publisher_name": "gps_publisher", "topic_name": "gps_data",
-            "publisher_data_type": String, "rate": 4.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
+        {"publisher_name": "bp_publisher", "topic_name": "bp_topic",
+            "publisher_data_type": String, "rate": 4.0, "queue_size": 1, "pub_handler_type": "bp_pub_handler"},
+        {"publisher_name": "gps_publisher", "topic_name": "gps_topic",
+            "publisher_data_type": NavSatFix, "rate": 4.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
     ]
 
     list_of_subscriber_dict = [
-        {"subscriber_name": "BP_subscriber", "topic_name": "BP_data",
+        {"subscriber_name": "bp_subscriber", "topic_name": "bp_topic",
             "subscriber_data_type": String, "sub_handler_type": "bp_sub_handler"}
     ]
 
