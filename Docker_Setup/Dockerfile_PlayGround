@@ -1,0 +1,37 @@
+FROM nvidia_noetic_ros:latest
+
+RUN apt-get update && apt-get install sudo
+
+ENV USERNAME areza
+RUN useradd -m $USERNAME && \
+        echo "$USERNAME:$USERNAME" | chpasswd && \
+        usermod --shell /bin/bash $USERNAME && \
+        usermod -aG sudo $USERNAME && \
+        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
+        chmod 0440 /etc/sudoers.d/$USERNAME && \
+        # Replace 1000 with your user/group id
+        usermod  --uid 1000 $USERNAME && \
+        groupmod --gid 1000 $USERNAME
+        
+USER $USERNAME
+
+RUN sudo apt-get update && sudo apt-get -y install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen git
+
+RUN mkdir /home/${USERNAME}/ManBuild_Packs && \
+    git clone https://github.com/neovim/neovim.git /home/${USERNAME}/ManBuild_Packs/neovim && \
+    cd /home/${USERNAME}/ManBuild_Packs/neovim && git checkout v0.8.0 && make -j 12 CMAKE_BUILD_TYPE=Release && \
+    sudo make install
+
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential python3 python3-pip python3-neovim \
+         global universal-ctags cscope nodejs npm make ninja-build libtool \
+         libtool-bin autoconf automake cmake g++ pkg-config lldb gdb xclip \
+         ripgrep fd-find fzf bison strace libncurses-dev stow wget clang \
+         clang-format clangd clang-tidy clang-tools
+
+RUN mkdir /home/${USERNAME}/.config/ && \
+    git clone --branch plua https://github.com/amirrezasadeqi/nvim_configs.git /home/${USERNAME}/.config/nvim && \
+    nvim --headless +PackerSync +qall
+
+
+WORKDIR /home/$USERNAME
+
