@@ -6,20 +6,34 @@ SHELL ["/bin/bash", "-c"]
 # This part is from below link:
 # https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user#_creating-a-nonroot-user
 # ********************************************************
-ARG USERNAME=areza
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+# ARG USERNAME=areza
+# ARG USER_UID=1000
+# ARG USER_GID=$USER_UID
 
-# Create the user
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    #
-    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
-    && apt-get update \
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+# # Create the user
+# RUN groupadd --gid $USER_GID $USERNAME \
+#     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+#     #
+#     # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+#     && apt-get update \
+#     && apt-get install -y sudo \
+#     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+#     && chmod 0440 /etc/sudoers.d/$USERNAME
 
+# Another tested way of adding user to docker image/container.
+RUN apt-get update && apt-get install sudo
+
+ENV USERNAME areza
+RUN useradd -m $USERNAME && \
+        echo "$USERNAME:$USERNAME" | chpasswd && \
+        usermod --shell /bin/bash $USERNAME && \
+        usermod -aG sudo $USERNAME && \
+        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
+        chmod 0440 /etc/sudoers.d/$USERNAME && \
+        # Replace 1000 with your user/group id
+        usermod  --uid 1000 $USERNAME && \
+        groupmod --gid 1000 $USERNAME
+        
 # ********************************************************
 # * Anything else you want to do like clean up goes here *
 # ********************************************************
@@ -38,6 +52,43 @@ RUN mkdir /home/${USERNAME}/repositories \
 RUN cd /home/${USERNAME}/repositories/ardupilot \
   && git submodule update --init --recursive
 
+# because in install script it needs environment variable USER not USERNAME
+ENV USER ${USERNAME}
+# These 3 lines for supperessing the keyboard configuration prompt which stops the build
+ARG DEBIAN_FRONTEND=noninteractive
+ENV LANG en_US.UTF-8
+RUN echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
+
+# There are some problems caused by bad network. sometimes you need VPN and sometimes you not.
 RUN /home/${USERNAME}/repositories/ardupilot/Tools/environment_install/install-prereqs-ubuntu.sh -y
 RUN export PATH="/home/${USERNAME}/repositories/ardupilot/Tools/autotest:$PATH"
+
+# I don't know why, but the install script of the ardupilot does not install mavproxy in such a way that we
+# we become able to use it. also note that you need to run sim_vehicle.py inside the ardupilot directories as 
+# I had to do in my first tests.
+
+RUN sudo pip3 install mavproxy
+
+# Installing neovim
+RUN sudo apt-get -y install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip curl doxygen git
+
+RUN mkdir /home/${USERNAME}/ManBuild_Packs && \
+    git clone https://github.com/neovim/neovim.git /home/${USERNAME}/ManBuild_Packs/neovim
+    
+RUN cd /home/${USERNAME}/ManBuild_Packs/neovim && git checkout v0.8.0 && make -j 12 CMAKE_BUILD_TYPE=Release && \
+    sudo make install
+
+RUN sudo apt-get install -y --no-install-recommends build-essential python3 python3-venv python3-pip python3-neovim \
+         global universal-ctags cscope nodejs npm make ninja-build libtool \
+         libtool-bin autoconf automake cmake g++ pkg-config lldb gdb xclip \
+         ripgrep fd-find fzf bison strace libncurses-dev stow wget clang \
+         clang-format clangd clang-tidy clang-tools
+
+RUN mkdir /home/${USERNAME}/.config/ && \
+    git clone --branch plua https://github.com/amirrezasadeqi/nvim_configs.git /home/${USERNAME}/.config/nvim
+
+RUN nvim --headless +PackerSync +qall
+
+
+WORKDIR /home/$USERNAME
 
