@@ -122,6 +122,7 @@ def abbreviate_location(long_loc):
 #   except rospy.ServiceException as e:
 #     print("Service Call Failed: %s"%e)
 
+# TODO: Adding basic navigation tasks for funnywing project.
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__()
