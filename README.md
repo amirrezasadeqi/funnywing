@@ -3,7 +3,7 @@
 This is a Hobby/Funny Project to Enjoy From Working with Flying Wings!<br>
 **Note:** At the momment the repository must be cloned into ~/Documents, because some of the pathes are hard-coded.<br>
 
-- [] Adding support for RF communication.
+- [ ] Adding support for RF communication.
 
 ## Getting started
 
