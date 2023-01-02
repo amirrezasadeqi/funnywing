@@ -157,7 +157,7 @@ class Ui(QtWidgets.QMainWindow):
             topic_name = f"/wing_{topic_name}"
             self.dict_subs[sub_name] = {}
             self.dict_subs[sub_name]["subscriber_object"] = rospy.Subscriber(
-                topic_name, sub["subscriber_data_type"], self.handler_mapping[sub["sub_handler_type"]])
+                topic_name, sub["subscriber_data_type"], self.subs_handler_mapping[sub["sub_handler_type"]])
             self.dict_subs[sub_name]["subscriber_callback_args"] = ()
         ################################################################
 
@@ -295,11 +295,51 @@ class Ui(QtWidgets.QMainWindow):
         self.fw_upload_custom_mission_button.clicked.connect(
             self.fw_upload_custom_mission)
 
+        ##############################################################
+        #              RF Communication Tab
+        #              Section Under Test and developement
+        ##############################################################
+        self.rf_com_modename_combobox = self.findChild(
+            QtWidgets.QComboBox, 'rf_com_mode_combobox')
+        self.rf_com_activemode_pushbutton = self.findChild(
+            QtWidgets.QPushButton, 'rf_com_activemode_pushbutton')
+        self.rf_com_activemode_pushbutton.clicked.connect(
+            self.rf_com_activemode_pushbutton_func)
+        self.rf_com_returnhome_pushbutton = self.findChild(
+            QtWidgets.QPushButton, "rf_com_returnhome_pushbutton")
+        self.rf_com_returnhome_pushbutton.clicked.connect(
+            self.rf_com_returnhome_pushbutton_func)
+        self.rf_com_armtakeoff_pushbutton = self.findChild(
+            QtWidgets.QPushButton, 'rf_com_armtakeoff_pushbutton')
+        self.rf_com_armtakeoff_pushbutton.clicked.connect(
+            self.rf_com_armtakeoff_pushbutton_func)
+
+        ##############################################################
+
         self.show()
 
     ##############################################################
     #              Section Under Test and developement
     ##############################################################
+
+    def rf_com_activemode_pushbutton_func(self):
+        """
+            Function for sending mode selection command over RF com
+        """
+        return
+
+    def rf_com_returnhome_pushbutton_func(self):
+        """
+            Function for sending return to home command over RF com
+        """
+        return
+
+    def rf_com_armtakeoff_pushbutton_func(self):
+        """
+            Function for sending arm takeoff command over RF com
+        """
+        return
+
     def gps_sub_handler(self, msg):
         """
             Reading GPS data from the topic which is published by the RF module
