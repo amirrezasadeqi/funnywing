@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import rospy
+import msgpack
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import UInt8MultiArray
 from wing_navigator.srv import PreDefMissionRequest, SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest, MissionInOut, MissionInOutRequest
 from wing_modules import navigator_modules  # , SimpleGotoResponse
 from wing_modules.navigator_modules.navigator_client import navigator_client
@@ -16,6 +18,7 @@ from pymavlink import mavutil
 from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload, WP_list_uploadRequest
 from dronekit import Command, LocationGlobal
 from wing_navigator.msg import MissionCommand
+from wing_modules.navigator_modules.navigation_commands import navigation_commands as nav_com
 #############################################
 ### TODO: Experimental Usage of pickle ############
 import pickle
@@ -41,6 +44,52 @@ class client_worker(QObject):
         # print("Request Result: %s"%arm_takeoff_client(req))
         print("Request Result: %s" % tg_client.arm_takeoff_client(req))
         self.finished.emit()
+
+
+class subscription_worker(QObject):
+    finished = pyqtSignal()
+
+    def __init__(self):
+        super(subscription_worker, self).__init__()
+        self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler}
+        self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic",
+                                   "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"}]
+
+        # Initialize the container for GUI app subscriber objects.
+        self.dict_subs = {}
+
+        for sub in self.list_of_subs_dict:
+            sub_name = sub["subscriber_name"]
+            sub_name = f"/wing_{sub_name}"
+            topic_name = sub["topic_name"]
+            topic_name = f"/wing_{topic_name}"
+            self.dict_subs[sub_name] = {}
+            self.dict_subs[sub_name]["subscriber_object"] = rospy.Subscriber(
+                topic_name, sub["subscriber_data_type"], self.subs_handler_mapping[sub["sub_handler_type"]])
+            self.dict_subs[sub_name]["subscriber_callback_args"] = ()
+
+    def run(self):
+        """
+            Do the subscription to data by spinning via rospy.spin(). after spin breaks or
+            terminates the looping, it emits a signal for finishing the object(I think) and
+            thread.
+        """
+        # Note: I have some doubts about the way application closing terminates rospy.spin()
+        # But I think it will be ok, if any issues in terminating or any wierd behavior
+        # , take a look at this.
+
+        rospy.spin()
+
+        self.finished.emit()
+
+    def gps_sub_handler(self, msg):
+        """
+            Reading GPS data from the topic which is published by the RF module
+            and visualize it in the GUI app or use it for other works.
+        """
+        # Just printing out the subscribed data into terminal to test the code correctness.
+        rospy.loginfo(
+            f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.latitude}\nlongitude: {msg.longitude}\n altitude: {msg.altitude}\n")
 
 #############################################################################
 
@@ -143,22 +192,63 @@ class Ui(QtWidgets.QMainWindow):
         # this section is under test and developement.
         # Note that this code will be ran on GCS computer.
         ################################################################
-        self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler}
-        self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic",
-                                   "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"}]
+
+        # TODO: I think we need a seperate thread for sensor data subscription. and we need
+        # to initialize the thread in the application constructor before(before/after may not
+        # have effect) the show() function call for starting subscription to data even before
+        # seeing the GUI on the monitor.
+
+        # setup and start the seperated thread for subscriptions.
+        self.subs_thread = QThread()
+        self.subs_worker = subscription_worker()  # This also creates the subscribers
+        self.subs_worker.moveToThread(self.subs_thread)
+        # subscription by spin() which starts by thread start
+        self.subs_thread.started.connect(self.subs_worker.run)
+        self.subs_thread.finished.connect(self.subs_thread.quit)
+        self.subs_worker.finished.connect(
+            self.subs_worker.deleteLater)
+        self.subs_thread.finished.connect(self.subs_thread.deleteLater)
+        self.subs_thread.start()
+
+        # self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler}
+        # self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic",
+        #                            "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"}]
 
         # Initialize the container for GUI app subscriber objects.
-        self.dict_subs = {}
+        # self.dict_subs = {}
 
-        for sub in self.list_of_subs_dict:
-            sub_name = sub["subscriber_name"]
-            sub_name = f"/wing_{sub_name}"
-            topic_name = sub["topic_name"]
+        # for sub in self.list_of_subs_dict:
+        #     sub_name = sub["subscriber_name"]
+        #     sub_name = f"/wing_{sub_name}"
+        #     topic_name = sub["topic_name"]
+        #     topic_name = f"/wing_{topic_name}"
+        #     self.dict_subs[sub_name] = {}
+        #     self.dict_subs[sub_name]["subscriber_object"] = rospy.Subscriber(
+        #         topic_name, sub["subscriber_data_type"], self.subs_handler_mapping[sub["sub_handler_type"]])
+        #     self.dict_subs[sub_name]["subscriber_callback_args"] = ()
+        ################################################################
+
+        ################################################################
+        # Adding publisher for publishing serialized commands to commands
+        # topic for using in RF communication node.
+        # this section is under test and developement.
+        # Note that this code will be ran on GCS computer.
+        ################################################################
+
+        self.list_of_pubs_dict = [
+            {"publisher_name": "navigation_commands_publisher", "topic_name": "navigation_commands",
+                "publisher_data_type": UInt8MultiArray, "queue_size": 1}
+        ]
+        self.dict_pubs = {}
+        for pub in self.list_of_pubs_dict:
+            pub_name = pub["publisher_name"]
+            pub_name = f"/wing_{pub_name}"
+            topic_name = pub["topic_name"]
             topic_name = f"/wing_{topic_name}"
-            self.dict_subs[sub_name] = {}
-            self.dict_subs[sub_name]["subscriber_object"] = rospy.Subscriber(
-                topic_name, sub["subscriber_data_type"], self.subs_handler_mapping[sub["sub_handler_type"]])
-            self.dict_subs[sub_name]["subscriber_callback_args"] = ()
+            self.dict_pubs[pub_name] = {}
+            self.dict_pubs[pub_name]["publisher_object"] = rospy.Publisher(
+                topic_name, pub["publisher_data_type"], queue_size=pub["queue_size"])
+
         ################################################################
 
         # fixed wing client objects
@@ -326,28 +416,39 @@ class Ui(QtWidgets.QMainWindow):
         """
             Function for sending mode selection command over RF com
         """
-        return
+        flight_mode = self.rf_com_modename_combobox.currentText()
+        active_mode_command = nav_com.active_mode(flight_mode)
+        packed_active_mode_command = msgpack.packb(active_mode_command)
+        publisher_object = self.dict_pubs["/wing_navigation_commands_publisher"]["publisher_object"]
+        msg = UInt8MultiArray()
+        msg.data = packed_active_mode_command
+        publisher_object.publish(msg)
+        # No sleep. Just one time publish, I mean publishing one message per click.
 
     def rf_com_returnhome_pushbutton_func(self):
         """
             Function for sending return to home command over RF com
         """
-        return
+        flight_mode = "RTL"
+        return_home_command = nav_com.active_mode(flight_mode)
+        packed_return_home_command = msgpack.packb(return_home_command)
+        publisher_object = self.dict_pubs["/wing_navigation_commands_publisher"]["publisher_object"]
+        msg = UInt8MultiArray()
+        msg.data = packed_return_home_command
+        publisher_object.publish(msg)
+        # No sleep. Just one time publish, I mean publishing one message per click.
 
     def rf_com_armtakeoff_pushbutton_func(self):
         """
             Function for sending arm takeoff command over RF com
         """
-        return
-
-    def gps_sub_handler(self, msg):
-        """
-            Reading GPS data from the topic which is published by the RF module
-            and visualize it in the GUI app or use it for other works.
-        """
-        # Just printing out the subscribed data into terminal to test the code correctness.
-        rospy.loginfo(
-            f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.latitude}\nlongitude: {msg.longitude}\n altitude: {msg.altitude}\n")
+        arm_takeoff_command = nav_com.arm_takeoff()
+        packed_arm_takeoff_command = msgpack.packb(arm_takeoff_command)
+        publisher_object = self.dict_pubs["/wing_navigation_commands_publisher"]["publisher_object"]
+        msg = UInt8MultiArray()
+        msg.data = packed_arm_takeoff_command
+        publisher_object.publish(msg)
+        # No sleep. Just one time publish, I mean publishing one message per click.
 
     ##############################################################
 
