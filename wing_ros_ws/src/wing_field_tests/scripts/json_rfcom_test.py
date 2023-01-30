@@ -61,8 +61,8 @@ def writer_worker(port, test_command_obj):
     if not port.isOpen():
         port.open()
     while not rospy.is_shutdown():
-        rospy.loginfo(f"{test_command_obj.system} writer thread writes!")
-        msg_obj = test_command.test_message(f"{test_command_obj.system}", wc)
+        rospy.loginfo(f"{test_command_obj._system} writer thread writes!")
+        msg_obj = test_command.test_message(f"{test_command_obj._system}", wc)
         msg = test_command.message_encoder(msg_obj)
         port.write(msg)
         wc += 1
@@ -93,8 +93,6 @@ def reader_worker(port, test_command_obj):
 
 
 if __name__ == "__main__":
-    rospy.init_node("gcs_rftester_node")
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output")
     parser.add_argument("-s", "--system")
@@ -102,6 +100,8 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--baudrate", default=57600)
 
     args = parser.parse_args()
+
+    rospy.init_node(f"{args.system}_rftester_node")
 
     port = serial.Serial(args.serial_port, baudrate=args.baudrate, timeout=1.0)
 
