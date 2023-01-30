@@ -78,6 +78,8 @@ def reader_worker(port, test_command_obj):
     if not port.isOpen():
         port.open()
 
+    sender = "RPI" if test_command_obj._system == "GCS" else "GCS"
+
     while not rospy.is_shutdown():
         msg_str = test_command.port_to_str(port)
         if len(msg_str) == 0:
@@ -87,7 +89,7 @@ def reader_worker(port, test_command_obj):
             test_command_obj.reader_objs_to_log.append(msg_obj)
         except:
             test_command_obj.reader_objs_to_log.append(
-                "Bad Date received and can't be decoded!")
+                f"Bad Date received from {sender} and can't be decoded!")
 
     return
 
