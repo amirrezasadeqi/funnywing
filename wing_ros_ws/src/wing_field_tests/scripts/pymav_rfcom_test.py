@@ -55,7 +55,7 @@ def writer_worker(port, data_logger_obj):
 def reader_worker(port, data_logger_obj):
     sender = "RPI" if data_logger_obj._system == "GCS" else "GCS"
     while not rospy.is_shutdown():
-        msg = port.recv_match(blocking=True)
+        msg = port.recv_match(blocking=True, timeout=1.0)
         if not msg:
             continue
         elif msg.get_type() == "BAD_DATA":
@@ -94,9 +94,9 @@ if __name__ == "__main__":
     data_logger_obj = data_logger(args.system, args.output)
 
     writer_thread = threading.Thread(
-        target=writer_worker, args=(port))
+        target=writer_worker, args=(port, data_logger_obj))
     reader_thread = threading.Thread(
-        target=reader_worker, args=(port))
+        target=reader_worker, args=(port, data_logger_obj))
 
     writer_thread.start()
     reader_thread.start()
