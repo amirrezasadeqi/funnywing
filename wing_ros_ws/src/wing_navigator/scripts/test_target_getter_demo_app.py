@@ -51,9 +51,12 @@ class subscription_worker(QObject):
 
     def __init__(self):
         super(subscription_worker, self).__init__()
-        self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler}
+        self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler,
+                                     "cmd_resp_handler": self.cmd_resp_handler}
         self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic",
-                                   "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"}]
+                                   "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"},
+                                  {"subscriber_name": "cmd_resp_subscriber", "topic_name": "cmd_resp_topic",
+                                   "subscriber_data_type": UInt8MultiArray, "sub_handler_type": "cmd_resp_handler"}]
 
         # Initialize the container for GUI app subscriber objects.
         self.dict_subs = {}
@@ -90,6 +93,21 @@ class subscription_worker(QObject):
         # Just printing out the subscribed data into terminal to test the code correctness.
         rospy.loginfo(
             f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.latitude}\nlongitude: {msg.longitude}\n altitude: {msg.altitude}\n")
+
+    def cmd_resp_handler(self, msg):
+        '''
+            Reading Command responses from the topic which is published by the RF module
+            and gives the response the requester.
+        '''
+        mav_msg = msgpack.unpackb(msg.data)
+        # mav_msg is checked in the publisher side, so you can directly use get_type() or to_dict
+        if mav_msg.get_type() == "COMMAND_RESPONSE":
+            mav_msg = mav_msg.to_dict()
+            rospy.loginfo(
+                f"Response to Request number {mav_msg['request_number']}: {mav_msg['result']}")
+        else:
+            rospy.loginfo(
+                f"The command type {mav_msg.get_type()} is not supported yet!")
 
 #############################################################################
 
@@ -187,6 +205,17 @@ class Ui(QtWidgets.QMainWindow):
         uilink_path = uilink_if_needed()
         uic.loadUi(uilink_path, self)
 
+        self.mode_mapping = {
+            "MANUAL": 1,
+            "AUTO": 2,
+            "GUIDED": 3,
+            "TAKEOFF": 4,
+            "LOITER": 5,
+            "RTL": 6,
+            "FBWB": 7,
+            "CIRCLE": 8,
+            "FBWA": 9
+        }
         ################################################################
         # Adding Subscription to sensor data for visualization in GUI.
         # this section is under test and developement.
@@ -415,22 +444,29 @@ class Ui(QtWidgets.QMainWindow):
     def rf_com_activemode_pushbutton_func(self):
         """
             Function for sending mode selection command over RF com
+            Note: This function sends the commands but does not receive
+            the response.
         """
         flight_mode = self.rf_com_modename_combobox.currentText()
-        active_mode_command = nav_com.active_mode(flight_mode)
+        flight_mode_number = self.mode_mapping[flight_mode]
+        active_mode_command = nav_com.active_mode(
+            flight_mode, flight_mode_number)
         packed_active_mode_command = msgpack.packb(active_mode_command)
         publisher_object = self.dict_pubs["/wing_navigation_commands_publisher"]["publisher_object"]
         msg = UInt8MultiArray()
         msg.data = packed_active_mode_command
         publisher_object.publish(msg)
         # No sleep. Just one time publish, I mean publishing one message per click.
+        # TODO: add the ability to get the response of the command
 
     def rf_com_returnhome_pushbutton_func(self):
         """
             Function for sending return to home command over RF com
         """
         flight_mode = "RTL"
-        return_home_command = nav_com.active_mode(flight_mode)
+        flight_mode_number = self.mode_mapping[flight_mode]
+        return_home_command = nav_com.active_mode(
+            flight_mode, flight_mode_number)
         packed_return_home_command = msgpack.packb(return_home_command)
         publisher_object = self.dict_pubs["/wing_navigation_commands_publisher"]["publisher_object"]
         msg = UInt8MultiArray()

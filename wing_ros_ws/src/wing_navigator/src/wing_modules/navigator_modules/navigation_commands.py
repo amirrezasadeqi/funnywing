@@ -3,10 +3,11 @@
 
 class navigation_commands:
     @staticmethod
-    def active_mode(flight_mode):
+    def active_mode(flight_mode, flight_mode_number):
         return {
             "command_type": "active_mode",
-            "flight_mode": flight_mode
+            "flight_mode": flight_mode,
+            "flight_mode_number": flight_mode_number
         }
 
     @staticmethod

@@ -2,12 +2,13 @@
 
 import rospy
 import threading
-import os
+import msgpack
 import time
 import argparse
+import os
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix, NavSatStatus
-from std_msgs.msg import String
+from std_msgs.msg import Header, String, UInt8MultiArray
 from wing_modules.navigator_modules.TimerAP import TimerAP
 
 
@@ -23,33 +24,95 @@ def reader_worker(port, input_msgs):
 def pub_worker(input_msgs):
 
     gps_pub = rospy.Publisher(
-        "funnywing_gps", NavSatFix, queue_size=1)
+        "/wing_gps_topic", NavSatFix, queue_size=1)
 
+    # To prevent definition of new ROS messages we encode data to bytes
+    # using msgpack and publish them with UInt8MultiArray type.
     cmd_resp_pub = rospy.Publisher(
-        "funnywing_cmd_resp", String, queue_size=1)
+        "/wing_cmd_resp_topic", UInt8MultiArray, queue_size=1)
 
     while not rospy.is_shutdown():
         if len(input_msgs) != 0:
             msg = input_msgs.pop(0)
-            if (not msg) and (msg.get_type() == "BAD_DATA"):
+            if not msg:
+                continue
+            elif msg.get_type() == "BAD_DATA":
                 continue
             else:
-                publisher = gps_pub if msg.get_type() == "GPS_DATA" else cmd_resp_pub
-                msg = mav_to_ros_msg(msg)
-                publisher.publish(msg)
+                publisher = gps_pub if msg.get_type() == "GLOBAL_POSITION_INT" else cmd_resp_pub
+                ros_msg = mav_to_ros_msg(msg)
+                if ros_msg is not None:
+                    publisher.publish(ros_msg)
         else:
             continue
 
 
 def mav_to_ros_msg(msg):
     '''converts mavlink message into ros message'''
-    return msg
+    if msg.get_type() == "GLOBAL_POSITION_INT":
+        # convert msg to NavSatFix
+        ros_msg = NavSatFix()
+        ros_msg.header = Header()
+        ros_msg.header.stamp = rospy.Time.now()
+        ros_msg.header.frame_id = 'gps'
+        # The lat and long are scaled due to low resolution of floats, so descale them.
+        ros_msg.latitude = msg.lat / 1.0e7
+        ros_msg.longitude = msg.lon / 1.0e7
+        ros_msg.altitude = msg.relative_alt / 1000.0
+        ros_msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+        ros_msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+    elif msg.get_type() == "COMMAND_RESPONSE":
+        # Convert msg to a ROS type to publish it
+        # You can use enums "MAV_RESULT_ACCEPTED/FAILED" for simple pass and fail
+        ros_msg = UInt8MultiArray()
+        ros_msg.data = msgpack.packb(msg)
+    else:
+        ros_msg = None
+
+    return ros_msg
+
+
+class cmd_subscriber_and_sender:
+    """
+    A class containing the subscriber object listening to the command topic
+    and on callback converts ROS messages to mavlink messages and sends them 
+    to the RPI.
+    """
+
+    def __init__(self, name, port):
+        self._name = name
+        self._port = port
+        self._subscriber = rospy.Subscriber(
+            "cmd_topic", UInt8MultiArray, self._callback)
+
+    def _callback(self, msg):
+        cmd_obj = msgpack.unpackb(msg.data)
+        self._send_mav_cmd(cmd_obj)
+        time.sleep(0.5)
+
+    def _send_mav_cmd(self, cmd_obj):
+        # TODO: use the wraper to automize calling the sender function.
+        if cmd_obj['command_type'] == "active_mode":
+            self._port.mav.command_long_send(
+                0, 0, mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0, mavutil.mavlink.MAV_MODE_GUIDED_ARMED, cmd_obj["flight_mode_number"], 0, 0, 0, 0, 0)
+        else:
+            rospy.loginfo(
+                f"The command type {cmd_obj['command_type']} is not supported yet!")
+
+    def inform(self):
+        rospy.loginfo(
+            f"{self._name} is listening to GUI commands and sends them to RPI!")
+
+
+def cmd_sub_and_send_worker(port):
+    cmdSubcriberSender = cmd_subscriber_and_sender("CmdSubSender", port)
+    cmdSubcriberSender.inform()
+    rospy.spin()
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output")
     parser.add_argument("-s", "--system")
     parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB0")
     parser.add_argument("-b", "--baudrate", default=57600)
@@ -67,6 +130,9 @@ if __name__ == "__main__":
         target=reader_worker, args=(port, input_msgs))
     publisher_thread = threading.Thread(
         target=pub_worker, args=(input_msgs, ))
+    cmd_sub_and_send_thread = threading.Thread(
+        target=cmd_sub_and_send_worker, args=(port, ))
 
     reader_thread.start()
     publisher_thread.start()
+    cmd_sub_and_send_thread.start()
