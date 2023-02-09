@@ -53,9 +53,9 @@ class subscription_worker(QObject):
         super(subscription_worker, self).__init__()
         self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler,
                                      "cmd_resp_handler": self.cmd_resp_handler}
-        self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic",
+        self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic_gcs",
                                    "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"},
-                                  {"subscriber_name": "cmd_resp_subscriber", "topic_name": "cmd_resp_topic",
+                                  {"subscriber_name": "cmd_resp_subscriber", "topic_name": "cmd_resp_topic_gcs",
                                    "subscriber_data_type": UInt8MultiArray, "sub_handler_type": "cmd_resp_handler"}]
 
         # Initialize the container for GUI app subscriber objects.
@@ -265,7 +265,7 @@ class Ui(QtWidgets.QMainWindow):
         ################################################################
 
         self.list_of_pubs_dict = [
-            {"publisher_name": "navigation_commands_publisher", "topic_name": "navigation_commands",
+            {"publisher_name": "navigation_commands_publisher", "topic_name": "nav_cmds_gcs",
                 "publisher_data_type": UInt8MultiArray, "queue_size": 1}
         ]
         self.dict_pubs = {}

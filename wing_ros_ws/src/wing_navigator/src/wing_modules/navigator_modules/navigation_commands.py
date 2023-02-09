@@ -15,3 +15,12 @@ class navigation_commands:
         return {
             "command_type": "arm_takeoff"
         }
+
+    @staticmethod
+    def simple_goto(lat, lon, alt):
+        return {
+            "command_type": "simple_goto",
+            "lat": lat,
+            "lon": lon,
+            "alt": alt
+        }

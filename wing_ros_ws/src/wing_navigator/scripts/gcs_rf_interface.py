@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from distutils import cmd
 import rospy
 import threading
 import msgpack
@@ -24,12 +25,12 @@ def reader_worker(port, input_msgs):
 def pub_worker(input_msgs):
 
     gps_pub = rospy.Publisher(
-        "/wing_gps_topic", NavSatFix, queue_size=1)
+        "/wing_gps_topic_gcs", NavSatFix, queue_size=1)
 
     # To prevent definition of new ROS messages we encode data to bytes
     # using msgpack and publish them with UInt8MultiArray type.
     cmd_resp_pub = rospy.Publisher(
-        "/wing_cmd_resp_topic", UInt8MultiArray, queue_size=1)
+        "/wing_cmd_resp_topic_gcs", UInt8MultiArray, queue_size=1)
 
     while not rospy.is_shutdown():
         if len(input_msgs) != 0:
@@ -83,7 +84,7 @@ class cmd_subscriber_and_sender:
         self._name = name
         self._port = port
         self._subscriber = rospy.Subscriber(
-            "cmd_topic", UInt8MultiArray, self._callback)
+            "/wing_nav_cmds_gcs", UInt8MultiArray, self._callback)
 
     def _callback(self, msg):
         cmd_obj = msgpack.unpackb(msg.data)
@@ -92,9 +93,14 @@ class cmd_subscriber_and_sender:
 
     def _send_mav_cmd(self, cmd_obj):
         # TODO: use the wraper to automize calling the sender function.
-        if cmd_obj['command_type'] == "active_mode":
+        cmd_type = cmd_obj['command_type']
+        if cmd_type == "active_mode":
             self._port.mav.command_long_send(
                 0, 0, mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0, mavutil.mavlink.MAV_MODE_GUIDED_ARMED, cmd_obj["flight_mode_number"], 0, 0, 0, 0, 0)
+        elif cmd_type == "simple_goto":
+            x, y, z = cmd_obj['lat'], cmd_obj['lon'], cmd_obj['alt']
+            self._port.mav.command_long_send(0, 0, mavutil.mavlink.MAV_CMD_OVERRIDE_GOTO, 0,
+                                             mavutil.mavlink.MAV_GOTO_DO_HOLD, mavutil.mavlink.MAV_GOTO_HOLD_AT_SPECIFIED_POSITION, 0, 0, x, y, z)
         else:
             rospy.loginfo(
                 f"The command type {cmd_obj['command_type']} is not supported yet!")

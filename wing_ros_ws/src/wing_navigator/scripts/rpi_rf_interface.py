@@ -60,10 +60,10 @@ def cmd_handle(cmd, client_obj):
     # create and fill the request object
     # call the proper request from the object
     # return response of the request
-    if cmd.get_type() == "MAV_CMD_DO_SET_MODE":
-        mode_number = cmd.to_dict()["Custom Mode"]
+    if cmd.get_type() == "COMMAND_LONG":
+        mode_number = cmd.to_dict()["param2"]
         req = ActiveModeRequest(mode_mapping[mode_number])
-        resp = {"type": "MAV_CMD_DO_SET_MODE", "sequence": None,
+        resp = {"type": "COMMAND_LONG", "sequence": None,
                 "response": client_obj.active_mode_client(req)}
         return resp
     else:
@@ -87,11 +87,17 @@ def cmd_resp_sender_worker(port, cmd_anss):
 
 
 def send_cmd_resp(port, ans):
-    if ans['type']
+    if ans['type'] == "COMMAND_LONG":
+        result = mavutil.mavlink.MAV_RESULT_ACCEPTED if ans[
+            'response'] else mavutil.mavlink.MAV_RESULT_FAILED
+        port.mav.command_ack_send(
+            mavutil.mavlink.MAV_CMD_DO_SET_MODE, result, 0, 0, 0, 0)
+    else:
+        rospy.loginfo(f"The command type {ans['type']} is not supported yet!")
 
 
 def sensor_sender_worker(port):
-    print()
+    pass
 
 
 if __name__ == "__main__":
