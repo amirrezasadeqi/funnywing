@@ -89,7 +89,6 @@ class cmd_subscriber_and_sender:
     def _callback(self, msg):
         cmd_obj = msgpack.unpackb(msg.data)
         self._send_mav_cmd(cmd_obj)
-        time.sleep(0.5)
 
     def _send_mav_cmd(self, cmd_obj):
         # TODO: use the wraper to automize calling the sender function.

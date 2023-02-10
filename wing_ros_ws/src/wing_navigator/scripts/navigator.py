@@ -65,15 +65,15 @@ if __name__ == '__main__':
 
     # Adding pub/sub capabillity to navigator agents, e.g. for monitoring drone status, like getting GPS data
     list_of_publisher_dict = [
-        {"publisher_name": "bp_publisher", "topic_name": "bp_topic",
-            "publisher_data_type": String, "rate": 4.0, "queue_size": 1, "pub_handler_type": "bp_pub_handler"},
+        # {"publisher_name": "bp_publisher", "topic_name": "bp_topic",
+        #     "publisher_data_type": String, "rate": 4.0, "queue_size": 1, "pub_handler_type": "bp_pub_handler"},
         {"publisher_name": "gps_publisher", "topic_name": "gps_topic",
             "publisher_data_type": NavSatFix, "rate": 4.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
     ]
 
     list_of_subscriber_dict = [
-        {"subscriber_name": "bp_subscriber", "topic_name": "bp_topic",
-            "subscriber_data_type": String, "sub_handler_type": "bp_sub_handler"}
+        # {"subscriber_name": "bp_subscriber", "topic_name": "bp_topic",
+        #     "subscriber_data_type": String, "sub_handler_type": "bp_sub_handler"}
     ]
 
     # nav_agent = navigator("flying_wing", connection_string, list_of_servers_dict)
