@@ -434,6 +434,17 @@ class Ui(QtWidgets.QMainWindow):
             self.rf_com_armtakeoff_pushbutton_func)
 
         ##############################################################
+        self.rf_com_simple_goto_lat = self.findChild(
+            QtWidgets.QLineEdit, "rf_com_simple_goto_lat")
+        self.rf_com_simple_goto_lon = self.findChild(
+            QtWidgets.QLineEdit, "rf_com_simple_goto_lon")
+        self.rf_com_simple_goto_alt = self.findChild(
+            QtWidgets.QLineEdit, "rf_com_simple_goto_alt")
+        self.rf_com_simple_goto_push_button = self.findChild(
+            QtWidgets.QPushButton, "rf_com_simple_goto_push_button")
+        self.rf_com_simple_goto_push_button.clicked.connect(
+            self.rf_com_simple_goto)
+        ##############################################################
 
         self.show()
 
@@ -485,6 +496,17 @@ class Ui(QtWidgets.QMainWindow):
         msg.data = packed_arm_takeoff_command
         publisher_object.publish(msg)
         # No sleep. Just one time publish, I mean publishing one message per click.
+
+    def rf_com_simple_goto(self):
+        lat = float(self.rf_com_simple_goto_lat.text())
+        lon = float(self.rf_com_simple_goto_lon.text())
+        alt = float(self.rf_com_simple_goto_alt.text())
+        simple_goto_cmd = nav_com.simple_goto(lat, lon, alt)
+        packed_simple_goto_cmd = msgpack.packb(simple_goto_cmd)
+        publisher_object = self.dict_pubs["/wing_navigation_commands_publisher"]["publisher_object"]
+        msg = UInt8MultiArray()
+        msg.data = packed_simple_goto_cmd
+        publisher_object.publish(msg)
 
     ##############################################################
 

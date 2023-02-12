@@ -5,7 +5,7 @@ import threading
 import argparse
 from pymavlink import mavutil, mavwp
 import os
-from wing_navigator.srv import ActiveModeRequest
+from wing_navigator.srv import ActiveModeRequest, SimpleGotoRequest
 from wing_modules.navigator_modules.navigator_client import navigator_client
 
 mode_mapping = {
@@ -61,11 +61,26 @@ def cmd_handle(cmd, client_obj):
     # call the proper request from the object
     # return response of the request
     if cmd.get_type() == "COMMAND_LONG":
-        mode_number = cmd.to_dict()["param2"]
-        req = ActiveModeRequest(mode_mapping[mode_number])
-        resp = {"type": "COMMAND_LONG", "sequence": None,
-                "response": client_obj.active_mode_client(req)}
-        return resp
+        cmd_as_dict = cmd.to_dict()
+        if cmd_as_dict['command'] == mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+            mode_number = cmd_as_dict["param2"]
+            req = ActiveModeRequest(mode_mapping[mode_number])
+            resp = {"type": "MAV_CMD_DO_SET_MODE", "sequence": None,
+                    "response": client_obj.active_mode_client(req)}
+            return resp
+        elif cmd_as_dict['command'] == mavutil.mavlink.MAV_CMD_OVERRIDE_GOTO:
+            req = SimpleGotoRequest()
+            req.lat = cmd_as_dict['param5']
+            req.lon = cmd_as_dict['param6']
+            req.alt = cmd_as_dict['param7']
+            resp = {"type": "MAV_CMD_OVERRIDE_GOTO", "sequence": None,
+                    "response": client_obj.simple_goto_client(req)}
+            return resp
+        else:
+            rospy.loginfo(
+                f"The command type {cmd.get_type()} is not supported yet!")
+            resp = {"type": None, "sequence": None, "response": None}
+            return resp
     else:
         rospy.loginfo(
             f"The command type {cmd.get_type()} is not supported yet!")
@@ -87,11 +102,16 @@ def cmd_resp_sender_worker(port, cmd_anss):
 
 
 def send_cmd_resp(port, ans):
-    if ans['type'] == "COMMAND_LONG":
+    if ans['type'] == "MAV_CMD_DO_SET_MODE":
         result = mavutil.mavlink.MAV_RESULT_ACCEPTED if ans[
             'response'] else mavutil.mavlink.MAV_RESULT_FAILED
         port.mav.command_ack_send(
             mavutil.mavlink.MAV_CMD_DO_SET_MODE, result, 0, 0, 0, 0)
+    elif ans['type'] == "MAV_CMD_OVERRIDE_GOTO":
+        result = mavutil.mavlink.MAV_RESULT_ACCEPTED if ans[
+            'response'] else mavutil.mavlink.MAV_RESULT_FAILED
+        port.mav.command_ack_send(
+            mavutil.mavlink.MAV_CMD_OVERRIDE_GOTO, result, 0, 0, 0, 0)
     else:
         rospy.loginfo(f"The command type {ans['type']} is not supported yet!")
 

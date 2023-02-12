@@ -1146,8 +1146,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>98</width>
-          <height>28</height>
+          <width>921</width>
+          <height>355</height>
          </rect>
         </property>
         <attribute name="label">
@@ -1179,7 +1179,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="1" column="1">
-            <widget class="QLineEdit" name="lineEdit_9"/>
+            <widget class="QLineEdit" name="rf_com_simple_goto_lon"/>
            </item>
            <item row="0" column="1">
             <widget class="QLabel" name="label_15">
@@ -1189,10 +1189,10 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLineEdit" name="lineEdit_10"/>
+            <widget class="QLineEdit" name="rf_com_simple_goto_lat"/>
            </item>
            <item row="1" column="2">
-            <widget class="QLineEdit" name="lineEdit_11"/>
+            <widget class="QLineEdit" name="rf_com_simple_goto_alt"/>
            </item>
            <item row="0" column="2">
             <widget class="QLabel" name="label_16">
@@ -1210,7 +1210,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QPushButton" name="pushButton_17">
+         <widget class="QPushButton" name="rf_com_simple_goto_push_button">
           <property name="geometry">
            <rect>
             <x>360</x>
@@ -1418,8 +1418,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>921</width>
-          <height>386</height>
+          <width>98</width>
+          <height>28</height>
          </rect>
         </property>
         <attribute name="label">
@@ -1597,8 +1597,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>921</width>
-          <height>355</height>
+          <width>98</width>
+          <height>28</height>
          </rect>
         </property>
         <attribute name="label">
@@ -1622,6 +1622,14 @@
         </widget>
        </widget>
        <widget class="QWidget" name="page_8">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>98</width>
+          <height>28</height>
+         </rect>
+        </property>
         <attribute name="label">
          <string>Sensor Data Log</string>
         </attribute>
