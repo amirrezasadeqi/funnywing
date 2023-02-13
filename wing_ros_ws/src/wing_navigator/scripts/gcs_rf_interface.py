@@ -10,6 +10,7 @@ import os
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from std_msgs.msg import Header, String, UInt8MultiArray
+from wing_navigator.msg import GLOBAL_POSITION_INT
 from wing_modules.navigator_modules.TimerAP import TimerAP
 
 
@@ -25,7 +26,7 @@ def reader_worker(port, input_msgs):
 def pub_worker(input_msgs):
 
     gps_pub = rospy.Publisher(
-        "/wing_gps_topic_gcs", NavSatFix, queue_size=1)
+        "/wing_gps_topic_gcs", GLOBAL_POSITION_INT, queue_size=1)
 
     # To prevent definition of new ROS messages we encode data to bytes
     # using msgpack and publish them with UInt8MultiArray type.
@@ -51,17 +52,36 @@ def pub_worker(input_msgs):
 def mav_to_ros_msg(msg):
     '''converts mavlink message into ros message'''
     if msg.get_type() == "GLOBAL_POSITION_INT":
-        # convert msg to NavSatFix
-        ros_msg = NavSatFix()
-        ros_msg.header = Header()
-        ros_msg.header.stamp = rospy.Time.now()
-        ros_msg.header.frame_id = 'gps'
+        # convert mavlink msg to GLOBAL_POSITION_INT.msg type
+        ros_msg = GLOBAL_POSITION_INT()
+        ros_msg.gps_data = NavSatFix()
+        ros_msg.gps_data.header = Header()
+        ros_msg.gps_data.header.stamp = rospy.Time.from_sec(
+            msg.time_boot_ms / 1000.0)
+        ros_msg.gps_data.header.frame_id = 'gps'
         # The lat and long are scaled due to low resolution of floats, so descale them.
-        ros_msg.latitude = msg.lat / 1.0e7
-        ros_msg.longitude = msg.lon / 1.0e7
-        ros_msg.altitude = msg.relative_alt / 1000.0
-        ros_msg.status.status = NavSatStatus.STATUS_SBAS_FIX
-        ros_msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+        ros_msg.gps_data.latitude = msg.lat / 1.0e7
+        ros_msg.gps_data.longitude = msg.lon / 1.0e7
+        ros_msg.gps_data.altitude = msg.relative_alt / 1000.0
+        ros_msg.gps_data.status.status = NavSatStatus.STATUS_SBAS_FIX
+        ros_msg.gps_data.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+        # GLOBAL_POSITION_INT message velocities are in cm/sec
+        ros_msg.velocity.x = msg.vx / 100.0
+        ros_msg.velocity.y = msg.vy / 100.0
+        ros_msg.velocity.z = msg.vz / 100.0
+
+        # convert msg to NavSatFix
+        # ros_msg = NavSatFix()
+        # ros_msg.header = Header()
+        # ros_msg.header.stamp = rospy.Time.from_sec(msg.time_boot_ms / 1000.0)
+        # ros_msg.header.frame_id = 'gps'
+        # # The lat and long are scaled due to low resolution of floats, so descale them.
+        # ros_msg.latitude = msg.lat / 1.0e7
+        # ros_msg.longitude = msg.lon / 1.0e7
+        # ros_msg.altitude = msg.relative_alt / 1000.0
+        # ros_msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+        # ros_msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+
     elif msg.get_type() == "COMMAND_RESPONSE":
         # Convert msg to a ROS type to publish it
         # You can use enums "MAV_RESULT_ACCEPTED/FAILED" for simple pass and fail

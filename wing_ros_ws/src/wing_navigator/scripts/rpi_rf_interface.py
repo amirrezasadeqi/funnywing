@@ -5,6 +5,8 @@ import threading
 import argparse
 from pymavlink import mavutil, mavwp
 import os
+from sensor_msgs.msg import NavSatFix
+from wing_navigator.msg import GLOBAL_POSITION_INT
 from wing_navigator.srv import ActiveModeRequest, SimpleGotoRequest
 from wing_modules.navigator_modules.navigator_client import navigator_client
 
@@ -116,8 +118,27 @@ def send_cmd_resp(port, ans):
         rospy.loginfo(f"The command type {ans['type']} is not supported yet!")
 
 
+def gps_sub_cb(msg, port):
+    '''
+        convert ros message 'msg' to mavlink GLOBAL_POSITION_INT message
+        send message using port.mav.global_position_int_send() method
+    '''
+
+    time_stamp = int(msg.header.stamp.to_sec() * 1000.0)
+    lat = int(msg.gps_data.latitude * 1.0e7)
+    lon = int(msg.gps_data.longitude * 1.0e7)
+    relative_alt = int(msg.gps_data.altitude * 1000.0)
+    vx = int(msg.velocity.x * 100.0)
+    vy = int(msg.velocity.y * 100.0)
+    vz = int(msg.velocity.z * 100.0)
+    port.mav.global_position_int_send(
+        time_stamp, lat, lon, 0, relative_alt, vx, vy, vz, 0)
+
+
 def sensor_sender_worker(port):
-    pass
+    gps_sub = rospy.Subscriber(
+        "/wing_gps_top", GLOBAL_POSITION_INT, gps_sub_cb, (port, ))
+    rospy.spin()
 
 
 if __name__ == "__main__":

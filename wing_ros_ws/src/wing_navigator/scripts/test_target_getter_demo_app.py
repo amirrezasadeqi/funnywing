@@ -17,7 +17,7 @@ from pymavlink import mavutil
 #### Test for custom service for mission ####
 from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload, WP_list_uploadRequest
 from dronekit import Command, LocationGlobal
-from wing_navigator.msg import MissionCommand
+from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
 from wing_modules.navigator_modules.navigation_commands import navigation_commands as nav_com
 #############################################
 ### TODO: Experimental Usage of pickle ############
@@ -54,7 +54,7 @@ class subscription_worker(QObject):
         self.subs_handler_mapping = {"gps_sub_handler": self.gps_sub_handler,
                                      "cmd_resp_handler": self.cmd_resp_handler}
         self.list_of_subs_dict = [{"subscriber_name": "gps_subscriber", "topic_name": "gps_topic_gcs",
-                                   "subscriber_data_type": NavSatFix, "sub_handler_type": "gps_sub_handler"},
+                                   "subscriber_data_type": GLOBAL_POSITION_INT, "sub_handler_type": "gps_sub_handler"},
                                   {"subscriber_name": "cmd_resp_subscriber", "topic_name": "cmd_resp_topic_gcs",
                                    "subscriber_data_type": UInt8MultiArray, "sub_handler_type": "cmd_resp_handler"}]
 
@@ -92,7 +92,7 @@ class subscription_worker(QObject):
         """
         # Just printing out the subscribed data into terminal to test the code correctness.
         rospy.loginfo(
-            f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.latitude}\nlongitude: {msg.longitude}\n altitude: {msg.altitude}\n")
+            f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.gps_data.latitude}\nlongitude: {msg.gps_data.longitude}\n altitude: {msg.gps_data.altitude}\n")
 
     def cmd_resp_handler(self, msg):
         '''

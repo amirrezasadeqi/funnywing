@@ -5,6 +5,7 @@ import argparse
 # test
 from std_msgs.msg import String
 from sensor_msgs.msg import NavSatFix
+from wing_navigator.msg import GLOBAL_POSITION_INT
 
 from wing_navigator.srv import ActiveMode, ArmTakeoff, PreDefMission, SimpleGoto, MissionInOut, WP_list_save, WP_list_upload
 # from wing_navigator.srv import *
@@ -68,7 +69,7 @@ if __name__ == '__main__':
         # {"publisher_name": "bp_publisher", "topic_name": "bp_topic",
         #     "publisher_data_type": String, "rate": 4.0, "queue_size": 1, "pub_handler_type": "bp_pub_handler"},
         {"publisher_name": "gps_publisher", "topic_name": "gps_topic",
-            "publisher_data_type": NavSatFix, "rate": 4.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
+            "publisher_data_type": GLOBAL_POSITION_INT, "rate": 4.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
     ]
 
     list_of_subscriber_dict = [

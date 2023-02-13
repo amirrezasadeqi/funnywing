@@ -10,7 +10,7 @@ from wing_modules.navigator_modules.TimerAP import TimerAP
 
 #### Test for custom service for mission ####
 from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
-from wing_navigator.msg import MissionCommand
+from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
 #############################################
 ### Experimental Usage of pickle ############
 import pickle
@@ -583,19 +583,33 @@ class navigator:
 
     def gps_pub_handler(self, arg_list, event=None):
         """
-            Read and publish GPS sensor data on rospy.TimerAP callbacks
+            Read and publish GPS sensor data(position and velocity) on rospy.TimerAP callbacks
         """
         # Reading data and substitude it in the msg container
         location = self.vehicle.location.global_relative_frame
+        # reading the velocity of the
+        velocity = self.vehicle.velocity
 
-        msg = NavSatFix()
-        msg.header = self.__get_header__()
-        msg.header.frame_id = 'gps'
-        msg.latitude = float(location.lat)
-        msg.longitude = float(location.lon)
-        msg.altitude = float(location.alt)
-        msg.status.status = NavSatStatus.STATUS_SBAS_FIX
-        msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+        msg = GLOBAL_POSITION_INT()
+        msg.gps_data.header = self.__get_header__()
+        msg.gps_data.header.frame_id = 'gps'
+        msg.gps_data.latitude = float(location.lat)
+        msg.gps_data.longitude = float(location.lon)
+        msg.gps_data.altitude = float(location.alt)
+        msg.gps_data.status.status = NavSatStatus.STATUS_SBAS_FIX
+        msg.gps_data.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
+        msg.velocity.x = float(velocity[0])
+        msg.velocity.y = float(velocity[1])
+        msg.velocity.z = float(velocity[2])
+
+        # msg = NavSatFix()
+        # msg.header = self.__get_header__()
+        # msg.header.frame_id = 'gps'
+        # msg.latitude = float(location.lat)
+        # msg.longitude = float(location.lon)
+        # msg.altitude = float(location.alt)
+        # msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+        # msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS | NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO
 
         publisher_object = self.dict_pubs[arg_list[0]]["publisher_object"]
         # Publishing the GPS message

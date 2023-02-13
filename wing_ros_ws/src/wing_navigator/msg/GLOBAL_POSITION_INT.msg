@@ -1,0 +1,2 @@
+sensor_msgs/NavSatFix gps_data
+geometry_msgs/Vector3 velocity
