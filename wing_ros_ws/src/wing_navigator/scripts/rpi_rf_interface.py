@@ -118,26 +118,36 @@ def send_cmd_resp(port, ans):
         rospy.loginfo(f"The command type {ans['type']} is not supported yet!")
 
 
-def gps_sub_cb(msg, port):
+def gps_sub_cb(msg, args):
     '''
         convert ros message 'msg' to mavlink GLOBAL_POSITION_INT message
         send message using port.mav.global_position_int_send() method
     '''
-
-    time_stamp = int(msg.header.stamp.to_sec() * 1000.0)
+    port = args[0]
+    # TODO: time_stamp value is limited to uint32_t max value(4294967295)
+    # and in RPI side usually rospy time becomes more than this value, so
+    # mavlink can't encode the message. Simple solution would be setting 
+    # time stamp to reminder of the rospy time divided by uint32_t max. the
+    # more complete solution is synchronization of the systems over RF link
+    # and for this we can use serial port synchronization methods or using 
+    # ros /clock topic which needs this topic's data being transferred over
+    # RF link. for now let's do the job and more important things!
+    time_stamp = int(msg.gps_data.header.stamp.to_sec() * 1000.0)
     lat = int(msg.gps_data.latitude * 1.0e7)
     lon = int(msg.gps_data.longitude * 1.0e7)
     relative_alt = int(msg.gps_data.altitude * 1000.0)
     vx = int(msg.velocity.x * 100.0)
     vy = int(msg.velocity.y * 100.0)
     vz = int(msg.velocity.z * 100.0)
+    # port.mav.global_position_int_send(
+    #     time_stamp, lat, lon, 0, relative_alt, vx, vy, vz, 0)
     port.mav.global_position_int_send(
-        time_stamp, lat, lon, 0, relative_alt, vx, vy, vz, 0)
+        0, lat, lon, 0, relative_alt, vx, vy, vz, 0)
 
 
 def sensor_sender_worker(port):
     gps_sub = rospy.Subscriber(
-        "/wing_gps_top", GLOBAL_POSITION_INT, gps_sub_cb, (port, ))
+        "/wing_gps_topic", GLOBAL_POSITION_INT, gps_sub_cb, (port, ))
     rospy.spin()
 
 
