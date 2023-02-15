@@ -19,6 +19,8 @@ from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload
 from dronekit import Command, LocationGlobal
 from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
 from wing_modules.navigator_modules.navigation_commands import navigation_commands as nav_com
+import pymap3d as pm
+import numpy as np
 #############################################
 ### TODO: Experimental Usage of pickle ############
 import pickle
@@ -43,6 +45,65 @@ class client_worker(QObject):
         print(f"{tg_client.name} Requests for Arm and Takeoff vehicle")
         # print("Request Result: %s"%arm_takeoff_client(req))
         print("Request Result: %s" % tg_client.arm_takeoff_client(req))
+        self.finished.emit()
+
+
+def real2virt_target_pos_converter(tg_global_pos, tg_global_lon, tg_global_alt, fw_lat, fw_lon, fw_alt, offset):
+    lat0, lon0, alt0 = 35.41323864, 51.15932969, 1007
+    tg_local_pos = pm.geodetic2enu(
+        tg_global_pos, tg_global_lon, tg_global_alt, lat0, lon0, alt0)
+    fw_local_pos = pm.geodetic2enu(
+        fw_lat, fw_lon, fw_alt, lat0, lon0, alt0)
+    diff_vec = np.array(tg_local_pos) - np.array(fw_local_pos)
+    diff_unit_vec = diff_vec/np.linalg.norm(diff_vec)
+    virt_tg_local_pos = tg_local_pos + offset * diff_unit_vec
+    virt_tg_global_pos = pm.enu2geodetic(
+        virt_tg_local_pos[0], virt_tg_local_pos[1], virt_tg_local_pos[2], lat0, lon0, alt0)
+    virt_tg_lat = virt_tg_global_pos[0]
+    virt_tg_lon = virt_tg_global_pos[1]
+    virt_tg_alt = virt_tg_global_pos[2]
+    return virt_tg_lat, virt_tg_lon, virt_tg_alt
+
+
+class run_test_worker(QObject):
+    finished = pyqtSignal()
+
+    def __init__(self, test_type="simple_tracker"):
+        super(run_test_worker, self).__init__()
+        self._test_type = test_type
+        self._test_handler = {
+            "simple_tracker": self._simple_tracker_callback,
+            "pn_tracker": self._pn_tracker_callback,
+            "unknown": self._unknown
+        }
+
+    def _simple_tracker_callback(self, msg, args):
+        publisher = args[0]
+        # real target gps location
+        tg_lat = msg.gps_data.latitude
+        tg_lon = msg.gps_data.longitude
+        tg_alt = msg.gps_data.altitude
+        fw_lat, fw_lon, fw_alt = last_fw_global_pos[0], last_fw_global_pos[1], last_fw_global_pos[2]
+        virt_tg_lat, virt_tg_lon, virt_tg_alt = real2virt_target_pos_converter(
+            tg_lat, tg_lon, tg_alt, fw_lat, fw_lon, fw_alt, 120)
+        cmd = nav_com.simple_goto(virt_tg_lat, virt_tg_lon, virt_tg_alt)
+        packed_cmd = msgpack.packb(cmd)
+        cmd_msg = UInt8MultiArray()
+        cmd_msg.data = packed_cmd
+        publisher.publish(cmd_msg)
+
+    def _pn_tracker_callback(self, msg, args):
+        rospy.loginfo("This tracking algorithm is Not implemented yet!")
+
+    def _unknown(self, msg, args):
+        rospy.loginfo("Unsupported type of tracker!")
+
+    def run(self):
+        publisher = rospy.Publisher(
+            "/wing_nav_cmds_gcs", UInt8MultiArray, queue_size=1)
+        tg_gps_subscriber = rospy.Subscriber(
+            "/target_gps_topic", GLOBAL_POSITION_INT, self._test_handler[self._test_type], (publisher, ))
+        rospy.spin()
         self.finished.emit()
 
 
@@ -91,8 +152,10 @@ class subscription_worker(QObject):
             and visualize it in the GUI app or use it for other works.
         """
         # Just printing out the subscribed data into terminal to test the code correctness.
-        rospy.loginfo(
-            f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.gps_data.latitude}\nlongitude: {msg.gps_data.longitude}\n altitude: {msg.gps_data.altitude}\n")
+        # rospy.loginfo(
+        #     f"\nSome data to check embedding subscriber into GUI app:\nlatitude: {msg.gps_data.latitude}\nlongitude: {msg.gps_data.longitude}\n altitude: {msg.gps_data.altitude}\n")
+        last_fw_global_pos = [msg.gps_data.latitude,
+                              msg.gps_data.longitude, msg.gps_data.altitude]
 
     def cmd_resp_handler(self, msg):
         '''
@@ -229,7 +292,8 @@ class Ui(QtWidgets.QMainWindow):
 
         # setup and start the seperated thread for subscriptions.
         self.subs_thread = QThread()
-        self.subs_worker = subscription_worker()  # This also creates the subscribers
+        # This also creates the subscribers and encapsulates the last gps data of funnywing
+        self.subs_worker = subscription_worker()
         self.subs_worker.moveToThread(self.subs_thread)
         # subscription by spin() which starts by thread start
         self.subs_thread.started.connect(self.subs_worker.run)
@@ -445,6 +509,14 @@ class Ui(QtWidgets.QMainWindow):
         self.rf_com_simple_goto_push_button.clicked.connect(
             self.rf_com_simple_goto)
         ##############################################################
+        self.simple_tracker_radiobutton = self.findChild(
+            QtWidgets.QRadioButton, "simple_tracker_radiobutton")
+        self.pn_tracker_radiobutton = self.findChild(
+            QtWidgets.QRadioButton, "pn_tracker_radiobutton")
+        self.run_test_pushbutton = self.findChild(
+            QtWidgets.QPushButton, "run_test_pushbutton")
+        self.run_test_pushbutton.clicked.connect(self.run_test_pushbutton_func)
+        ##############################################################
 
         self.show()
 
@@ -507,6 +579,24 @@ class Ui(QtWidgets.QMainWindow):
         msg = UInt8MultiArray()
         msg.data = packed_simple_goto_cmd
         publisher_object.publish(msg)
+
+    def run_test_pushbutton_func(self):
+        if self.simple_tracker_radiobutton.isChecked():
+            test_type = "simple_tracker"
+        elif self.pn_tracker_radiobutton.isChecked():
+            test_type = "pn_tracker"
+        else:
+            test_type = "unknown"
+
+        self.run_test_thread = QThread()
+        self.run_test_worker = run_test_worker(test_type)
+        self.run_test_worker.moveToThread(self.run_test_thread)
+        self.run_test_thread.started.connect(self.run_test_worker.run)
+        self.run_test_thread.finished.connect(self.run_test_thread.quit)
+        self.run_test_worker.finished.connect(
+            self.run_test_worker.deleteLater)
+        self.run_test_thread.finished.connect(self.run_test_thread.deleteLater)
+        self.run_test_thread.start()
 
     ##############################################################
 
@@ -600,22 +690,24 @@ class Ui(QtWidgets.QMainWindow):
 
     # Using QThread to prevent GUI freezes
     def tg_arm_takeoff(self):
-        self.thread = QThread()
+        self.tg_arm_takeoff_thread = QThread()
         self.tg_client_worker = client_worker()
-        self.tg_client_worker.moveToThread(self.thread)
-        self.thread.started.connect(self.tg_client_worker.run)
-        self.thread.finished.connect(self.thread.quit)
+        self.tg_client_worker.moveToThread(self.tg_arm_takeoff_thread)
+        self.tg_arm_takeoff_thread.started.connect(self.tg_client_worker.run)
+        self.tg_arm_takeoff_thread.finished.connect(
+            self.tg_arm_takeoff_thread.quit)
         self.tg_client_worker.finished.connect(
             self.tg_client_worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.start()
+        self.tg_arm_takeoff_thread.finished.connect(
+            self.tg_arm_takeoff_thread.deleteLater)
+        self.tg_arm_takeoff_thread.start()
 
         # TODO: This reset does not work currently because dronekit takeoff does not compelete
         # and I think the thread does not finish. Solve it later! for now just reactivate the
         # button on other events.
         # disable the button arm and takeoff button to prevent wrong click events
         # self.tg_arm_takeoff_button.setEnabled(False)
-        # self.thread.finished.connect(
+        # self.tg_arm_takeoff_thread.finished.connect(
         #         # activate the button after thread job is done.
         #         lambda : self.tg_arm_takeoff_button.setEnabled(True)
         #         )
@@ -805,5 +897,7 @@ class Ui(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     rospy.init_node("clien_app")
     app = QtWidgets.QApplication(sys.argv)
+    global last_fw_global_pos
+    last_fw_global_pos = [35.41323864, 51.15932969, 1007]
     window = Ui()
     sys.exit(app.exec_())
