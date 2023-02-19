@@ -21,6 +21,7 @@ from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
 from wing_modules.navigator_modules.navigation_commands import navigation_commands as nav_com
 import pymap3d as pm
 import numpy as np
+import threading
 #############################################
 ### TODO: Experimental Usage of pickle ############
 import pickle
@@ -516,6 +517,10 @@ class Ui(QtWidgets.QMainWindow):
         self.run_test_pushbutton = self.findChild(
             QtWidgets.QPushButton, "run_test_pushbutton")
         self.run_test_pushbutton.clicked.connect(self.run_test_pushbutton_func)
+        self.stop_test_pushbutton = self.findChild(
+            QtWidgets.QPushButton, "stop_test_pushbutton")
+        self.stop_test_pushbutton.clicked.connect(
+            self.stop_test_pushbutton_func)
         ##############################################################
 
         self.show()
@@ -580,7 +585,50 @@ class Ui(QtWidgets.QMainWindow):
         msg.data = packed_simple_goto_cmd
         publisher_object.publish(msg)
 
+    def _simple_tracker_callback(self, msg, args):
+        publisher = args[0]
+        # real target gps location
+        tg_lat = msg.gps_data.latitude
+        tg_lon = msg.gps_data.longitude
+        tg_alt = msg.gps_data.altitude
+        fw_lat, fw_lon, fw_alt = last_fw_global_pos[0], last_fw_global_pos[1], last_fw_global_pos[2]
+        virt_tg_lat, virt_tg_lon, virt_tg_alt = real2virt_target_pos_converter(
+            tg_lat, tg_lon, tg_alt, fw_lat, fw_lon, fw_alt, 120)
+        cmd = nav_com.simple_goto(virt_tg_lat, virt_tg_lon, virt_tg_alt)
+        packed_cmd = msgpack.packb(cmd)
+        cmd_msg = UInt8MultiArray()
+        cmd_msg.data = packed_cmd
+        publisher.publish(cmd_msg)
+
+    def _pn_tracker_callback(self, msg, args):
+        rospy.loginfo("This tracking algorithm is Not implemented yet!")
+
+    def _unknown(self, msg, args):
+        rospy.loginfo("Unsupported type of tracker!")
+
     def run_test_pushbutton_func(self):
+
+        self.test_event = threading.Event()
+        self.run_test_thread = threading.Thread(
+            target=self._run_test_worker, args=(self.test_event, ))
+        self.run_test_thread.start()
+        # self.run_test_thread = QThread()
+        # self.run_test_worker = run_test_worker(test_type)
+        # self.run_test_worker.moveToThread(self.run_test_thread)
+        # self.run_test_thread.started.connect(self.run_test_worker.run)
+        # self.run_test_thread.finished.connect(self.run_test_thread.quit)
+        # self.run_test_worker.finished.connect(
+        #     self.run_test_worker.deleteLater)
+        # self.run_test_thread.finished.connect(self.run_test_thread.deleteLater)
+        # self.run_test_thread.start()
+
+    def _run_test_worker(self):
+        self._test_handler = {
+            "simple_tracker": self._simple_tracker_callback,
+            "pn_tracker": self._pn_tracker_callback,
+            "unknown": self._unknown
+        }
+
         if self.simple_tracker_radiobutton.isChecked():
             test_type = "simple_tracker"
         elif self.pn_tracker_radiobutton.isChecked():
@@ -588,17 +636,18 @@ class Ui(QtWidgets.QMainWindow):
         else:
             test_type = "unknown"
 
-        self.run_test_thread = QThread()
-        self.run_test_worker = run_test_worker(test_type)
-        self.run_test_worker.moveToThread(self.run_test_thread)
-        self.run_test_thread.started.connect(self.run_test_worker.run)
-        self.run_test_thread.finished.connect(self.run_test_thread.quit)
-        self.run_test_worker.finished.connect(
-            self.run_test_worker.deleteLater)
-        self.run_test_thread.finished.connect(self.run_test_thread.deleteLater)
-        self.run_test_thread.start()
+        self.publisher = rospy.Publisher(
+            "/wing_nav_cmds_gcs", UInt8MultiArray, queue_size=1)
+        self.tg_gps_subscriber = rospy.Subscriber(
+            "/target_gps_topic", GLOBAL_POSITION_INT, self._test_handler[test_type], (self.publisher, ))
+        # rospy.spin()
 
-    ##############################################################
+    def stop_test_pushbutton_func(self):
+        # if self.run_test_thread and self.run_test_thread.isRunning():
+        # self.run_test_thread.quit()
+        # self.run_test_thread.wait()
+        self.run_test_thread.join()
+        ##############################################################
 
     def get_gazebo_world_file(self):
         worldfile, _ = QtWidgets.QFileDialog.getOpenFileName(

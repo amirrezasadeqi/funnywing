@@ -10,10 +10,16 @@ if __name__ == "__main__":
     r = rospy.Rate(4)
     pub = rospy.Publisher("/target_gps_topic",
                           GLOBAL_POSITION_INT, queue_size=1)
+    step = 0.000040
+    counter = 0
     msg = GLOBAL_POSITION_INT()
-    msg.gps_data.latitude = 35.41330190
-    msg.gps_data.longitude = 51.15932984
-    msg.gps_data.altitude = 50
     while not rospy.is_shutdown():
+        msg.gps_data.latitude = 35.41330190 + counter * step
+        msg.gps_data.longitude = 51.15932984
+        msg.gps_data.altitude = 1200
         pub.publish(msg)
+        if counter <= 50:
+            counter += 1
+        else:
+            counter = 0
         r.sleep()

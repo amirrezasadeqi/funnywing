@@ -1,0 +1,7 @@
+git
+tmux
+ros-noetic
+python3-pyqt5
+neovim
+python-is-python3
+
