@@ -107,7 +107,7 @@ class cmd_subscriber_and_sender:
             "/wing_nav_cmds_gcs", UInt8MultiArray, self._callback)
 
     def _callback(self, msg):
-        cmd_obj = msgpack.unpackb(msg.data)
+        cmd_obj = msgpack.unpackb(msg.data, encoding="utf-8")
         self._send_mav_cmd(cmd_obj)
 
     def _send_mav_cmd(self, cmd_obj):
