@@ -1,6 +1,8 @@
 #include "marble/GeoDataCoordinates.h"
 #include "marble/GeoDataDocument.h"
+#include "marble/GeoDataIconStyle.h"
 #include "marble/GeoDataPlacemark.h"
+#include "marble/GeoDataStyle.h"
 #include "marble/GeoDataTreeModel.h"
 #include "marble/MarbleModel.h"
 #include "marble/MarbleWidget.h"
@@ -12,8 +14,10 @@
 #include <QThread>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <marble/GeoDataStyle.h>
 #include <qboxlayout.h>
 #include <qobjectdefs.h>
+#include <ros/package.h>
 #include <ros/ros.h>
 #include <string>
 #include <wing_navigator/GLOBAL_POSITION_INT.h>
@@ -41,7 +45,7 @@ private:
 };
 
 gps_subscriber::gps_subscriber(ros::NodeHandle *nh) : QObject() {
-  wing_sub = nh->subscribe("/wing_gps_topic_gcs", 1,
+  wing_sub = nh->subscribe("/wing_gps_topic", 1,
                            &gps_subscriber::gps_sub_callback, this);
   target_sub = nh->subscribe("/target_gps_topic", 1,
                              &gps_subscriber::tg_gps_sub_callback, this);
@@ -108,8 +112,25 @@ Window::Window(const ros::NodeHandle &nh, QWidget *parent)
   m_marbleWidget->centerOn(test_location);
   m_marbleWidget->setZoom(2300);
 
+  std::string icon_img_dir = ros::package::getPath("wing_navigator");
+
   m_wing = new Marble::GeoDataPlacemark(QStringLiteral("wing"));
+  Marble::GeoDataStyle *wing_style = new Marble::GeoDataStyle;
+  Marble::GeoDataIconStyle wing_icon_style;
+  QString wing_icon_path =
+      QString::fromStdString(icon_img_dir + std::string("/images/wing.jpg"));
+  wing_icon_style.setIconPath(wing_icon_path);
+  wing_style->setIconStyle(wing_icon_style);
+  m_wing->setStyle(QSharedPointer<Marble::GeoDataStyle>(wing_style));
+
   m_target = new Marble::GeoDataPlacemark(QStringLiteral("target"));
+  Marble::GeoDataStyle *target_style = new Marble::GeoDataStyle;
+  Marble::GeoDataIconStyle tg_icon_style;
+  QString tg_icon_path =
+      QString::fromStdString(icon_img_dir + std::string("/images/target.jpg"));
+  tg_icon_style.setIconPath(tg_icon_path);
+  target_style->setIconStyle(tg_icon_style);
+  m_target->setStyle(QSharedPointer<Marble::GeoDataStyle>(target_style));
 
   Marble::GeoDataDocument *document = new Marble::GeoDataDocument;
 
@@ -130,7 +151,8 @@ void Window::start_subscribing() {
 
   connect(m_worker,
           SIGNAL(coordinatesChanged(Marble::GeoDataCoordinates, std::string)),
-          this, SLOT(setNewCoordinates(Marble::GeoDataCoordinates, std::string)),
+          this,
+          SLOT(setNewCoordinates(Marble::GeoDataCoordinates, std::string)),
           Qt::BlockingQueuedConnection);
 
   connect(m_thread, SIGNAL(started()), m_worker, SLOT(start_spinning()));
