@@ -6,8 +6,12 @@ project(wing_navigator)
 
 # Find catkin macros and libraries if COMPONENTS list like find_package(catkin
 # REQUIRED COMPONENTS xyz) is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs sensor_msgs geometry_msgs
-                                        message_generation)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs sensor_msgs
+                                        geometry_msgs message_generation)
+
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Network REQUIRED)
+find_package(Marble REQUIRED)
 
 # System dependencies are found with CMake's conventions find_package(Boost
 # REQUIRED COMPONENTS system)
@@ -34,7 +38,8 @@ catkin_python_setup()
 # MSG_DEP_SET to catkin_package(CATKIN_DEPENDS ...) * uncomment the add_*_files
 # sections below as needed and list every .msg/.srv/.action file to be processed
 # * uncomment the generate_messages entry below * add every package in
-# MSG_DEP_SET to generate_messages(DEPENDENCIES std_msgs sensor_msgs geometry_msgs)
+# MSG_DEP_SET to generate_messages(DEPENDENCIES std_msgs sensor_msgs
+# geometry_msgs)
 
 # Generate messages in the 'msg' folder add_message_files( FILES Message1.msg
 # Message2.msg )
@@ -168,3 +173,6 @@ catkin_install_python(
 # ${PROJECT_NAME}) endif()
 
 # Add folders to be run by python nosetests catkin_add_nosetests(test)
+add_executable(simple_marble_map src/simple_marble_map.cpp)
+target_link_libraries(simple_marble_map Marble Qt5::Widgets ${catkin_LIBRARIES})
+set_property(TARGET simple_marble_map PROPERTY AUTOMOC ON)

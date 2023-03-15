@@ -14,8 +14,8 @@ if __name__ == "__main__":
     counter = 0
     msg = GLOBAL_POSITION_INT()
     while not rospy.is_shutdown():
-        msg.gps_data.latitude = 35.41330190 + counter * step
-        msg.gps_data.longitude = 51.15932984
+        msg.gps_data.latitude = 35.74743520638767 + counter * step
+        msg.gps_data.longitude = 51.60374888014409
         msg.gps_data.altitude = 1200
         pub.publish(msg)
         if counter <= 50:
