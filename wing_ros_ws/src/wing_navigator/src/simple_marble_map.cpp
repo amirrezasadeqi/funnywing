@@ -45,7 +45,9 @@ private:
 };
 
 gps_subscriber::gps_subscriber(ros::NodeHandle *nh) : QObject() {
-  wing_sub = nh->subscribe("/wing_gps_topic", 1,
+  // TODO: If you want to use this with simulation remove the _gcs from the end
+  // of topic name.
+  wing_sub = nh->subscribe("/wing_gps_topic_gcs", 1,
                            &gps_subscriber::gps_sub_callback, this);
   target_sub = nh->subscribe("/target_gps_topic", 1,
                              &gps_subscriber::tg_gps_sub_callback, this);
