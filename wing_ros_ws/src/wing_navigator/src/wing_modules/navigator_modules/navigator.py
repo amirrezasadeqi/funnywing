@@ -314,12 +314,19 @@ class navigator:
     def simple_goto_handler(self, req):
         resp = SimpleGotoResponse()
         try:
-            print("Going to your desired position")
-            self.vehicle.mode = VehicleMode("GUIDED")
-            goto_location = LocationGlobalRelative(req.lat, req.lon, req.alt)
-            self.vehicle.simple_goto(goto_location)
-            resp.accepted = True
-            return resp
+            # TODO: This is a short time solve you should solve the locking problem
+            #       with Observing Attribute Changes in DroneKit Documentation.
+            # Adding this part to prevent locking in the guided mode
+            if "GUIDED" != self.vehicle.mode:
+                resp.accepted = False
+                return resp
+            else:
+                print("Going to your desired position")
+                # self.vehicle.mode = VehicleMode("GUIDED")
+                goto_location = LocationGlobalRelative(req.lat, req.lon, req.alt)
+                self.vehicle.simple_goto(goto_location)
+                resp.accepted = True
+                return resp
         except:
             resp.accepted = False
             return resp

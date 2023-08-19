@@ -372,6 +372,11 @@
           </item>
           <item>
            <property name="text">
+            <string>STABILIZE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>AUTO</string>
            </property>
           </item>
@@ -1094,6 +1099,11 @@
            </item>
            <item>
             <property name="text">
+             <string>STABILIZE</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
              <string>AUTO</string>
             </property>
            </item>
@@ -1597,8 +1607,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>921</width>
-          <height>355</height>
+          <width>98</width>
+          <height>28</height>
          </rect>
         </property>
         <attribute name="label">

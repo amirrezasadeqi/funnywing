@@ -271,14 +271,15 @@ class Ui(QtWidgets.QMainWindow):
 
         self.mode_mapping = {
             "MANUAL": 1,
-            "AUTO": 2,
-            "GUIDED": 3,
-            "TAKEOFF": 4,
-            "LOITER": 5,
-            "RTL": 6,
-            "FBWB": 7,
-            "CIRCLE": 8,
-            "FBWA": 9
+            "STABILIZE": 2,
+            "AUTO": 3,
+            "GUIDED": 4,
+            "TAKEOFF": 5,
+            "LOITER": 6,
+            "RTL": 7,
+            "FBWB": 8,
+            "CIRCLE": 9,
+            "FBWA": 10
         }
         ################################################################
         # Adding Subscription to sensor data for visualization in GUI.

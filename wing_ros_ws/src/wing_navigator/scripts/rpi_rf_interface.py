@@ -12,14 +12,15 @@ from wing_modules.navigator_modules.navigator_client import navigator_client
 
 mode_mapping = {
     1: "MANUAL",
-    2: "AUTO",
-    3: "GUIDED",
-    4: "TAKEOFF",
-    5: "LOITER",
-    6: "RTL",
-    7: "FBWB",
-    8: "CIRCLE",
-    9: "FBWA"
+    2: "STABILIZE",
+    3: "AUTO",
+    4: "GUIDED",
+    5: "TAKEOFF",
+    6: "LOITER",
+    7: "RTL",
+    8: "FBWB",
+    9: "CIRCLE",
+    10: "FBWA"
 }
 
 
@@ -43,6 +44,7 @@ def cmd_handler_worker(cmds, cmd_anss):
     fw_client = navigator_client("wing")
 
     while not rospy.is_shutdown():
+        # TODO: refactor these nested ifs
         if len(cmds) != 0:
             cmd = cmds.pop(0)
             if not cmd:
