@@ -19,8 +19,14 @@ def real2virt_target_pos_converter(tg_global_pos, tg_global_lon, tg_global_alt, 
     fw_local_pos = pm.geodetic2enu(
         fw_lat, fw_lon, fw_alt, lat0, lon0, alt0)
     diff_vec = np.array(tg_local_pos) - np.array(fw_local_pos)
-    diff_unit_vec = diff_vec/np.linalg.norm(diff_vec)
-    virt_tg_local_pos = tg_local_pos + offset * diff_unit_vec
+    diff_vec_norm = np.linalg.norm(diff_vec)
+    diff_unit_vec = diff_vec / diff_vec_norm
+    ##################################################################
+    # Print the Distance to target for test purposes
+    print(f"Distance to Target: {diff_vec_norm}")
+    ##################################################################
+    # virt_tg_local_pos = tg_local_pos + offset * diff_unit_vec
+    virt_tg_local_pos = fw_local_pos + offset * diff_unit_vec
     virt_tg_global_pos = pm.enu2geodetic(
         virt_tg_local_pos[0], virt_tg_local_pos[1], virt_tg_local_pos[2], lat0, lon0, alt0)
     virt_tg_lat = virt_tg_global_pos[0]
@@ -30,6 +36,8 @@ def real2virt_target_pos_converter(tg_global_pos, tg_global_lon, tg_global_alt, 
 
 
 def simple_tracker_cb(msg, args):
+    # I think this line solves the problem of not updating the funnywing position
+    global last_fw_global_pos
     if last_fw_global_pos is not None:
         publisher = args[0]
         # real target gps location
@@ -50,6 +58,7 @@ def simple_tracker_cb(msg, args):
 
 
 def fw_gps_sub_handler(msg):
+    global last_fw_global_pos
     last_fw_global_pos = [msg.gps_data.latitude,
                           msg.gps_data.longitude, msg.gps_data.altitude]
 
