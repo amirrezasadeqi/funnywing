@@ -4,6 +4,7 @@
 import rospy
 import serial
 from wing_navigator.msg import GLOBAL_POSITION_INT
+import argparse
 
 
 def parse_gngll_data(msg_as_list):
@@ -21,11 +22,24 @@ def parse_gngll_data(msg_as_list):
 if __name__ == "__main__":
     rospy.init_node("target_gps_reciever")
 
-    port = serial.Serial("/dev/ttyUSB1", 9600, timeout=1.0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB1")
+    parser.add_argument("-b", "--baudrate", default=9600)
+    args = parser.parse_args()
+
+    # AT COMMAND to set the gps rate to 5Hz: 0xC8 0x00 -> 200[ms] I think!
+    ubx_com = b'\xB5\x62\x06\x08\x06\x00\xC8\x00\x01\x00\x01\x00\xDE\x6A\xB5\x62\x06\x08\x00\x00\x0E\x30'
+    port = serial.Serial(args.serial_port, args.baudrate, timeout=1.0)
     if not port.is_open:
         port.open()
 
-    r = rospy.Rate(4)
+    # Sending command to ublox module to change the measurement rate. This change is not permanent and Restarting
+    # the module resets the configs.
+    port.write(ubx_com)
+
+    # TODO: check if you should use (measurement rate) * (number of gps data line) for the rate or not!
+    r = rospy.Rate(25)
+
     pub = rospy.Publisher("/target_gps_topic",
                           GLOBAL_POSITION_INT, queue_size=1)
     msg = GLOBAL_POSITION_INT()
