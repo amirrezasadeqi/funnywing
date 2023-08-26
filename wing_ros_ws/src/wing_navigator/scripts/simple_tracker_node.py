@@ -11,12 +11,13 @@ import numpy as np
 global last_fw_global_pos
 last_fw_global_pos = [35.41323864, 51.15932969, 1007]
 
+def msl2ellipsoid(msl_lat, msl_lon, msl_alt):
+    wgs_alt = msl_alt
+    return wgs_alt
 
-def msl2ellipsoid(lat, lon, alt):
-    return alt
-
-def ellipsoid2msl(lat, lon, alt):
-    return alt
+def ellipsoid2msl(wgs_lat, wgs_lon, wgs_alt):
+    msl_alt = wgs_alt
+    return msl_alt
 
 
 def real2virt_target_pos_converter(tg_global_lat, tg_global_lon, tg_global_alt, fw_lat, fw_lon, fw_alt, offset):
