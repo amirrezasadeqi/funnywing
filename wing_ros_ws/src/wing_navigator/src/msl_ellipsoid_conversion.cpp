@@ -1,5 +1,4 @@
 #include "msl_ellipsoid_conversion.h"
-#include <pybind11/pybind11.h>
 #include <exception>
 #include <GeographicLib/Geoid.hpp>
 #include <iostream>

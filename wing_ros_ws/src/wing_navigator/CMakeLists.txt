@@ -19,6 +19,8 @@ find_package(
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Network REQUIRED)
 find_package(Marble REQUIRED)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/geographiclib")
+find_package(GeographicLib REQUIRED)
 
 # System dependencies are found with CMake's conventions find_package(Boost
 # REQUIRED COMPONENTS system)
@@ -63,7 +65,9 @@ add_service_files(
   WP_list_save.srv
   WP_list_upload.srv
   TestPickleUpload.srv
-  PreDefMission.srv)
+  PreDefMission.srv
+  MSL_WGS_CONV.srv
+)
 
 # Generate actions in the 'action' folder add_action_files( FILES Action1.action
 # Action2.action )
@@ -183,3 +187,5 @@ catkin_install_python(
 add_executable(simple_marble_map src/simple_marble_map.cpp)
 target_link_libraries(simple_marble_map Marble Qt5::Widgets ${catkin_LIBRARIES})
 set_property(TARGET simple_marble_map PROPERTY AUTOMOC ON)
+add_executable(msl_wgs_conv_service src/msl_wgs_conv_service.cpp src/msl_ellipsoid_conversion.cpp src/msl_ellipsoid_conversion.h)
+target_link_libraries(msl_wgs_conv_service ${catkin_LIBRARIES} ${GeographicLib_LIBRARIES})
