@@ -593,7 +593,10 @@ class navigator:
             Read and publish GPS sensor data(position and velocity) on rospy.TimerAP callbacks
         """
         # Reading data and substitude it in the msg container
-        location = self.vehicle.location.global_relative_frame
+        # location = self.vehicle.location.global_relative_frame
+        # TODO: my be you should uncomment the above line and comment out the below one. because
+        # below line gives the altitude in MSL but above one in relative to home altitude.
+        location = self.vehicle.location.global_frame # Altitude relative to MSL
         # reading the velocity of the
         velocity = self.vehicle.velocity
 

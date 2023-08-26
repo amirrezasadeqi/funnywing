@@ -12,12 +12,40 @@ global last_fw_global_pos
 last_fw_global_pos = [35.41323864, 51.15932969, 1007]
 
 
-def real2virt_target_pos_converter(tg_global_pos, tg_global_lon, tg_global_alt, fw_lat, fw_lon, fw_alt, offset):
-    lat0, lon0, alt0 = 35.41323864, 51.15932969, 1007
-    tg_local_pos = pm.geodetic2enu(
-        tg_global_pos, tg_global_lon, tg_global_alt, lat0, lon0, alt0)
-    fw_local_pos = pm.geodetic2enu(
-        fw_lat, fw_lon, fw_alt, lat0, lon0, alt0)
+def msl2ellipsoid(lat, lon, alt):
+    return alt
+
+def ellipsoid2msl(lat, lon, alt):
+    return alt
+
+
+def real2virt_target_pos_converter(tg_global_lat, tg_global_lon, tg_global_alt, fw_lat, fw_lon, fw_alt, offset):
+    '''
+    Gives a virtual target ahead of the funnywing to track. GPS data converted to ECEF coordinate and after computations
+    converted back to the WGS84 coordinate frame
+    :param tg_global_lat:
+    :param tg_global_lon:
+    :param tg_global_alt: target hei
+    :param fw_lat:
+    :param fw_lon:
+    :param fw_alt: funnywing height relative to MSL.
+    :param offset: offset ahead of the funnywing
+    :return: Virtual target position in WGS84. Altitude is relative to MSL or geoid
+    '''
+    # lat0, lon0, alt0 = 35.41323864, 51.15932969, 1007
+    # tg_local_pos = pm.geodetic2enu(
+    #     tg_global_pos, tg_global_lon, tg_global_alt, lat0, lon0, alt0)
+    # fw_local_pos = pm.geodetic2enu(
+    #     fw_lat, fw_lon, fw_alt, lat0, lon0, alt0)
+
+    # TODO: convert altitude from MSL to above WGS84 ellipsoid for using it in the geodetic2ecef function
+    # tg_local_pos = pm.geodetic2ecef(tg_global_lat, tg_global_lon, tg_global_alt)
+    # fw_local_pos = pm.geodetic2ecef(fw_lat, fw_lon, fw_alt)
+    tg_global_alt_ellipsoid = msl2ellipsoid(tg_global_lat, tg_global_lon, tg_global_alt)
+    fw_alt_ellipsoid = msl2ellipsoid(fw_lat, fw_lon, fw_alt)
+    tg_local_pos = pm.geodetic2ecef(tg_global_lat, tg_global_lon, tg_global_alt_ellipsoid)
+    fw_local_pos = pm.geodetic2ecef(fw_lat, fw_lon, fw_alt_ellipsoid)
+
     diff_vec = np.array(tg_local_pos) - np.array(fw_local_pos)
     diff_vec_norm = np.linalg.norm(diff_vec)
     diff_unit_vec = diff_vec / diff_vec_norm
@@ -27,11 +55,15 @@ def real2virt_target_pos_converter(tg_global_pos, tg_global_lon, tg_global_alt, 
     ##################################################################
     # virt_tg_local_pos = tg_local_pos + offset * diff_unit_vec
     virt_tg_local_pos = fw_local_pos + offset * diff_unit_vec
-    virt_tg_global_pos = pm.enu2geodetic(
-        virt_tg_local_pos[0], virt_tg_local_pos[1], virt_tg_local_pos[2], lat0, lon0, alt0)
+    # virt_tg_global_pos = pm.enu2geodetic(
+    #     virt_tg_local_pos[0], virt_tg_local_pos[1], virt_tg_local_pos[2], lat0, lon0, alt0)
+    virt_tg_global_pos = pm.ecef2geodetic(virt_tg_local_pos[0], virt_tg_local_pos[1], virt_tg_local_pos[2])
+    # TODO: ecef2geodetic gives altitude above WGS84 ellipsoid. To be compatible with DroneKit convert it back to
+    #       Altitude relative to MSL or geoid
     virt_tg_lat = virt_tg_global_pos[0]
     virt_tg_lon = virt_tg_global_pos[1]
-    virt_tg_alt = virt_tg_global_pos[2]
+    # virt_tg_alt = virt_tg_global_pos[2]
+    virt_tg_alt = ellipsoid2msl(virt_tg_lat, virt_tg_lon, virt_tg_global_pos[2])
     return virt_tg_lat, virt_tg_lon, virt_tg_alt
 
 

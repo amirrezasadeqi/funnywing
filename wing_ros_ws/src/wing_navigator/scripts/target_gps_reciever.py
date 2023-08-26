@@ -8,9 +8,14 @@ import argparse
 
 
 def parse_gngll_data(msg_as_list):
+    '''
+    converts the GPGLL/GNGLL data format to the degrees
+    :param msg_as_list: A list containing GPS data fields
+    :return: latitude, longitude and altitude in degrees
+    '''
     lat_str = msg_as_list[2]
     lon_str = msg_as_list[4]
-    alt_str = msg_as_list[9]  # mean sea level altitude
+    alt_str = msg_as_list[9]  # height relative to MSL or geoid
     # convert lat_str to lat in degrees DDMM.MMMMM
     lat = float(lat_str[:2]) + (float(lat_str[2:]) / 60.0)
     # convert lon_str to lon in degrees DDDMM.MMMMM
