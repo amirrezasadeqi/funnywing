@@ -2,15 +2,48 @@
 
 import rospy
 import msgpack
+import argparse
 from std_msgs.msg import UInt8MultiArray
 from wing_navigator.msg import GLOBAL_POSITION_INT
-from wing_navigator.srv import MSL_WGS_CONVRequest, MSL_WGS_CONV
+from wing_navigator.srv import MSL_WGS_CONVRequest, MSL_WGS_CONV, SimpleGotoRequest
 from wing_modules.navigator_modules.navigation_commands import navigation_commands as nav_com
+from wing_modules.navigator_modules.navigator_client import navigator_client
 import pymap3d as pm
 import numpy as np
+from abc import ABC, abstractmethod
 
 global last_fw_global_pos
 last_fw_global_pos = [35.41323864, 51.15932969, 1007]
+
+class CommandSender(ABC):
+    @abstractmethod
+    def send_command(self, lat, lon, alt):
+        pass
+
+class RfCommandSender(CommandSender):
+    def __init__(self, publisher):
+        self.__publisher = publisher
+        return
+    def send_command(self, lat, lon, alt):
+        cmd = nav_com.simple_goto(lat, lon, alt)
+        packed_cmd = msgpack.packb(cmd)
+        cmd_msg = UInt8MultiArray()
+        cmd_msg.data = packed_cmd
+        self.__publisher.publish(cmd_msg)
+        return
+
+class RosCommandSender(CommandSender):
+    def __init__(self):
+        self.__fw_client = navigator_client("wing")
+        return
+    def send_command(self, lat, lon, alt):
+        req = SimpleGotoRequest()
+        req.lat = float(lat)
+        req.lon = float(lon)
+        req.alt = float(alt)
+        self.__fw_client.simple_goto_client(req)
+        return
+
 
 def msl2ellipsoid(msl_lat, msl_lon, msl_alt):
     req = MSL_WGS_CONVRequest()
@@ -89,6 +122,8 @@ def real2virt_target_pos_converter(tg_global_lat, tg_global_lon, tg_global_alt, 
     virt_tg_lon = virt_tg_global_pos[1]
     # virt_tg_alt = virt_tg_global_pos[2]
     virt_tg_alt = ellipsoid2msl(virt_tg_lat, virt_tg_lon, virt_tg_global_pos[2])
+    # TODO: goto command gets altitude relative to home height, but here we give it relative to MSL. so convert it home
+    #       altitude.
     return virt_tg_lat, virt_tg_lon, virt_tg_alt
 
 
@@ -96,7 +131,7 @@ def simple_tracker_cb(msg, args):
     # I think this line solves the problem of not updating the funnywing position
     global last_fw_global_pos
     if last_fw_global_pos is not None:
-        publisher = args[0]
+        commandSender = args[0]
         # real target gps location
         tg_lat = msg.gps_data.latitude
         tg_lon = msg.gps_data.longitude
@@ -105,11 +140,7 @@ def simple_tracker_cb(msg, args):
         # TODO: you should tune the last argument for your funnywing and altitude should be with respect to the home altitude.
         virt_tg_lat, virt_tg_lon, virt_tg_alt = real2virt_target_pos_converter(
             tg_lat, tg_lon, tg_alt, fw_lat, fw_lon, fw_alt, 120)
-        cmd = nav_com.simple_goto(virt_tg_lat, virt_tg_lon, virt_tg_alt)
-        packed_cmd = msgpack.packb(cmd)
-        cmd_msg = UInt8MultiArray()
-        cmd_msg.data = packed_cmd
-        publisher.publish(cmd_msg)
+        commandSender.send_command(virt_tg_lat, virt_tg_lon, virt_tg_alt)
     else:
         rospy.loginfo("The funnywing gps is not subscribed yet!")
 
@@ -123,12 +154,17 @@ def fw_gps_sub_handler(msg):
 if __name__ == "__main__":
     rospy.init_node("simple_tracker_node")
     rospy.loginfo("Starting simple_tracker_node.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--simulation", default=False)
+    args = parser.parse_args()
 
     publisher = rospy.Publisher(
         "/wing_nav_cmds_gcs", UInt8MultiArray, queue_size=1)
+    commandSender = RosCommandSender() if args.simulation else RfCommandSender(publisher)
     tg_gps_subscriber = rospy.Subscriber(
-        "/target_gps_topic", GLOBAL_POSITION_INT, simple_tracker_cb, (publisher, ))
+        "/target_gps_topic", GLOBAL_POSITION_INT, simple_tracker_cb, (commandSender, ))
+    fw_gps_topic_name = "/wing_gps_topic" if args.simulation else "/wing_gps_topic_gcs"
     fw_gps_subscriber = rospy.Subscriber(
-        "/wing_gps_topic_gcs", GLOBAL_POSITION_INT, fw_gps_sub_handler)
+        fw_gps_topic_name, GLOBAL_POSITION_INT, fw_gps_sub_handler)
 
     rospy.spin()
