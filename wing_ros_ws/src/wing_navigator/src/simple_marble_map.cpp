@@ -25,168 +25,185 @@
 // TODO: There is a bug, the node does not stop by Ctrl-C. Solve it!
 
 class gps_subscriber : public QObject {
-  Q_OBJECT
+Q_OBJECT
 public:
-  gps_subscriber(ros::NodeHandle *nh);
+    gps_subscriber(ros::NodeHandle *nh, bool simulation = false);
 
 Q_SIGNALS:
-  void coordinatesChanged(Marble::GeoDataCoordinates coord, std::string sender);
+
+    void coordinatesChanged(Marble::GeoDataCoordinates coord, std::string sender);
 
 public Q_SLOTS:
-  void start_spinning();
+
+    void start_spinning();
 
 private:
-  ros::Subscriber wing_sub;
-  ros::Subscriber target_sub;
-  void gps_sub_callback(const wing_navigator::GLOBAL_POSITION_INT &msg);
-  void tg_gps_sub_callback(const wing_navigator::GLOBAL_POSITION_INT &msg);
-  Marble::GeoDataCoordinates
-  msg_to_coord(const wing_navigator::GLOBAL_POSITION_INT &msg);
+    ros::Subscriber wing_sub;
+    ros::Subscriber target_sub;
+
+    void gps_sub_callback(const wing_navigator::GLOBAL_POSITION_INT &msg);
+
+    void tg_gps_sub_callback(const wing_navigator::GLOBAL_POSITION_INT &msg);
+
+    Marble::GeoDataCoordinates
+    msg_to_coord(const wing_navigator::GLOBAL_POSITION_INT &msg);
 };
 
-gps_subscriber::gps_subscriber(ros::NodeHandle *nh) : QObject() {
-  // TODO: If you want to use this with simulation remove the _gcs from the end
-  // of topic name.
-  wing_sub = nh->subscribe("/wing_gps_topic_gcs", 1,
-                           &gps_subscriber::gps_sub_callback, this);
-  target_sub = nh->subscribe("/target_gps_topic", 1,
-                             &gps_subscriber::tg_gps_sub_callback, this);
+gps_subscriber::gps_subscriber(ros::NodeHandle *nh, bool simulation) : QObject() {
+    // TODO: If you want to use this with simulation remove the _gcs from the end
+    // of topic name.
+    std::string wing_gps_topic_name = simulation ? "/wing_gps_topic" : "/wing_gps_topic_gcs";
+    wing_sub = nh->subscribe(wing_gps_topic_name, 1,
+                             &gps_subscriber::gps_sub_callback, this);
+    target_sub = nh->subscribe("/target_gps_topic", 1,
+                               &gps_subscriber::tg_gps_sub_callback, this);
 }
 
 void gps_subscriber::start_spinning() { ros::spin(); }
 
 Marble::GeoDataCoordinates
 gps_subscriber::msg_to_coord(const wing_navigator::GLOBAL_POSITION_INT &msg) {
-  qreal lat = msg.gps_data.latitude;
-  qreal lon = msg.gps_data.longitude;
+    qreal lat = msg.gps_data.latitude;
+    qreal lon = msg.gps_data.longitude;
 
-  Marble::GeoDataCoordinates coord(lon, lat, 0.0,
-                                   Marble::GeoDataCoordinates::Degree);
-  return coord;
+    Marble::GeoDataCoordinates coord(lon, lat, 0.0,
+                                     Marble::GeoDataCoordinates::Degree);
+    return coord;
 }
 
 void gps_subscriber::gps_sub_callback(
-    const wing_navigator::GLOBAL_POSITION_INT &msg) {
-  Marble::GeoDataCoordinates coord = msg_to_coord(msg);
-  emit coordinatesChanged(coord, "wing");
+        const wing_navigator::GLOBAL_POSITION_INT &msg) {
+    Marble::GeoDataCoordinates coord = msg_to_coord(msg);
+    emit coordinatesChanged(coord, "wing");
 }
+
 void gps_subscriber::tg_gps_sub_callback(
-    const wing_navigator::GLOBAL_POSITION_INT &msg) {
-  Marble::GeoDataCoordinates coord = msg_to_coord(msg);
-  emit coordinatesChanged(coord, "target");
+        const wing_navigator::GLOBAL_POSITION_INT &msg) {
+    Marble::GeoDataCoordinates coord = msg_to_coord(msg);
+    emit coordinatesChanged(coord, "target");
 }
 
 // Window Class
 class Window : public QWidget {
-  Q_OBJECT
+Q_OBJECT
 public:
-  explicit Window(const ros::NodeHandle &nh, QWidget *parent = nullptr);
-  void start_subscribing();
+    explicit Window(const ros::NodeHandle &nh, QWidget *parent = nullptr);
+
+    void start_subscribing(bool simulation = false);
 
 public Q_SLOTS:
-  // updates the position of marker
-  void setNewCoordinates(const Marble::GeoDataCoordinates &coord,
-                         const std::string &sender);
+
+    // updates the position of marker
+    void setNewCoordinates(const Marble::GeoDataCoordinates &coord,
+                           const std::string &sender);
 
 private:
-  Marble::MarbleWidget *m_marbleWidget;
-  gps_subscriber *m_worker;
-  ros::NodeHandle _nh;
-  Marble::GeoDataPlacemark *m_wing;
-  Marble::GeoDataPlacemark *m_target;
-  QThread *m_thread;
+    Marble::MarbleWidget *m_marbleWidget;
+    gps_subscriber *m_worker;
+    ros::NodeHandle _nh;
+    Marble::GeoDataPlacemark *m_wing;
+    Marble::GeoDataPlacemark *m_target;
+    QThread *m_thread;
 };
 
 Window::Window(const ros::NodeHandle &nh, QWidget *parent)
-    : QWidget(parent), m_marbleWidget(new Marble::MarbleWidget), _nh(nh) {
-  QVBoxLayout *layout = new QVBoxLayout(this);
-  layout->addWidget(m_marbleWidget);
-  setLayout(layout);
+        : QWidget(parent), m_marbleWidget(new Marble::MarbleWidget), _nh(nh) {
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->addWidget(m_marbleWidget);
+    setLayout(layout);
 
-  // Load the OpenStreetMap map
-  m_marbleWidget->setMapThemeId(
-      QStringLiteral("earth/vectorosm/vectorosm.dgml"));
-  m_marbleWidget->setProjection(Marble::Spherical);
-  setGeometry(80, 60, 1000, 800);
-  Marble::GeoDataCoordinates test_location(35.74743520638767, 51.60374888014409,
-                                           0.0,
-                                           Marble::GeoDataCoordinates::Degree);
-  m_marbleWidget->centerOn(test_location);
-  m_marbleWidget->setZoom(2300);
+    // Load the OpenStreetMap map
+    m_marbleWidget->setMapThemeId(
+            QStringLiteral("earth/vectorosm/vectorosm.dgml"));
+    m_marbleWidget->setProjection(Marble::Spherical);
+    setGeometry(80, 60, 1000, 800);
+    Marble::GeoDataCoordinates test_location(35.74743520638767, 51.60374888014409,
+                                             0.0,
+                                             Marble::GeoDataCoordinates::Degree);
+    m_marbleWidget->centerOn(test_location);
+    m_marbleWidget->setZoom(2300);
 
-  std::string icon_img_dir = ros::package::getPath("wing_navigator");
+    std::string icon_img_dir = ros::package::getPath("wing_navigator");
 
-  m_wing = new Marble::GeoDataPlacemark(QStringLiteral("wing"));
-  Marble::GeoDataStyle *wing_style = new Marble::GeoDataStyle;
-  Marble::GeoDataIconStyle wing_icon_style;
-  QString wing_icon_path =
-      QString::fromStdString(icon_img_dir + std::string("/images/wing.jpg"));
-  wing_icon_style.setIconPath(wing_icon_path);
-  wing_style->setIconStyle(wing_icon_style);
-  m_wing->setStyle(QSharedPointer<Marble::GeoDataStyle>(wing_style));
+    m_wing = new Marble::GeoDataPlacemark(QStringLiteral("wing"));
+    Marble::GeoDataStyle *wing_style = new Marble::GeoDataStyle;
+    Marble::GeoDataIconStyle wing_icon_style;
+    QString wing_icon_path =
+            QString::fromStdString(icon_img_dir + std::string("/images/wing.jpg"));
+    wing_icon_style.setIconPath(wing_icon_path);
+    wing_style->setIconStyle(wing_icon_style);
+    m_wing->setStyle(QSharedPointer<Marble::GeoDataStyle>(wing_style));
 
-  m_target = new Marble::GeoDataPlacemark(QStringLiteral("target"));
-  Marble::GeoDataStyle *target_style = new Marble::GeoDataStyle;
-  Marble::GeoDataIconStyle tg_icon_style;
-  QString tg_icon_path =
-      QString::fromStdString(icon_img_dir + std::string("/images/target.jpg"));
-  tg_icon_style.setIconPath(tg_icon_path);
-  target_style->setIconStyle(tg_icon_style);
-  m_target->setStyle(QSharedPointer<Marble::GeoDataStyle>(target_style));
+    m_target = new Marble::GeoDataPlacemark(QStringLiteral("target"));
+    Marble::GeoDataStyle *target_style = new Marble::GeoDataStyle;
+    Marble::GeoDataIconStyle tg_icon_style;
+    QString tg_icon_path =
+            QString::fromStdString(icon_img_dir + std::string("/images/target.jpg"));
+    tg_icon_style.setIconPath(tg_icon_path);
+    target_style->setIconStyle(tg_icon_style);
+    m_target->setStyle(QSharedPointer<Marble::GeoDataStyle>(target_style));
 
-  Marble::GeoDataDocument *document = new Marble::GeoDataDocument;
+    Marble::GeoDataDocument *document = new Marble::GeoDataDocument;
 
-  document->append(m_wing);
-  document->append(m_target);
+    document->append(m_wing);
+    document->append(m_target);
 
-  m_marbleWidget->model()->treeModel()->addDocument(document);
+    m_marbleWidget->model()->treeModel()->addDocument(document);
 
-  show();
+    show();
 }
 
-void Window::start_subscribing() {
+void Window::start_subscribing(bool simulation) {
 
-  // funnywing placemark
-  m_thread = new QThread;
-  m_worker = new gps_subscriber(&_nh);
-  m_worker->moveToThread(m_thread);
+    // funnywing placemark
+    m_thread = new QThread;
+    m_worker = new gps_subscriber(&_nh, simulation);
+    m_worker->moveToThread(m_thread);
 
-  connect(m_worker,
-          SIGNAL(coordinatesChanged(Marble::GeoDataCoordinates, std::string)),
-          this,
-          SLOT(setNewCoordinates(Marble::GeoDataCoordinates, std::string)),
-          Qt::BlockingQueuedConnection);
+    connect(m_worker,
+            SIGNAL(coordinatesChanged(Marble::GeoDataCoordinates, std::string)),
+            this,
+            SLOT(setNewCoordinates(Marble::GeoDataCoordinates, std::string)),
+            Qt::BlockingQueuedConnection);
 
-  connect(m_thread, SIGNAL(started()), m_worker, SLOT(start_spinning()));
+    connect(m_thread, SIGNAL(started()), m_worker, SLOT(start_spinning()));
 
-  m_thread->start();
+    m_thread->start();
 }
 
 void Window::setNewCoordinates(const Marble::GeoDataCoordinates &coord,
                                const std::string &sender) {
 
-  // commented because we use the same object for both markers and I think this
-  // gives one thing to us. so we used a parameter in signal for specification
-  // of sender. gps_subscriber *worker = qobject_cast<gps_subscriber
-  // *>(sender());
+    // commented because we use the same object for both markers and I think this
+    // gives one thing to us. so we used a parameter in signal for specification
+    // of sender. gps_subscriber *worker = qobject_cast<gps_subscriber
+    // *>(sender());
 
-  if (sender == "wing") {
-    m_wing->setCoordinate(coord);
-    m_marbleWidget->model()->treeModel()->updateFeature(m_wing);
-  } else if (sender == "target") {
-    m_target->setCoordinate(coord);
-    m_marbleWidget->model()->treeModel()->updateFeature(m_target);
-  }
+    if (sender == "wing") {
+        m_wing->setCoordinate(coord);
+        m_marbleWidget->model()->treeModel()->updateFeature(m_wing);
+    } else if (sender == "target") {
+        m_target->setCoordinate(coord);
+        m_marbleWidget->model()->treeModel()->updateFeature(m_target);
+    }
 }
 
 int main(int argc, char *argv[]) {
-  QApplication app(argc, argv);
-  ros::init(argc, argv, "simple_marble_map");
-  ros::NodeHandle nh;
+    QApplication app(argc, argv);
+    ros::init(argc, argv, "simple_marble_map");
+    ros::NodeHandle nh;
 
-  Window window(nh);
-  window.start_subscribing();
+    bool simulation = false;
+    if (argc == 3 && "-s" == std::string(argv[1]))
+        simulation = (std::string(argv[2]) == "true");
+    else
+        simulation = false;
 
-  return app.exec();
+    Window window(nh);
+    // simulation flag passes here
+    window.start_subscribing(simulation);
+
+    return app.exec();
 };
+
 #include "simple_marble_map.moc"

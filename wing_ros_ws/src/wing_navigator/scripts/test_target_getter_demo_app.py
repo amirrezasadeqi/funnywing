@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+from rospkg import RosPack as rospack
 import msgpack
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
@@ -210,13 +211,16 @@ def readmission(aFileName):
 
 
 def uilink_if_needed():
+
     # Address of symlink to ui file
     uilink_path = expanduser("~/.ros/demo_app/demo_app.ui")
+
     # Address of the symlink directory
     uilink_dir = expanduser("~/.ros/demo_app")
-    # Address of the original ui file. Considered to be located at the ~/Documents/funnywing/...
-    uifile_path = expanduser(
-        "~/Documents/funnywing/wing_ros_ws/src/wing_navigator/scripts/demo_app.ui")
+
+    # Address of the original ui file.
+    uifile_path = rospack().get_path("wing_navigator") + "/scripts/demo_app.ui"
+
     if not exists(uilink_path):
         if not exists(uilink_dir):
             makedirs(uilink_dir)
@@ -652,14 +656,13 @@ class Ui(QtWidgets.QMainWindow):
 
     def get_gazebo_world_file(self):
         worldfile, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, 'Single File', expanduser("~"), '*.world')
+            self, 'Single File', rospack().get_path("wing_navigator") + "/worlds", '*.world')
         if worldfile:
             self.gz_world_address.setText(worldfile)
 
     def run_simulation(self):
         args = []
-        args.append(expanduser(
-            "~/Documents/funnywing/wing_ros_ws/src/wing_navigator/scripts/run_simulation.bash"))
+        args.append(rospack().get_path("wing_navigator") + "/scripts/run_simulation.bash")
 
         if self.sim_map_chbox.isChecked():
             args.append("-m")
