@@ -14,6 +14,8 @@ find_package(
              sensor_msgs
              geometry_msgs
              message_generation
+             mavros
+             mavros_msgs
              roslib)
 
 find_package(Qt5Widgets REQUIRED)
