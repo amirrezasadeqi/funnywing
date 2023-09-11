@@ -1,12 +1,26 @@
 #!/usr/bin/env python
 
 
-import rospy
-from ConnectionInterface import ConnectionInterface
-from RfConnection import RfConnection
-from mavros import mavlink
-from mavros_msgs.msg import StatusText
 import argparse
+import rospy
+from pymavlink import mavutil
+from RfConnection import RfConnection
+
+
+def sendMessageCb(event=None):
+    global connection
+    msg = mavutil.mavlink.MAVLink_heartbeat_message(mavutil.mavlink.MAV_TYPE_FIXED_WING, 0, 0, 0, 0, 0)
+    connection.write(msg)
+    return
+
+
+def readMessageCb(event=None):
+    global connection
+    inMsg = connection.read()
+    if inMsg:
+        print(f"{inMsg}")
+    return
+
 
 if __name__ == "__main__":
     rospy.init_node("RfConnectionTest", anonymous=True)
@@ -16,22 +30,10 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--baudrate", default=9600)
     args = parser.parse_args()
 
+    global connection
     connection = RfConnection(args.serial_port, args.baudrate)
 
-    count = 0
-    while count < 3:
-        rosmsg = StatusText()
-        rosmsg.text = f"{count} : Hello from {args.system}"
-        bits = mavlink.convert_to_bytes(rosmsg)
-        mavmsg = connection.getPort().mav.decode(bits)
-        connection.write(mavmsg)
-        count += 1
+    rospy.Timer(rospy.Duration(0, 1e8), callback=sendMessageCb)
+    rospy.Timer(rospy.Duration(0, 1e8), callback=readMessageCb)
 
-    while count > 0:
-        inMsg = connection.read()
-        if inMsg:
-            count -= 1
-            print(f"Message: {inMsg}")
-
-    if not count:
-        print("Test Passed!")
+    rospy.spin()

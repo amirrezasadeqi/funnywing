@@ -1,17 +1,15 @@
-import time
-
-import rospy
-
-from ConnectionInterface import ConnectionInterface
 import os
-from pymavlink import mavutil
 import threading
-import dronekit
+import time
+import rospy
+from pymavlink import mavutil
+from ConnectionInterface import ConnectionInterface
 
 
 # TODO: check if singleton pattern is suitable for this connection
 class RfConnection(ConnectionInterface):
-    def __init__(self, serialPort, baudRate):
+    def __init__(self, serialPort="/dev/ttyUSB0", baudRate=9600, outBufWaitForMsg=1e-4):
+        self.__outBufWaitForMsg = outBufWaitForMsg
         self.__inBuf = []
         self.__outBuf = []
         self.__serialPort = serialPort
@@ -62,7 +60,7 @@ class RfConnection(ConnectionInterface):
                 outMsg = self.__outBuf.pop(0)
                 self.__port.mav.send(outMsg)
             else:
-                time.sleep(0.010)
+                time.sleep(self.outBufWaitForMsg)
         return
 
     def __del__(self):
