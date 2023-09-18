@@ -4,7 +4,9 @@
 import argparse
 import rospy
 from pymavlink import mavutil
-from RfConnection import RfConnection
+from RfCommunication.RfConnection.RfConnection import RfConnection
+from RfCommunication.Job.Factory.JobFactory import JobFactory
+from RfCommunication.Job.Interface.JobInterface import JobInterface
 
 
 def sendMessageCb(event=None):
@@ -30,6 +32,18 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--baudrate", default=9600)
     args = parser.parse_args()
 
+    #########################################################################
+    print("Test the Pycharm for ROS Development")
+    # test = heartbeat_job("Hello world")
+    jf = JobFactory()
+    jf.setMessage("heartbeat_job")
+    test: JobInterface = jf.createJob()
+    if test:
+        print(test.getMessage())
+        print("Pycharm is OK")
+    else:
+        print("Use Neovim the old friend")
+    #########################################################################
     global connection
     connection = RfConnection(args.serial_port, args.baudrate)
 
