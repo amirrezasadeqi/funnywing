@@ -15,15 +15,18 @@ from abc import ABC, abstractmethod
 global last_fw_global_pos
 last_fw_global_pos = [35.41323864, 51.15932969, 1007]
 
+
 class CommandSender(ABC):
     @abstractmethod
     def send_command(self, lat, lon, alt):
         pass
 
+
 class RfCommandSender(CommandSender):
     def __init__(self, publisher):
         self.__publisher = publisher
         return
+
     def send_command(self, lat, lon, alt):
         cmd = nav_com.simple_goto(lat, lon, alt)
         packed_cmd = msgpack.packb(cmd)
@@ -32,10 +35,12 @@ class RfCommandSender(CommandSender):
         self.__publisher.publish(cmd_msg)
         return
 
+
 class RosCommandSender(CommandSender):
     def __init__(self):
         self.__fw_client = navigator_client("wing")
         return
+
     def send_command(self, lat, lon, alt):
         req = SimpleGotoRequest()
         req.lat = float(lat)
@@ -59,7 +64,8 @@ def msl2ellipsoid(msl_lat, msl_lon, msl_alt):
         wgs_alt = resp.alt_convd
         return wgs_alt
     except rospy.ServiceException as e:
-        print("Service Call Failed: %s"%e)
+        print("Service Call Failed: %s" % e)
+
 
 def ellipsoid2msl(wgs_lat, wgs_lon, wgs_alt):
     req = MSL_WGS_CONVRequest()
@@ -75,7 +81,8 @@ def ellipsoid2msl(wgs_lat, wgs_lon, wgs_alt):
         msl_alt = resp.alt_convd
         return msl_alt
     except rospy.ServiceException as e:
-        print("Service Call Failed: %s"%e)
+        print("Service Call Failed: %s" % e)
+
 
 def real2virt_target_pos_converter(tg_global_lat, tg_global_lon, tg_global_alt, fw_lat, fw_lon, fw_alt, offset):
     '''
@@ -162,7 +169,7 @@ if __name__ == "__main__":
         "/wing_nav_cmds_gcs", UInt8MultiArray, queue_size=1)
     commandSender = RosCommandSender() if args.simulation else RfCommandSender(publisher)
     tg_gps_subscriber = rospy.Subscriber(
-        "/target_gps_topic", GLOBAL_POSITION_INT, simple_tracker_cb, (commandSender, ))
+        "/target_gps_topic", GLOBAL_POSITION_INT, simple_tracker_cb, (commandSender,))
     fw_gps_topic_name = "/wing_gps_topic" if args.simulation else "/wing_gps_topic_gcs"
     fw_gps_subscriber = rospy.Subscriber(
         fw_gps_topic_name, GLOBAL_POSITION_INT, fw_gps_sub_handler)

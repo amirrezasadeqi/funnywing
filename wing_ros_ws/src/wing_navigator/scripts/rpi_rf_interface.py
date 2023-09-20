@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import rospy
-import threading
 import argparse
-from pymavlink import mavutil, mavwp
 import os
-from sensor_msgs.msg import NavSatFix
+import threading
+
+import rospy
+from pymavlink import mavutil
 from wing_navigator.msg import GLOBAL_POSITION_INT
 from wing_navigator.srv import ActiveModeRequest, SimpleGotoRequest
+
 from wing_modules.navigator_modules.navigator_client import navigator_client
 
 mode_mapping = {
@@ -93,7 +94,6 @@ def cmd_handle(cmd, client_obj):
 
 
 def cmd_resp_sender_worker(port, cmd_anss):
-
     while not rospy.is_shutdown():
         if len(cmd_anss) != 0:
             ans = cmd_anss.pop(0)
@@ -149,12 +149,11 @@ def gps_sub_cb(msg, args):
 
 def sensor_sender_worker(port):
     gps_sub = rospy.Subscriber(
-        "/wing_gps_topic", GLOBAL_POSITION_INT, gps_sub_cb, (port, ))
+        "/wing_gps_topic", GLOBAL_POSITION_INT, gps_sub_cb, (port,))
     rospy.spin()
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--system")
     parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB0")
@@ -184,7 +183,7 @@ if __name__ == "__main__":
     cmd_resp_sender_thread = threading.Thread(
         target=cmd_resp_sender_worker, args=(port, cmd_anss))
     sensor_sender_thread = threading.Thread(
-        target=sensor_sender_worker, args=(port, ))
+        target=sensor_sender_worker, args=(port,))
 
     reader_thread.start()
     cmd_handler_thread.start()

@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 
-import rospy
 import argparse
-# test
-from std_msgs.msg import String
-from sensor_msgs.msg import NavSatFix
-from wing_navigator.msg import GLOBAL_POSITION_INT
 
-from wing_navigator.srv import ActiveMode, ArmTakeoff, PreDefMission, SimpleGoto, MissionInOut, WP_list_save, WP_list_upload
-# from wing_navigator.srv import *
-# from dronekit import connect, VehicleMode, LocationGlobalRelative
-from wing_modules.navigator_modules.navigator import copter_navigator, fw_navigator, navigator
+import rospy
+# test
+from wing_navigator.msg import GLOBAL_POSITION_INT
+from wing_navigator.srv import ActiveMode, ArmTakeoff, PreDefMission, SimpleGoto, MissionInOut, WP_list_save, \
+    WP_list_upload
+from wing_modules.navigator_modules.navigator import copter_navigator, fw_navigator
 
 # def simple_goto_handler(req):
 #   try:
@@ -47,20 +44,22 @@ if __name__ == '__main__':
     # This part is experimental
     #######################################################################
     # For more Info goto the navigator class implementation
-    list_of_servers_dict = [{"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
-                            {"server_name": "active_mode", "server_data_type": ActiveMode,
-                                "server_handler_type": "active_mode"},
-                            {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff,
-                                "server_handler_type": "arm_takeoff"},
-                            {"server_name": "save_mission", "server_data_type": MissionInOut,
-                                "server_handler_type": "save_mission"},
-                            {"server_name": "upload_mission", "server_data_type": MissionInOut,
-                                "server_handler_type": "upload_mission"},
-                            {"server_name": "save_mission_ros", "server_data_type": WP_list_save,
-                                "server_handler_type": "save_mission_ros"},
-                            {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload,
-                                "server_handler_type": "upload_mission_ros"},
-                            {"server_name": "upload_predefined_mission", "server_data_type": PreDefMission, "server_handler_type": "upload_predefined_mission"}]
+    list_of_servers_dict = [
+        {"server_name": "simple_goto", "server_data_type": SimpleGoto, "server_handler_type": "simple_goto"},
+        {"server_name": "active_mode", "server_data_type": ActiveMode,
+         "server_handler_type": "active_mode"},
+        {"server_name": "arm_takeoff", "server_data_type": ArmTakeoff,
+         "server_handler_type": "arm_takeoff"},
+        {"server_name": "save_mission", "server_data_type": MissionInOut,
+         "server_handler_type": "save_mission"},
+        {"server_name": "upload_mission", "server_data_type": MissionInOut,
+         "server_handler_type": "upload_mission"},
+        {"server_name": "save_mission_ros", "server_data_type": WP_list_save,
+         "server_handler_type": "save_mission_ros"},
+        {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload,
+         "server_handler_type": "upload_mission_ros"},
+        {"server_name": "upload_predefined_mission", "server_data_type": PreDefMission,
+         "server_handler_type": "upload_predefined_mission"}]
     # {"server_name": "save_mission_ros", "server_data_type": WP_list_save, "server_handler_type": "save_mission"},
     # {"server_name": "upload_mission_ros", "server_data_type": WP_list_upload, "server_handler_type": "upload_mission"}]
 
@@ -69,7 +68,8 @@ if __name__ == '__main__':
         # {"publisher_name": "bp_publisher", "topic_name": "bp_topic",
         #     "publisher_data_type": String, "rate": 4.0, "queue_size": 1, "pub_handler_type": "bp_pub_handler"},
         {"publisher_name": "gps_publisher", "topic_name": "gps_topic",
-            "publisher_data_type": GLOBAL_POSITION_INT, "rate": 4.0, "queue_size": 1, "pub_handler_type": "gps_pub_handler"}
+         "publisher_data_type": GLOBAL_POSITION_INT, "rate": 4.0, "queue_size": 1,
+         "pub_handler_type": "gps_pub_handler"}
     ]
 
     list_of_subscriber_dict = [

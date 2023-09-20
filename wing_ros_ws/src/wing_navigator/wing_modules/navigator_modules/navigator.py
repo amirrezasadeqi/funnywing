@@ -1,20 +1,24 @@
-from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, LocationGlobal
-import rospy
-from sensor_msgs.msg import NavSatFix, NavSatStatus
-from std_msgs.msg import String, Header
-from pymavlink import mavutil
-import time
 import math
-from wing_navigator.srv import PreDefMissionResponse, SimpleGoto, SimpleGotoResponse, ActiveMode, ActiveModeResponse, ArmTakeoff, ArmTakeoffResponse, MissionInOut, MissionInOutResponse
-from wing_modules.navigator_modules.TimerAP import TimerAP
-
-#### Test for custom service for mission ####
-from wing_navigator.srv import WP_list_save, WP_list_saveResponse, WP_list_upload, WP_list_uploadResponse
-from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
 #############################################
 ### Experimental Usage of pickle ############
 import pickle
-from wing_navigator.srv import TestPickleUpload, TestPickleUploadResponse
+import time
+
+import rospy
+from dronekit import LocationGlobalRelative, connect, VehicleMode, Command, LocationGlobal
+from pymavlink import mavutil
+from sensor_msgs.msg import NavSatStatus
+from std_msgs.msg import String, Header
+from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
+from wing_navigator.srv import PreDefMissionResponse, SimpleGotoResponse, ActiveModeResponse, ArmTakeoffResponse, \
+    MissionInOutResponse
+from wing_navigator.srv import TestPickleUploadResponse
+#### Test for custom service for mission ####
+from wing_navigator.srv import WP_list_saveResponse, WP_list_uploadResponse
+
+from wing_modules.navigator_modules.TimerAP import TimerAP
+
+
 #############################################
 
 # Using this function for just Determining of the Lat/Lon and for Alt we would use the Relative Alt as you will see in the following

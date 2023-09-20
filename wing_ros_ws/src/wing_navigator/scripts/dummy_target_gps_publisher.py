@@ -4,7 +4,6 @@
 import rospy
 from wing_navigator.msg import GLOBAL_POSITION_INT
 
-
 if __name__ == "__main__":
     rospy.init_node("dummy_target_gps_publisher")
     r = rospy.Rate(4)

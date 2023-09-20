@@ -4,9 +4,20 @@
 import argparse
 import rospy
 from pymavlink import mavutil
-from RfCommunication.RfConnection.RfConnection import RfConnection
+
 from RfCommunication.Job.Factory.JobFactory import JobFactory
-from RfCommunication.Job.Interface.JobInterface import JobInterface
+from RfCommunication.RfCommunicationHandler.RfCommunicationHandler import RfCommunicationHandler
+from RfCommunication.RfConnection.RfConnection import RfConnection
+
+
+########################################################################
+# TODO: Delete below test things.
+# For Test
+# from pymavlink.dialects.v20.funnywing import mavlink_map
+# import pymavlink.dialects.v20.funnywing as funnywing
+# from pymavlink import mavutil
+# mavlink_map[funnywing.MAVLINK_MSG_ID_HEARTBEAT]
+########################################################################
 
 
 def sendMessageCb(event=None):
@@ -32,22 +43,6 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--baudrate", default=9600)
     args = parser.parse_args()
 
-    #########################################################################
-    print("Test the Pycharm for ROS Development")
-    # test = heartbeat_job("Hello world")
     jf = JobFactory()
-    jf.setMessage("heartbeat_job")
-    test: JobInterface = jf.createJob()
-    if test:
-        print(test.getMessage())
-        print("Pycharm is OK")
-    else:
-        print("Use Neovim the old friend")
-    #########################################################################
-    global connection
     connection = RfConnection(args.serial_port, args.baudrate)
-
-    rospy.Timer(rospy.Duration(0, 1e8), callback=sendMessageCb)
-    rospy.Timer(rospy.Duration(0, 1e8), callback=readMessageCb)
-
-    rospy.spin()
+    comHandler = RfCommunicationHandler(connection, jf, args.system)

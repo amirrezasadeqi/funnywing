@@ -1,32 +1,33 @@
 #!/usr/bin/env python
 
-import rospy
-from rospkg import RosPack as rospack
+import subprocess as sp
+import sys
+import threading
+from os import symlink, makedirs
+from os.path import expanduser, exists
+
 import msgpack
+import numpy as np
+import pymap3d as pm
+import rospy
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
-from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import UInt8MultiArray
-from wing_navigator.srv import PreDefMissionRequest, SimpleGoto, SimpleGotoRequest, ActiveMode, ActiveModeRequest, ArmTakeoff, ArmTakeoffRequest, MissionInOut, MissionInOutRequest
-from wing_modules import navigator_modules  # , SimpleGotoResponse
-from wing_modules.navigator_modules.navigator_client import navigator_client
-import sys
-import subprocess as sp
-from os.path import expanduser, exists
-from os import symlink, makedirs
-from pymavlink import mavutil
-#### Test for custom service for mission ####
-from wing_navigator.srv import WP_list_save, WP_list_saveRequest, WP_list_upload, WP_list_uploadRequest
 from dronekit import Command, LocationGlobal
+from pymavlink import mavutil
+from rospkg import RosPack as rospack
+from std_msgs.msg import UInt8MultiArray
 from wing_navigator.msg import GLOBAL_POSITION_INT, MissionCommand
+from wing_navigator.srv import PreDefMissionRequest, SimpleGotoRequest, ActiveModeRequest, ArmTakeoffRequest, \
+    MissionInOutRequest
+#### Test for custom service for mission ####
+from wing_navigator.srv import WP_list_saveRequest, WP_list_uploadRequest
+
 from wing_modules.navigator_modules.navigation_commands import navigation_commands as nav_com
-import pymap3d as pm
-import numpy as np
-import threading
+from wing_modules.navigator_modules.navigator_client import navigator_client
+
+
 #############################################
 ### TODO: Experimental Usage of pickle ############
-import pickle
-from wing_navigator.srv import TestPickleUpload, TestPickleUploadRequest
 #############################################
 
 # Threading Experimental

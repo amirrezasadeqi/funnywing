@@ -7,9 +7,9 @@ from wing_navigator.msg import GLOBAL_POSITION_INT
 import argparse
 
 
-def parse_gngll_data(msg_as_list):
+def parseGNGGA(msg_as_list):
     '''
-    converts the GPGLL/GNGLL data format to the degrees
+    converts the GPGGA/GNGGA data format to the degrees
     :param msg_as_list: A list containing GPS data fields
     :return: latitude, longitude and altitude in degrees
     '''
@@ -61,7 +61,7 @@ if __name__ == "__main__":
             try:
                 recv_msg = recv_msg.split(",")
                 ###########################################
-                lat, lon, alt = parse_gngll_data(recv_msg)
+                lat, lon, alt = parseGNGGA(recv_msg)
                 msg.gps_data.latitude = lat
                 msg.gps_data.longitude = lon
                 msg.gps_data.altitude = alt

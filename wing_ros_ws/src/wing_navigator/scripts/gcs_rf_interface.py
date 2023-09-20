@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-from distutils import cmd
-import rospy
-import threading
-import msgpack
-import time
 import argparse
 import os
+import threading
+
+import msgpack
+import rospy
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix, NavSatStatus
-from std_msgs.msg import Header, String, UInt8MultiArray
+from std_msgs.msg import Header, UInt8MultiArray
 from wing_navigator.msg import GLOBAL_POSITION_INT
-from wing_modules.navigator_modules.TimerAP import TimerAP
 
 
 def reader_worker(port, input_msgs):
@@ -24,7 +22,6 @@ def reader_worker(port, input_msgs):
 
 
 def pub_worker(input_msgs):
-
     gps_pub = rospy.Publisher(
         "/wing_gps_topic_gcs", GLOBAL_POSITION_INT, queue_size=1)
 
@@ -116,11 +113,13 @@ class cmd_subscriber_and_sender:
         cmd_type = cmd_obj['command_type']
         if cmd_type == "active_mode":
             self._port.mav.command_long_send(
-                0, 0, mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0, mavutil.mavlink.MAV_MODE_GUIDED_ARMED, cmd_obj["flight_mode_number"], 0, 0, 0, 0, 0)
+                0, 0, mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0, mavutil.mavlink.MAV_MODE_GUIDED_ARMED,
+                cmd_obj["flight_mode_number"], 0, 0, 0, 0, 0)
         elif cmd_type == "simple_goto":
             x, y, z = cmd_obj['lat'], cmd_obj['lon'], cmd_obj['alt']
             self._port.mav.command_long_send(0, 0, mavutil.mavlink.MAV_CMD_OVERRIDE_GOTO, 0,
-                                             mavutil.mavlink.MAV_GOTO_DO_HOLD, mavutil.mavlink.MAV_GOTO_HOLD_AT_SPECIFIED_POSITION, 0, 0, x, y, z)
+                                             mavutil.mavlink.MAV_GOTO_DO_HOLD,
+                                             mavutil.mavlink.MAV_GOTO_HOLD_AT_SPECIFIED_POSITION, 0, 0, x, y, z)
         else:
             rospy.loginfo(
                 f"The command type {cmd_obj['command_type']} is not supported yet!")
@@ -137,7 +136,6 @@ def cmd_sub_and_send_worker(port):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--system")
     parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB0")
@@ -155,9 +153,9 @@ if __name__ == "__main__":
     reader_thread = threading.Thread(
         target=reader_worker, args=(port, input_msgs))
     publisher_thread = threading.Thread(
-        target=pub_worker, args=(input_msgs, ))
+        target=pub_worker, args=(input_msgs,))
     cmd_sub_and_send_thread = threading.Thread(
-        target=cmd_sub_and_send_worker, args=(port, ))
+        target=cmd_sub_and_send_worker, args=(port,))
 
     reader_thread.start()
     publisher_thread.start()

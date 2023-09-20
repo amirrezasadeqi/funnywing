@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from numpy.core.defchararray import count
-import rospy
-import matplotlib.pyplot as plt
 import argparse
-from matplotlib.animation import FuncAnimation
-from mpl_toolkits.mplot3d import Axes3D
-import pymap3d as pm
-from wing_navigator.msg import GLOBAL_POSITION_INT
 from itertools import count
+
+import matplotlib.pyplot as plt
+import pymap3d as pm
+import rospy
+from matplotlib.animation import FuncAnimation
+from numpy.core.defchararray import count
+from wing_navigator.msg import GLOBAL_POSITION_INT
 from wing_navigator.srv import MSL_WGS_CONVRequest, MSL_WGS_CONV
 
 lat0, lon0, alt0 = 35.41323864, 51.15932969, 1007

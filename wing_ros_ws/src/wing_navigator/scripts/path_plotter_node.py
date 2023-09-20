@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-import rospy
-import matplotlib.pyplot as plt
 import argparse
-from mpl_toolkits import mplot3d
-from wing_navigator.msg import GLOBAL_POSITION_INT
+
+import matplotlib.pyplot as plt
 import pymap3d as pm
-# import numpy as np
-# import threading
+import rospy
 from matplotlib.animation import FuncAnimation
+from wing_navigator.msg import GLOBAL_POSITION_INT
 from wing_navigator.srv import MSL_WGS_CONVRequest, MSL_WGS_CONV
 
 
@@ -26,7 +24,8 @@ def msl2ellipsoid(msl_lat, msl_lon, msl_alt):
         wgs_alt = resp.alt_convd
         return wgs_alt
     except rospy.ServiceException as e:
-        print("Service Call Failed: %s"%e)
+        print("Service Call Failed: %s" % e)
+
 
 class path_plotter():
 
