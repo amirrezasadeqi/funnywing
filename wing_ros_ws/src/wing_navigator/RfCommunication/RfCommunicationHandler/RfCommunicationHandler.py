@@ -26,7 +26,7 @@ class RfCommunicationHandler(object):
         self._rfConnection = rfConnection
         self._jobFactory = jobFactory
         self._inBufWaitForMsg = inBufWaitForMsg
-        self._fromRosTopic = "/from_" + systemName + "_ros"
+        self._fromRosTopic = "/from_" + str(systemName) + "_ros"
         self._recvMavMsgThread = None
         self._transRosMsgThread = None
         self._mavrosMsgSubscriber = None

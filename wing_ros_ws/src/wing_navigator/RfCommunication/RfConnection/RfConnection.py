@@ -43,11 +43,12 @@ class RfConnection(ConnectionInterface):
 
     def _initializePort(self):
         # Initialize Mavlink serial port
-        os.environ["MAVLINK20"] = "1"
+        # TODO: Using mavlink 2.0 raises some CRC error, so commented below line.
+        # os.environ["MAVLINK20"] = "1"
         try:
             self._port = mavutil.mavlink_connection(
                 self._serialPort, baud=self._baudRate, dialect="funnywing")
-        except:
+        except Exception:
             self._port = None
             print("The Connection is Not initialized Correctly!")
         return

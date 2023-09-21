@@ -1,3 +1,4 @@
+import rospy
 from RfCommunication.Job.Interface.JobInterface import JobInterface
 
 
@@ -10,4 +11,4 @@ class heartbeat_job(JobInterface):
         return self._message
 
     def _doJob(self):
-        print(f"{self._message}")
+        rospy.loginfo(f"{self._message}")
