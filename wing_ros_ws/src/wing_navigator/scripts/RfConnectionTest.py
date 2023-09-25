@@ -23,9 +23,10 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--system")
     parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB0")
     parser.add_argument("-b", "--baudrate", default=115200)
+    parser.add_argument("-d", "--dialect", default="funnywing")
     args = parser.parse_args()
 
     jf = JobFactory()
-    connection = RfConnection(args.serial_port, args.baudrate)
+    connection = RfConnection(args.serial_port, args.baudrate, args.dialect)
 
     comHandler = RfCommunicationHandler(connection, jf, args.system)

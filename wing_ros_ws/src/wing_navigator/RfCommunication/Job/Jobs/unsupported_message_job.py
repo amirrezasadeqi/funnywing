@@ -2,7 +2,7 @@ import rospy
 from RfCommunication.Job.Interface.JobInterface import JobInterface
 
 
-class heartbeat_job(JobInterface):
+class unsupported_message_job(JobInterface):
 
     def __init__(self, message):
         """
@@ -13,4 +13,4 @@ class heartbeat_job(JobInterface):
         return
 
     def _doJob(self):
-        rospy.loginfo(f"{self.getMessage()}")
+        rospy.logwarn(f"The message:\n{self.getMessage()}\nis not supported yet. Implement it in the Jobs modules!")

@@ -9,3 +9,7 @@ class ConnectionInterface(ABC):
     @abstractmethod
     def write(self, message):
         pass
+
+    @abstractmethod
+    def getPort(self):
+        pass

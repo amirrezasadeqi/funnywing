@@ -3,13 +3,12 @@ import rospy
 from mavros import mavlink
 from mavros_msgs.msg import Mavlink
 
-from RfCommunication.RfConnection.RfConnection import RfConnection
 from RfCommunication.Job.Factory.JobFactory import JobFactory
-from RfCommunication.Job.Interface.JobInterface import JobInterface
+from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
 
 
 class RfCommunicationHandler(object):
-    def __init__(self, rfConnection: RfConnection, jobFactory: JobFactory, systemName: str,
+    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory, systemName: str,
                  inBufWaitForMsg: float = 1e-4):
         """
         RfCommunicationHandler constructor. This class assembles all parts of the architecture
@@ -44,8 +43,7 @@ class RfCommunicationHandler(object):
         while not rospy.is_shutdown():
             inMavMsg = self._rfConnection.read()
             if inMavMsg:
-                self._jobFactory.setMessage(inMavMsg)
-                job: JobInterface = self._jobFactory.createJob()
+                job = self._jobFactory.createJob(inMavMsg)
                 job.runJob()
             else:
                 # sleep to prevent from wasting performance when there is no message

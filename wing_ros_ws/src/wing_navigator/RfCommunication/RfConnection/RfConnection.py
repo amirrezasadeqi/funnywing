@@ -8,12 +8,13 @@ from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import
 
 # TODO: check if singleton pattern is suitable for this connection
 class RfConnection(ConnectionInterface):
-    def __init__(self, serialPort="/dev/ttyUSB0", baudRate=9600, outBufWaitForMsg=1e-4):
+    def __init__(self, serialPort, baudRate, dialect, outBufWaitForMsg=1e-4):
         self._outBufWaitForMsg = outBufWaitForMsg
         self._inBuf = []
         self._outBuf = []
         self._serialPort = serialPort
         self._baudRate = baudRate
+        self._dialect = dialect
         self._port = None
 
         self._startCommunication()
@@ -47,7 +48,7 @@ class RfConnection(ConnectionInterface):
         # os.environ["MAVLINK20"] = "1"
         try:
             self._port = mavutil.mavlink_connection(
-                self._serialPort, baud=self._baudRate, dialect="funnywing")
+                self._serialPort, baud=self._baudRate, dialect=self._dialect)
         except Exception:
             self._port = None
             print("The Connection is Not initialized Correctly!")

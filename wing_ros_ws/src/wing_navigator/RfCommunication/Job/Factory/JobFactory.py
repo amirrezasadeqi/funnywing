@@ -1,27 +1,25 @@
 from RfCommunication.Job import Jobs as jobs
+from RfCommunication.Job.Interface.JobInterface import JobInterface
 
 
 class JobFactory(object):
     def __init__(self):
-        self._message = None
+        self._job: JobInterface = jobs.unsupported_message_job(None)
         return
 
-    def setMessage(self, message):
+    def createJob(self, message) -> JobInterface:
         """
-        @param message: This is a mavlink message. Not the base class
-         MAVLink_message but its child classes(e.g. MAVLink_heartbeat_message)
-         . since we need to pass it to job class and use the attributes of those
-         child classes in there.
+        @param message: MAVLink_<message_type> coming from RF interface
+        @return: JobInterface to be used in User classes
         """
-        self._message = message
-        return
+        jobType = self._getJobType(message.get_type())
 
-    def createJob(self):
-        jobType = self._getJobType()
-        job = getattr(jobs, jobType)(self._message)
-        return job
+        try:
+            self._job = getattr(jobs, jobType)(message)
+        except Exception:
+            self._job = jobs.unsupported_message_job(message)
 
-    def _getJobType(self):
-        msgType: str = self._message.get_type()
-        jobType = msgType.lower() + "_job"
-        return jobType
+        return self._job
+
+    def _getJobType(self, messageType: str):
+        return messageType.lower() + "_job"

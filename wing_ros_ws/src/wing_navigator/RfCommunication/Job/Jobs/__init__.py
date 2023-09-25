@@ -1,1 +1,3 @@
 from RfCommunication.Job.Jobs.heartbeat_job import heartbeat_job
+from RfCommunication.Job.Jobs.global_position_int_job import global_position_int_job
+from RfCommunication.Job.Jobs.unsupported_message_job import unsupported_message_job
