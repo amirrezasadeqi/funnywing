@@ -43,5 +43,4 @@ class heartbeat_to_mavros_msgs_State(object):
 
     def _getRosMsgHeader(self) -> Header:
         header = Header()
-        header.stamp = rospy.Time.from_sec(self._message.time_boot_ms / 1000.0)
         return header

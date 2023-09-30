@@ -1,7 +1,7 @@
 from typing import Dict
 from RfCommunication.MAVLinkToRosMsgConverter import ConverterClasses
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
-from ConverterClasses import all_message_types_to_mavros_msgs_Mavlink
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses import all_message_types_to_mavros_msgs_Mavlink
 
 
 class MAVLinkToRosMsgConverter(object):

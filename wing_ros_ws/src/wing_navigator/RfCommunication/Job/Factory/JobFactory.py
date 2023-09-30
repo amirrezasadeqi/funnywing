@@ -11,10 +11,7 @@ class JobFactory(object):
         self._mavrosPublisherManager = mavrosPublisherManager
         self._system = system
         self._component = component
-        self._job: JobInterface = jobs.unsupported_message_job(None, self._rfConnection,
-                                                               self._mavrosPublisherManager.getPublishers(
-                                                                   "UNSUPPORTED_MESSAGE"), self._system,
-                                                               self._component)
+        self._job = None
         return
 
     def createJob(self, message) -> JobInterface:
