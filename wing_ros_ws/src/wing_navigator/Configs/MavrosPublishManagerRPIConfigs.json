@@ -1,0 +1,42 @@
+[
+  {
+    "name": "MavlinkPublisher",
+    "enable": true,
+    "topicName": "/Mavlink/from",
+    "msgPack": "mavros_msgs",
+    "msgType": "Mavlink",
+    "rate": 1000,
+    "queueSize": 100,
+    "onMessage": "ALL_MESSAGE_TYPES"
+  },
+  {
+    "name": "targetGlobalPositionPublisher",
+    "enable": true,
+    "topicName": "/funnywing/targetGlobalPosition",
+    "msgPack": "sensor_msgs",
+    "msgType": "NavSatFix",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "POSITION_TARGET_GLOBAL_INT",
+    "messageFields": [
+      "lat_int",
+      "lon_int",
+      "alt"
+    ]
+  },
+  {
+    "name": "targetVelocityPublisher",
+    "enable": true,
+    "topicName": "/funnywing/targetVelocity",
+    "msgPack": "geometry_msgs",
+    "msgType": "TwistStamped",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "POSITION_TARGET_GLOBAL_INT",
+    "messageFields": [
+      "vx",
+      "vy",
+      "vz"
+    ]
+  }
+]

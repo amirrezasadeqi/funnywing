@@ -12,4 +12,7 @@ class ConnectionInterface(ABC):
 
     @abstractmethod
     def getPort(self):
+        """
+        Gives the pymavlink.mavutil.mavlink_connection object.
+        """
         pass

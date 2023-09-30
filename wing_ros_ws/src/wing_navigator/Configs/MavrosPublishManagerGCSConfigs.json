@@ -1,0 +1,108 @@
+[
+  {
+    "name": "MavlinkPublisher",
+    "enable": true,
+    "topicName": "/Mavlink/from",
+    "msgPack": "mavros_msgs",
+    "msgType": "Mavlink",
+    "rate": 1000,
+    "queueSize": 100,
+    "onMessage": "ALL_MESSAGE_TYPES"
+  },
+  {
+    "name": "fcuStatePublisher",
+    "enable": true,
+    "topicName": "/funnywing/state",
+    "msgPack": "mavros_msgs",
+    "msgType": "State",
+    "rate": 1,
+    "queueSize": 1,
+    "onMessage": "HEARTBEAT"
+  },
+  {
+    "name": "batteryStatePublisher",
+    "enable": true,
+    "topicName": "/funnywing/battery",
+    "msgPack": "sensor_msgs",
+    "msgType": "BatteryState",
+    "rate": 1,
+    "queueSize": 1,
+    "onMessage": "BATTERY_STATUS"
+  },
+  {
+    "name": "globalPositionPublisher",
+    "enable": true,
+    "topicName": "/funnywing/globalPosition",
+    "msgPack": "sensor_msgs",
+    "msgType": "NavSatFix",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "GLOBAL_POSITION_INT",
+    "messageFields": [
+      "lat",
+      "lon",
+      "alt"
+    ]
+  },
+  {
+    "name": "gpsVelocityPublisher",
+    "enable": true,
+    "topicName": "/funnywing/gpsVelocity",
+    "msgPack": "geometry_msgs",
+    "msgType": "TwistStamped",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "GLOBAL_POSITION_INT",
+    "messageFields": [
+      "vx",
+      "vy",
+      "vz"
+    ]
+  },
+  {
+    "name": "gpsHeadingPublisher",
+    "enable": true,
+    "topicName": "/funnywing/gpsHeading",
+    "msgPack": "std_msgs",
+    "msgType": "Float64",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "GLOBAL_POSITION_INT",
+    "messageFields": [
+      "hdg"
+    ]
+  },
+  {
+    "name": "gpsRelativeAltitudePublisher",
+    "enable": true,
+    "topicName": "/funnywing/gpsRelativeAltitude",
+    "msgPack": "std_msgs",
+    "msgType": "Float64",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "GLOBAL_POSITION_INT",
+    "messageFields": [
+      "relative_alt"
+    ]
+  },
+  {
+    "name": "attitudePublisher",
+    "enable": true,
+    "topicName": "/funnywing/orientation",
+    "msgPack": "sensor_msgs",
+    "msgType": "Imu",
+    "rate": 100,
+    "queueSize": 10,
+    "onMessage": "ATTITUDE"
+  },
+  {
+    "name": "homePositionPublisher",
+    "enable": true,
+    "topicName": "/funnywing/homePosition",
+    "msgPack": "mavros_msgs",
+    "msgType": "HomePosition",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "HOME_POSITION"
+  }
+]
