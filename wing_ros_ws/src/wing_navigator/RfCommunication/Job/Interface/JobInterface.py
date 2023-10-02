@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import rospy
+
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
 from RfCommunication.MAVLinkToRosMsgConverter.MAVLinkToRosMsgConverter import MAVLinkToRosMsgConverter
 
@@ -53,7 +55,11 @@ class JobInterface(ABC):
 
     def _publishMessageToRos(self):
         for publisher in self._mavrosPublishers:
-            self._mavlinkToRosMsgConverter.setPublisherConfig(publisher["publisherConfig"])
+            try:
+                self._mavlinkToRosMsgConverter.setupConverter(publisher["publisherConfig"])
+            except Exception as e:
+                rospy.logwarn(e)
+                continue
             msg = self._mavlinkToRosMsgConverter.convert()
             publisher["publisherObject"].publish(msg)
         return

@@ -8,7 +8,7 @@ from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import
 
 
 class RfCommunicationHandler(object):
-    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory, systemName: str,
+    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory, systemName: str, fromRosTopic,
                  inBufWaitForMsg: float = 1e-4):
         """
         RfCommunicationHandler constructor. This class assembles all parts of the architecture
@@ -21,11 +21,15 @@ class RfCommunicationHandler(object):
         rospy.spin() and solves these problems.
 
         @type rfConnection: RfConnection
+        @param fromRosTopic: This is the name of the mavros_msgs/Mavlink topic that this node subscribes to and converts
+        its data to mavlink message and sends through mavlink port. This can be used for forwarding the mavlink data
+        coming from FCU by mavros node on RPI. Also, you can use it in GCS for sending commands to RPI by just creating
+        MAVLink_<message_type> object and convert it to mavros_msgs/Mavlink and publishing it to this topic.
         """
         self._rfConnection = rfConnection
         self._jobFactory = jobFactory
         self._inBufWaitForMsg = inBufWaitForMsg
-        self._fromRosTopic = "/from_" + str(systemName) + "_ros"
+        self._fromRosTopic = fromRosTopic
         self._recvMavMsgThread = None
         self._transRosMsgThread = None
         self._mavrosMsgSubscriber = None

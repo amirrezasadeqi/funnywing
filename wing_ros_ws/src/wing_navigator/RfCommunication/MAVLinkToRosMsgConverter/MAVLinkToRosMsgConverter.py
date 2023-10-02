@@ -25,7 +25,7 @@ class MAVLinkToRosMsgConverter(object):
         self._message = message
         return
 
-    def setPublisherConfig(self, publisherConfig: Dict):
+    def setupConverter(self, publisherConfig: Dict):
         """
 
         @param publisherConfig: Dictionary containing the publisher information which is necessary to
@@ -50,8 +50,7 @@ class MAVLinkToRosMsgConverter(object):
             else:
                 return getattr(ConverterClasses, converterClassName)(self._message)
         except Exception:
-            print("Conversion is not available at the moment, Please Implement it!")
-            return None
+            raise Exception("Conversion is not available at the moment, Please Implement it!")
 
     def _getConverterClassName(self):
         """

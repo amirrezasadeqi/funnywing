@@ -43,4 +43,5 @@ if __name__ == "__main__":
     # For now the system is not important in the Job we create. later we pass specific IDs for system and component.
     jf = JobFactory(connection, mavrosPubMng, 0, 0)
 
-    comHandler = RfCommunicationHandler(connection, jf, args.system)
+    comHandler = RfCommunicationHandler(connection, jf, args.system,
+                                        "/mavlink/from" if "RPI" == args.system else "/GCS/from")

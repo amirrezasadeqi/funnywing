@@ -2,7 +2,7 @@
   {
     "name": "MavlinkPublisher",
     "enable": true,
-    "topicName": "/Mavlink/from",
+    "topicName": "/GCS/from",
     "msgPack": "mavros_msgs",
     "msgType": "Mavlink",
     "rate": 1000,

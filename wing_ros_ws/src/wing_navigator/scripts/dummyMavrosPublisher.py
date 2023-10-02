@@ -9,8 +9,9 @@ if __name__ == "__main__":
     rospy.init_node("dummyMavrosPublisher")
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--system")
+    parser.add_argument("-t", "--topic_to_publish")
     args = parser.parse_args()
-    publisher_name = "/from_" + str(args.system) + "_ros"
+    publisher_name = args.topic_to_publish
     mavPub = rospy.Publisher(publisher_name, Mavlink, queue_size=10)
     rate = rospy.Rate(1)
 

@@ -1,4 +1,3 @@
-import os
 import threading
 import time
 import rospy
@@ -65,7 +64,10 @@ class RfConnection(ConnectionInterface):
         while not rospy.is_shutdown():
             if len(self._outBuf):
                 outMsg = self._outBuf.pop(0)
-                self._port.mav.send(outMsg)
+                try:
+                    self._port.mav.send(outMsg)
+                except Exception:
+                    rospy.logwarn("Message coming from FCU by mavros, is in MAVLink_message base class or corrupted!")
             else:
                 time.sleep(self._outBufWaitForMsg)
         return
