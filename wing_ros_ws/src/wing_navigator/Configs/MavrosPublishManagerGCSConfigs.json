@@ -93,7 +93,7 @@
     "msgType": "Imu",
     "rate": 100,
     "queueSize": 10,
-    "onMessage": "ATTITUDE"
+    "onMessage": "ATTITUDE_QUATERNION"
   },
   {
     "name": "homePositionPublisher",

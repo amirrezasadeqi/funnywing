@@ -1,8 +1,14 @@
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.heartbeat_to_mavros_msgs_State import \
     heartbeat_to_mavros_msgs_State
 
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.global_position_int_hdg_to_std_msgs_Float64 import \
+    global_position_int_hdg_to_std_msgs_Float64
+
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.global_position_int_lat_lon_alt_to_sensor_msgs_NavSatFix import \
     global_position_int_lat_lon_alt_to_sensor_msgs_NavSatFix
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.global_position_int_relative_alt_to_std_msgs_Float64 import \
+    global_position_int_relative_alt_to_std_msgs_Float64
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.global_position_int_vx_vy_vz_to_geometry_msgs_TwistStamped import \
     global_position_int_vx_vy_vz_to_geometry_msgs_TwistStamped
@@ -21,3 +27,6 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.position_target_g
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.position_target_global_int_vx_vy_vz_to_geometry_msgs_TwistStamped import \
     position_target_global_int_vx_vy_vz_to_geometry_msgs_TwistStamped
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_quaternion_to_sensor_msgs_Imu import \
+    attitude_quaternion_to_sensor_msgs_Imu
