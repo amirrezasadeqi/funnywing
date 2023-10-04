@@ -1,5 +1,5 @@
-import threading
 import rospy
+import threading
 from mavros import mavlink
 from mavros_msgs.msg import Mavlink
 
@@ -8,7 +8,7 @@ from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import
 
 
 class RfCommunicationHandler(object):
-    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory, systemName: str, fromRosTopic,
+    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory, systemID, componentID, fromRosTopic,
                  inBufWaitForMsg: float = 1e-4):
         """
         RfCommunicationHandler constructor. This class assembles all parts of the architecture
@@ -30,6 +30,8 @@ class RfCommunicationHandler(object):
         self._jobFactory = jobFactory
         self._inBufWaitForMsg = inBufWaitForMsg
         self._fromRosTopic = fromRosTopic
+        self._systemID = systemID
+        self._componentID = componentID
         self._recvMavMsgThread = None
         self._transRosMsgThread = None
         self._mavrosMsgSubscriber = None
@@ -73,8 +75,9 @@ class RfCommunicationHandler(object):
         """
         # convert Mavlink message to mavutil.mavlink.MAVLink_<message_type>
         mavlinkMsg = self._mavrosToMavlink(mavrosMsg)
-        # write message to the connection
-        self._rfConnection.write(mavlinkMsg)
+        if self._filterMavrosInternalMessages(mavlinkMsg):
+            # write message to the connection
+            self._rfConnection.write(mavlinkMsg)
         return
 
     def _mavrosToMavlink(self, mavrosMsg: Mavlink):
@@ -91,3 +94,14 @@ class RfCommunicationHandler(object):
         bits = mavlink.convert_to_bytes(mavrosMsg)
         mavlinkMsg = self._rfConnection.getPort().mav.decode(bits)
         return mavlinkMsg
+
+    def _filterMavrosInternalMessages(self, mavlinkMsg):
+        """
+        This function returns True only if the mavlink message source is the system we specify in the self._systemID,
+        This way, we can filter the messages coming from the internal things of the mavros and the mavros heartbeat(
+        These messages previously caused some bugs in seeing the correct flight mode in the GCS side.). Also, in this
+        way the message coming from other place(probably unknown or unwanted palces) can be dropped or filtered.
+        @param mavlinkMsg: MAVLink_<message_type>
+        @return: boolean, True if the message is going to be written on the RF connection.
+        """
+        return self._systemID == mavlinkMsg.get_header().srcSystem

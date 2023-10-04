@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-import argparse
-import json
+
 import rospy
+import argparse
+from pymavlink import mavutil
 from rospkg import RosPack as rospack
 
 from RfCommunication.Job.Factory.JobFactory import JobFactory
+from RfCommunication.MavrosPublishManager.MavrosPublishManager import MavrosPublishManager
 from RfCommunication.RfCommunicationHandler.RfCommunicationHandler import RfCommunicationHandler
 from RfCommunication.RfConnection.RfConnection import RfConnection
-from RfCommunication.MavrosPublishManager.MavrosPublishManager import MavrosPublishManager
 
 ########################################################################
 # TODO: Delete below test things.
@@ -18,7 +19,17 @@ from RfCommunication.MavrosPublishManager.MavrosPublishManager import MavrosPubl
 # from pymavlink import mavutil
 # mavlink_map[funnywing.MAVLINK_MSG_ID_HEARTBEAT]
 ########################################################################
+systemAddressMap = {
+    "GCS": {
+        "systemID": mavutil.mavlink.MAV_TYPE_GCS,
+        "componentID": 0
+    },
 
+    "RPI": {
+        "systemID": mavutil.mavlink.MAV_TYPE_FIXED_WING,
+        "componentID": 0
+    }
+}
 
 if __name__ == "__main__":
     rospy.init_node("RfConnectionTest", anonymous=True)
@@ -38,10 +49,13 @@ if __name__ == "__main__":
     else:
         print("Please Specify a valid configuration file for your system!")
 
-    mavrosPubMng = MavrosPublishManager(config_path)
-    connection = RfConnection(args.serial_port, args.baudrate, args.dialect)
-    # For now the system is not important in the Job we create. later we pass specific IDs for system and component.
-    jf = JobFactory(connection, mavrosPubMng, 0, 0)
+    systemAddress = systemAddressMap[args.system]
 
-    comHandler = RfCommunicationHandler(connection, jf, args.system,
+    mavrosPubMng = MavrosPublishManager(config_path)
+    connection = RfConnection(args.serial_port, args.baudrate, systemAddress["systemID"], systemAddress["componentID"],
+                              args.dialect)
+    # For now the system is not important in the Job we create. later we pass specific IDs for system and component.
+    jf = JobFactory(connection, mavrosPubMng, systemAddress["systemID"], systemAddress["componentID"])
+
+    comHandler = RfCommunicationHandler(connection, jf, systemAddress["systemID"], systemAddress["componentID"],
                                         "/mavlink/from" if "RPI" == args.system else "/GCS/from")

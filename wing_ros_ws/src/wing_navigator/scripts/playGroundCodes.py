@@ -14,8 +14,10 @@ from mavros import mavlink
 def mavlinkSubsCallback(msg):
     protocolObject = mavutil.mavlink.MAVLink('')
     mavMsg = protocolObject.decode(mavlink.convert_to_bytes(msg))
-    if "HEARTBEAT" == mavMsg.get_type():
+    # if "HEARTBEAT" == mavMsg.get_type():
+    if mavMsg.get_header().srcSystem in (0, 255):
         rospy.loginfo(mavMsg)
+    # rospy.loginfo(mavMsg.get_header().srcSystem)
     return
 
 
