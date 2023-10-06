@@ -5,10 +5,12 @@ from mavros_msgs.msg import Mavlink
 
 from RfCommunication.Job.Factory.JobFactory import JobFactory
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
+from RfCommunication.MavrosPublishManager.MavrosPublishManager import MavrosPublishManager
 
 
 class RfCommunicationHandler(object):
-    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory, systemID, componentID, fromRosTopic,
+    def __init__(self, rfConnection: ConnectionInterface, jobFactory: JobFactory,
+                 mavrosPublisherManager: MavrosPublishManager, systemID, componentID, fromRosTopic,
                  inBufWaitForMsg: float = 1e-4):
         """
         RfCommunicationHandler constructor. This class assembles all parts of the architecture
@@ -28,6 +30,7 @@ class RfCommunicationHandler(object):
         """
         self._rfConnection = rfConnection
         self._jobFactory = jobFactory
+        self._mavrosPublisherManager = mavrosPublisherManager
         self._inBufWaitForMsg = inBufWaitForMsg
         self._fromRosTopic = fromRosTopic
         self._systemID = systemID
@@ -49,6 +52,7 @@ class RfCommunicationHandler(object):
         while not rospy.is_shutdown():
             inMavMsg = self._rfConnection.read()
             if inMavMsg:
+                self._mavrosPublisherManager.addToPublishBuffer(inMavMsg)
                 job = self._jobFactory.createJob(inMavMsg)
                 job.runJob()
             else:

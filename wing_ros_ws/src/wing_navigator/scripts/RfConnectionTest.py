@@ -51,11 +51,14 @@ if __name__ == "__main__":
 
     systemAddress = systemAddressMap[args.system]
 
-    mavrosPubMng = MavrosPublishManager(config_path)
     connection = RfConnection(args.serial_port, args.baudrate, systemAddress["systemID"], systemAddress["componentID"],
                               args.dialect)
-    # For now the system is not important in the Job we create. later we pass specific IDs for system and component.
-    jf = JobFactory(connection, mavrosPubMng, systemAddress["systemID"], systemAddress["componentID"])
 
-    comHandler = RfCommunicationHandler(connection, jf, systemAddress["systemID"], systemAddress["componentID"],
+    mavrosPubMng = MavrosPublishManager(config_path, connection)
+
+    # For now the system is not important in the Job we create. later we pass specific IDs for system and component.
+    jf = JobFactory(connection, systemAddress["systemID"], systemAddress["componentID"])
+
+    comHandler = RfCommunicationHandler(connection, jf, mavrosPubMng, systemAddress["systemID"],
+                                        systemAddress["componentID"],
                                         "/mavlink/from" if "RPI" == args.system else "/GCS/from")

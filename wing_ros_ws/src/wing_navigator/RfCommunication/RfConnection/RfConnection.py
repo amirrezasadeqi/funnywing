@@ -67,6 +67,7 @@ class RfConnection(ConnectionInterface):
         while not rospy.is_shutdown():
             if len(self._outBuf):
                 outMsg = self._outBuf.pop(0)
+                # if not a command and out of data -> continue
                 try:
                     self._port.mav.send(outMsg)
                 except Exception:

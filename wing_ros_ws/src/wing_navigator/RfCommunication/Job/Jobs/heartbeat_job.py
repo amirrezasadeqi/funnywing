@@ -5,12 +5,12 @@ from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import
 
 class heartbeat_job(JobInterface):
 
-    def __init__(self, message, rfConnection: ConnectionInterface, mavrosPublishers, system, component):
+    def __init__(self, message, rfConnection: ConnectionInterface, system, component):
         """
 
         @type message: MAVLink_<message_type>
         """
-        super().__init__(message, rfConnection, mavrosPublishers, system, component)
+        super().__init__(message, rfConnection, system, component)
         return
 
     def _doJob(self):
