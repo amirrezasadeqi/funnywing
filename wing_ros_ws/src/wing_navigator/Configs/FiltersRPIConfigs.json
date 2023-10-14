@@ -1,0 +1,17 @@
+{
+  "mavrosMavlinkIdFilter": {
+    "allowedList": [
+      "HEARTBEAT",
+      "GLOBAL_POSITION_INT",
+      "ATTITUDE_QUATERNION",
+      "HOME_POSITION",
+      "BATTERY_STATUS"
+    ],
+    "blackList": []
+  },
+  "mavrosInternalMsgFilter": {
+    "sourceType": "MAV_TYPE_FIXED_WING",
+    "sourceSystem": 1,
+    "sourceComponent": 1
+  }
+}

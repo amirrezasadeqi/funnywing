@@ -1,0 +1,16 @@
+{
+  "mavrosMavlinkIdFilter": {
+    "allowedList": [
+      "HEARTBEAT",
+      "COMMAND_LONG",
+      "COMMAND_INT",
+      "POSITION_TARGET_GLOBAL_INT"
+    ],
+    "blackList": []
+  },
+  "mavrosInternalMsgFilter": {
+    "sourceType": "MAV_TYPE_GCS",
+    "sourceSystem": 6,
+    "sourceComponent": 1
+  }
+}
