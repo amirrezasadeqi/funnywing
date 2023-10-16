@@ -30,3 +30,6 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.position_target_g
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_quaternion_to_sensor_msgs_Imu import \
     attitude_quaternion_to_sensor_msgs_Imu
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_to_sensor_msgs_Imu import \
+    attitude_to_sensor_msgs_Imu
