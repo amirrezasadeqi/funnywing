@@ -55,12 +55,13 @@ if __name__ == "__main__":
 
     systemAddress = systemAddressMap[args.system]
 
-    # creating list of message filters
+    # Creating list of message filters. Adding mavrosInternalMsgFilter first preventing from warning logs about not
+    # defined mavlink messages.
     messageFilters = []
-    mavrosMavLinkIdFilter = Filters.mavrosMavlinkIdFilter(filterConfigPath)
-    messageFilters.append(mavrosMavLinkIdFilter)
     mavrosInternalMsgFilter = Filters.mavrosInternalMsgFilter(filterConfigPath)
     messageFilters.append(mavrosInternalMsgFilter)
+    mavrosMavLinkIdFilter = Filters.mavrosMavlinkIdFilter(filterConfigPath)
+    messageFilters.append(mavrosMavLinkIdFilter)
 
     connection = RfConnection(args.serial_port, args.baudrate, systemAddress["systemID"], systemAddress["componentID"],
                               args.dialect)

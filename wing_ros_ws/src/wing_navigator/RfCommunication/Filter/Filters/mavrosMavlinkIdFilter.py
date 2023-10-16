@@ -1,4 +1,5 @@
 import json
+import rospy
 from pymavlink import mavutil
 
 from RfCommunication.Filter.Interface.FilterInterface import FilterInterface
@@ -25,8 +26,13 @@ class mavrosMavlinkIdFilter(FilterInterface):
         @return: Returns True if the message type is in allowedList AND not in blackList. So, blackList overrides the
         allowedList.
         """
-        messageType = self._mavlink_map[message.msgid].msgname
-        return (messageType in self._config["allowedList"]) and (messageType not in self._config["blackList"])
+        try:
+            messageType = self._mavlink_map[message.msgid].msgname
+            return (messageType in self._config["allowedList"]) and (messageType not in self._config["blackList"])
+        except KeyError:
+            rospy.logwarn("The message is not existed in the chosen dialect XML file. Check if it is published "
+                          "wrongly or add this message to your custom dialect.")
+            return False
 
     def _readFilterConfig(self, configPath):
         configFile = open(configPath)
