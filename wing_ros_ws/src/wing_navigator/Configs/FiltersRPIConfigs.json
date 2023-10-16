@@ -3,7 +3,7 @@
     "allowedList": [
       "HEARTBEAT",
       "GLOBAL_POSITION_INT",
-      "ATTITUDE_QUATERNION",
+      "ATTITUDE",
       "HOME_POSITION",
       "BATTERY_STATUS"
     ],
