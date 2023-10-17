@@ -23,6 +23,7 @@ class attitude_to_sensor_msgs_Imu(object):
         convert mavlink ATTITUDE message to sensor_msgs/Imu ROS message. ATTITUDE is representing orientation in Euler
         angles and in Z-down, Y-right, X-front, ZYX intrinsic(refers to elemental rotations around rotating coordinates)
         coordinate frame. To convert between Euler angles and quaternions and vice versa, use below link:
+
         https://www.theconstructsim.com/ros-qa-how-to-convert-quaternions-to-euler-angles/
         """
         rosMsg = Imu()
