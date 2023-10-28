@@ -3,10 +3,85 @@
 import sys
 from pathlib import Path
 import rospy
+import threading
+from pymavlink import mavutil
+from mavros import mavlink
+
+from mavros_msgs.msg import Mavlink, State
+from sensor_msgs.msg import NavSatFix
+from geometry_msgs.msg import TwistStamped
+from std_msgs.msg import Float64
 
 from PySide2.QtQml import QQmlApplicationEngine
 from PySide2.QtCore import QObject, Signal, Slot
 from PySide2.QtWidgets import QApplication
+
+
+class dataUpdater(QObject):
+    def __init__(self, dataSubConfig):
+        super().__init__()
+
+        self._dataSubConfig = dataSubConfig
+        # Create Subscribers
+        self._subscriberList = []
+        self._createSubscriptions()
+        # create listener thread to spin
+        self._rosSpinnerThread = threading.Thread(target=self._rosSpinnerThreadCallback)
+        # start the thread
+        self._rosSpinnerThread.start()
+        return
+
+    def _createSubscriptions(self):
+        self._topicHandlerMap = {
+            "/funnywing/state": self._stateCallback,
+            "/funnywing/globalPosition": self._globalPositionCallback,
+            "/funnywing/gpsVelocity": self._gpsVelocityCallback,
+            "/funnywing/gpsHeading": self._gpsHeadingCallback,
+            "/funnywing/gpsRelativeAltitude": self._gpsRelAltCallback,
+            "/target/globalPosition": self._tgGlobalPositionCallback
+        }
+        # create ROS listeners to get latest data and send it to frontend
+        for config in self._dataSubConfig:
+            self._subscriberList.append({"topicName": config["topicName"],
+                                         "subscriber": rospy.Subscriber(config["topicName"], config["dataType"],
+                                                                        callback=self._topicHandlerMap[
+                                                                            config["topicName"]],
+                                                                        callback_args=(config["signal"],))})
+        return
+
+    def _rosSpinnerThreadCallback(self):
+        rospy.spin()
+        return
+
+    def _stateCallback(self, msg: State, args):
+        signal = args[0]
+        signal.emit(msg.mode)
+        return
+
+    def _globalPositionCallback(self, msg: NavSatFix, args):
+        signal = args[0]
+        signal.emit(msg.latitude, msg.longitude, msg.altitude)
+        return
+
+    def _gpsVelocityCallback(self, msg: TwistStamped, args):
+        signal = args[0]
+        signal.emit(msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z)
+        return
+
+    def _gpsHeadingCallback(self, msg: Float64, args):
+        signal = args[0]
+        signal.emit(msg.data)
+        return
+
+    def _gpsRelAltCallback(self, msg: Float64, args):
+        signal = args[0]
+        signal.emit(msg.data)
+        return
+
+    def _tgGlobalPositionCallback(self, msg: NavSatFix, args):
+        signal = args[0]
+        signal.emit(msg.latitude, msg.longitude, msg.altitude)
+        return
 
 
 class backEnd(QObject):
@@ -19,9 +94,27 @@ class backEnd(QObject):
     setWingFlightState = Signal(str, arguments=['flightState'])
     setWingRelAlt = Signal(float, arguments=['alt'])
 
+    _dataSubscriptionConfig = [
+        {"topicName": "/funnywing/state", "dataType": State, "signal": setWingFlightState},
+        {"topicName": "/funnywing/globalPosition", "dataType": NavSatFix, "signal": setWingGPS},
+        {"topicName": "/funnywing/gpsVelocity", "dataType": TwistStamped, "signal": setWingVelocity},
+        {"topicName": "/funnywing/gpsHeading", "dataType": Float64, "signal": setWingHeading},
+        {"topicName": "/funnywing/gpsRelativeAltitude", "dataType": Float64, "signal": setWingRelAlt},
+        {"topicName": "/target/globalPosition", "dataType": NavSatFix, "signal": setTargetGPS}
+    ]
+
     @Slot(bool)
     def setArmState(self, armState):
         self._armState = armState
+        # create mavlink message
+        mavMsg = mavutil.mavlink.MAVLink_command_long_message(self._tgSystemID, self._tgComponentID,
+                                                              mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0,
+                                                              1 if armState else 0, 0, 0, 0, 0, 0, 0)
+        # convert it to mavros_msgs/Mavlink message
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        # publish the message, and it will automatically be sent.
+        self._toRfComPublisher.publish(rosMsg)
         ###
         print(armState)
         return
@@ -29,19 +122,64 @@ class backEnd(QObject):
     @Slot(str)
     def setFlightMode(self, flightMode):
         self._flightMode = flightMode
+        mavMsg = mavutil.mavlink.MAVLink_command_long_message(self._tgSystemID, self._tgComponentID,
+                                                              mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
+                                                              0, self.ARDUPLANE_MODE_MAP[flightMode], 0, 0, 0, 0, 0)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
         ###
         print(flightMode)
         return
 
     @Slot(float, float, float)
     def goToLocation(self, lat, lon, alt):
+        # Scaling lat, lon to use them with MAVLink_command_int_message.
+        lat = int(lat * 1e7)
+        lon = int(lon * 1e7)
+        mavMsg = mavutil.mavlink.MAVLink_command_int_message(self._tgSystemID, self._tgComponentID,
+                                                             mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+                                                             mavutil.mavlink.MAV_CMD_DO_REPOSITION, 0, 0, -1,
+                                                             mavutil.mavlink.MAV_DO_REPOSITION_FLAGS_CHANGE_MODE, 120,
+                                                             0, lat, lon, alt)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
         print(lat, lon, alt)
         return
 
-    def __init__(self):
+    def __init__(self, systemID, componentID, tgSystemID, tgComponentID):
+        self.ARDUPLANE_MODE_MAP = {
+            "MANUAL": 0,
+            "CIRCLE": 1,
+            "STABILIZE": 2,
+            "TRAINING": 3,
+            "ACRO": 4,
+            "FBWA": 5,
+            "FBWB": 6,
+            "CRUISE": 7,
+            "AUTOTUNE": 8,
+            "AUTO": 10,
+            "RTL": 11,
+            "LOITER": 12,
+            "GUIDED": 15
+        }
         super().__init__()
         self._armState = False
         self._flightMode = "MANUAL"
+        self._systemID = systemID
+        self._componentID = componentID
+        self._tgSystemID = tgSystemID
+        self._tgComponentID = tgComponentID
+        self._dataUpdater = dataUpdater(self._dataSubscriptionConfig)
+        # TODO[test needed]: MAVLink object does not try to connect to the connection string and
+        #   I don't know if the connection string is important in de/serialization. So I will use
+        #   empty string now and if it will be ok delete this, otherwise we must pass the address
+        #   of the connection(since MAVLink does not connect to that automatically, I think there
+        #   will be no problem about occupied connection).
+        self._protocolObj = mavutil.mavlink.MAVLink('', self._systemID, self._componentID)
+        # Publisher for sending mavlink Commands and all the data which is needed in the RPI side.
+        self._toRfComPublisher = rospy.Publisher("/GCS/from", Mavlink, queue_size=10)
         return
 
 
@@ -59,7 +197,11 @@ if __name__ == "__main__":
     if not engine.rootObjects():
         sys.exit(-1)
 
-    backend = backEnd()
+    sysId = mavutil.mavlink.MAV_TYPE_GCS  # MAVLink ID for GCS
+    compId = 1
+    tgSysId = mavutil.mavlink.MAV_TYPE_FIXED_WING
+    tgCompId = 1
+    backend = backEnd(sysId, compId, tgSysId, tgCompId)
     engine.rootContext().setContextProperty("backend", backend)
 
     sys.exit(app.exec_())
