@@ -24,7 +24,7 @@ Window {
     property real wingRelAlt: 100.432
 
     Connections{
-        target: backend
+        target: backFrontConnections
 
         function onSetTargetGPS(lat, lon, alt){
             mainWindow.tgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
@@ -420,10 +420,10 @@ Window {
                                                 id: stateActionView
                                                 anchors.fill: parent
                                                 onArmingStateChanged: {
-                                                    backend.setArmState(armingState)
+                                                    backFrontConnections.setArmState(armingState)
                                                 }
                                                 onFlightModeChanged: {
-                                                    backend.setFlightMode(flightMode)
+                                                    backFrontConnections.setFlightMode(flightMode)
                                                 }
                                             }
                                         }
@@ -434,7 +434,7 @@ Window {
                                                 id: gotoServiceView
                                                 anchors.fill: parent
                                                 onGoToSignal: {
-                                                    backend.goToLocation(lat, lon, alt)
+                                                    backFrontConnections.goToLocation(lat, lon, alt)
                                                 }
                                             }
                                         }

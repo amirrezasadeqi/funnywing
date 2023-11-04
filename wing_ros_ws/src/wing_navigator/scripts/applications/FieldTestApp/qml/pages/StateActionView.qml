@@ -94,7 +94,7 @@ Item {
                                             Layout.preferredWidth: activeModeBtn.width
                                             wheelEnabled: true
                                             editable: true
-                                            model: ["MANUAL", "STABILIZED", "AUTO", "GUIDED", "RTL", "FBWA"]
+                                            model: ["MANUAL", "STABILIZE", "AUTO", "GUIDED", "RTL", "FBWA"]
                                         }
                                         CustomTextBtn{
                                             id: activeModeBtn
