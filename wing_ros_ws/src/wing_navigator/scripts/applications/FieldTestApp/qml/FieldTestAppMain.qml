@@ -346,6 +346,47 @@ Window {
                                     wingLocation: QtPositioning.coordinate(mainWindow.wingGPS.lat, mainWindow.wingGPS.lon)
                                     tgLocation: QtPositioning.coordinate(mainWindow.tgGPS.lat, mainWindow.tgGPS.lon)
                                     wingHdg: mainWindow.wingHdg
+                                    onSendGoToCommandToBackEnd: {
+                                        backFrontConnections.goToLocation(lat, lon, alt)
+                                    }
+                                }
+
+                                Rectangle {
+                                    id: mapHorizontalControlsContainer
+                                    height: 30
+                                    color: "#00ffffff"
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    anchors.rightMargin: 0
+                                    anchors.leftMargin: 0
+                                    anchors.bottomMargin: 0
+
+                                    CustomTextBtn {
+                                        id: moveToWingBtn
+                                        width: 80
+                                        height: 28
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        btnLabel: "Wing"
+                                        anchors.leftMargin: 5
+                                        onClicked: {
+                                            map.mapCenter = map.wingLocation
+                                        }
+                                    }
+
+                                    CustomTextBtn {
+                                        id: moveToTgBtn
+                                        width: 80
+                                        height: 28
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: moveToWingBtn.right
+                                        btnLabel: "Target"
+                                        anchors.leftMargin: 5
+                                        onClicked: {
+                                            map.mapCenter = map.tgLocation
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -419,11 +460,11 @@ Window {
                                             StateActionView{
                                                 id: stateActionView
                                                 anchors.fill: parent
-                                                onArmingStateChanged: {
-                                                    backFrontConnections.setArmState(armingState)
+                                                onArmDisarmBtnSignal: {
+                                                    backFrontConnections.setArmState(arming)
                                                 }
-                                                onFlightModeChanged: {
-                                                    backFrontConnections.setFlightMode(flightMode)
+                                                onModeChangerBtnsSignal: {
+                                                    backFrontConnections.setFlightMode(mode)
                                                 }
                                             }
                                         }

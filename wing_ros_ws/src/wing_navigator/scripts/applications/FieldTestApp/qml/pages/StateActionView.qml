@@ -10,6 +10,9 @@ Item {
     property bool armingState: false
     property string flightMode: qsTr("MANUAL")
 
+    signal armDisarmBtnSignal(bool arming)
+    signal modeChangerBtnsSignal(string mode)
+
     Rectangle {
         id: bg
         color: "#2a2a2a"
@@ -50,7 +53,7 @@ Item {
                                         btnLabel: qsTr("Arm")
                                         Layout.topMargin: (systemArmingActionControlContainer.height - height) / 2
                                         onClicked: {
-                                            stateActionView.armingState = true
+                                            stateActionView.armDisarmBtnSignal(true)
                                         }
                                     }
                                     CustomTextBtn{
@@ -58,7 +61,7 @@ Item {
                                         btnLabel: qsTr("Disarm")
                                         Layout.topMargin: (systemArmingActionControlContainer.height - height) / 2
                                         onClicked: {
-                                            stateActionView.armingState = false
+                                            stateActionView.armDisarmBtnSignal(false)
                                         }
                                     }
                                 }
@@ -100,7 +103,7 @@ Item {
                                             id: activeModeBtn
                                             btnLabel: qsTr("Active Mode")
                                             onClicked: {
-                                                stateActionView.flightMode = flightModeComboBox.currentText
+                                                stateActionView.modeChangerBtnsSignal(flightModeComboBox.currentText)
                                             }
                                         }
                                     }
@@ -111,7 +114,7 @@ Item {
                                         Layout.alignment: Qt.AlignHCenter
                                         btnLabel: qsTr("Return to Home")
                                         onClicked: {
-                                            stateActionView.flightMode = qsTr("RTL")
+                                            stateActionView.modeChangerBtnsSignal(qsTr("RTL"))
                                         }
                                     }
                                 }
