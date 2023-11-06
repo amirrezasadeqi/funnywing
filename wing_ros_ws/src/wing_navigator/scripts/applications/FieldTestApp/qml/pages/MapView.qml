@@ -190,6 +190,9 @@ Item {
                         anchors.topMargin: 15
                         placeholderText: "Enter Command Altitude"
                         anchors.horizontalCenter: parent.horizontalCenter
+                        onAccepted: {
+                            gotoAltInputPopupBtn.clicked()
+                        }
                     }
 
                     CustomTextBtn{
