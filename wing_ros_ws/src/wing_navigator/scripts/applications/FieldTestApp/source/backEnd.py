@@ -60,20 +60,18 @@ class backEnd(QObject):
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         # publish the message, and it will automatically be sent.
         self._toRfComPublisher.publish(rosMsg)
-        ###
-        print(armState)
         return
 
     @Slot(str)
     def pubSetModeCommand(self, flightMode):
+        # Note that command's param1 should be set, otherwise Arduplane does not change the mode.
         mavMsg = mavutil.mavlink.MAVLink_command_long_message(self._tgSystemID, self._tgComponentID,
                                                               mavutil.mavlink.MAV_CMD_DO_SET_MODE, 0,
-                                                              0, self.ARDUPLANE_MODE_MAP[flightMode], 0, 0, 0, 0, 0)
+                                                              mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+                                                              self.ARDUPLANE_MODE_MAP[flightMode], 0, 0, 0, 0, 0)
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         self._toRfComPublisher.publish(rosMsg)
-        ###
-        print(flightMode)
         return
 
     @Slot(float, float, float)
@@ -89,5 +87,4 @@ class backEnd(QObject):
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         self._toRfComPublisher.publish(rosMsg)
-        print(lat, lon, alt)
         return
