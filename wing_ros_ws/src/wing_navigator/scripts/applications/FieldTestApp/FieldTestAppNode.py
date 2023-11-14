@@ -49,22 +49,6 @@ if __name__ == "__main__":
         {"topicName": "/target/globalPosition", "dataType": NavSatFix, "callbackType": "targetGlobalPosition"}
     ]
 
-    ################################################################################################
-    # TODO: delete this. use it just for test.
-    # dataSubscriptionConfig = [
-    #     {"topicName": "/mavros/state", "dataType": State, "callbackType": "funnywingState"},
-    #     {"topicName": "/mavros/global_position/global", "dataType": NavSatFix,
-    #      "callbackType": "funnywingGlobalPosition"},
-    #     {"topicName": "/mavros/global_position/raw/gps_vel", "dataType": TwistStamped,
-    #      "callbackType": "funnywingGpsVelocity"},
-    #     {"topicName": "/mavros/global_position/compass_hdg", "dataType": Float64,
-    #      "callbackType": "funnywingGpsHeading"},
-    #     {"topicName": "/mavros/global_position/rel_alt", "dataType": Float64,
-    #      "callbackType": "funnywingGpsRelativeAltitude"},
-    #     {"topicName": "/target/globalPosition", "dataType": NavSatFix, "callbackType": "targetGlobalPosition"}
-    # ]
-    ################################################################################################
-
     backend = backEnd(dataSubscriptionConfig, backFrontConnections, sysId, compId, tgSysId, tgCompId)
     ################################################################################################
 

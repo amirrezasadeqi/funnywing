@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     if "GCS" == args.system:
         wingGPSTopic = "/funnywing/globalPosition"
-        targetGPSTopic = "/targetGlobalPosition"
+        targetGPSTopic = "/target/globalPosition"
         sysID = mavutil.mavlink.MAV_TYPE_GCS
         compID = 1
         commandSender = CommandSenderRemote(sysID, compID, "/GCS/from")
