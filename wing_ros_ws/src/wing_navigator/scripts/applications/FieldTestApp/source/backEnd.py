@@ -8,7 +8,8 @@ from .dataUpdater import dataUpdater
 
 
 class backEnd(QObject):
-    def __init__(self, dataSubscriptionConfig, backFrontConnection, systemID, componentID, tgSystemID, tgComponentID):
+    def __init__(self, dataSubscriptionConfig, backFrontConnection, systemID, componentID, tgSystemID, tgComponentID,
+                 gcsFromTopic="/GCS/from"):
         super().__init__()
         self._dataSubscriptionConfig = dataSubscriptionConfig
         self._systemID = systemID
@@ -30,7 +31,7 @@ class backEnd(QObject):
         #   will be no problem about occupied connection).
         self._protocolObj = mavutil.mavlink.MAVLink('', self._systemID, self._componentID)
         # Publisher for sending mavlink Commands and all the data which is needed in the RPI side.
-        self._toRfComPublisher = rospy.Publisher("/GCS/from", Mavlink, queue_size=10)
+        self._toRfComPublisher = rospy.Publisher(gcsFromTopic, Mavlink, queue_size=10)
         return
 
     ARDUPLANE_MODE_MAP = {
