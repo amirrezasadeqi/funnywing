@@ -46,7 +46,9 @@ if __name__ == "__main__":
         {"topicName": "/funnywing/gpsHeading", "dataType": Float64, "callbackType": "funnywingGpsHeading"},
         {"topicName": "/funnywing/gpsRelativeAltitude", "dataType": Float64,
          "callbackType": "funnywingGpsRelativeAltitude"},
-        {"topicName": "/target/globalPosition", "dataType": NavSatFix, "callbackType": "targetGlobalPosition"}
+        {"topicName": "/target/globalPosition", "dataType": NavSatFix, "callbackType": "targetGlobalPosition"},
+        {"topicName": "/virtualTarget/globalPosition", "dataType": NavSatFix,
+         "callbackType": "virtualTargetGlobalPosition"},
     ]
 
     backend = backEnd(dataSubscriptionConfig, backFrontConnections, sysId, compId, tgSysId, tgCompId)

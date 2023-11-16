@@ -1,11 +1,15 @@
 import threading
 
+import numpy as np
+import pymap3d
 import rospy
 from PySide2.QtCore import QObject
 from geometry_msgs.msg import TwistStamped
 from mavros_msgs.msg import State
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64
+
+from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
 
 
 class dataUpdater(QObject):
@@ -20,7 +24,12 @@ class dataUpdater(QObject):
         self._callbackTypeMap = {}
         self._setupCallbackTypeMap()
         self._createSubscriptions()
+        self._ellipsoidMSLConverter = EllipsoidMSLConversion()
+        self._lastWingGlobalPose = None
+        self._lastTargetGlobalPose = None
 
+        # ROS Timer to update distance to target
+        self._distToTgUpdaterTimer = rospy.Timer(rospy.Duration(0, int((1.0 / 5.0) * 1e9)), self._updateDistToTg)
         # create listener thread to spin
         self._rosSpinnerThread = threading.Thread(target=self._rosSpinnerThreadCallback)
         # start the thread
@@ -34,7 +43,8 @@ class dataUpdater(QObject):
             "funnywingGpsVelocity": self._gpsVelocityCallback,
             "funnywingGpsHeading": self._gpsHeadingCallback,
             "funnywingGpsRelativeAltitude": self._gpsRelAltCallback,
-            "targetGlobalPosition": self._tgGlobalPositionCallback
+            "targetGlobalPosition": self._tgGlobalPositionCallback,
+            "virtualTargetGlobalPosition": self._virtTgGlobalPosCallback
         }
         return
 
@@ -56,7 +66,10 @@ class dataUpdater(QObject):
         return
 
     def _globalPositionCallback(self, msg: NavSatFix):
-        self._backFrontConnection.setWingGPS.emit(msg.latitude, msg.longitude, msg.altitude)
+        self._lastWingGlobalPose = [msg.latitude, msg.longitude, msg.altitude]
+        self._backFrontConnection.setWingGPS.emit(self._lastWingGlobalPose[0],
+                                                  self._lastWingGlobalPose[1],
+                                                  self._lastWingGlobalPose[2])
         return
 
     def _gpsVelocityCallback(self, msg: TwistStamped):
@@ -72,5 +85,29 @@ class dataUpdater(QObject):
         return
 
     def _tgGlobalPositionCallback(self, msg: NavSatFix):
-        self._backFrontConnection.setTargetGPS.emit(msg.latitude, msg.longitude, msg.altitude)
+        self._lastTargetGlobalPose = [msg.latitude, msg.longitude, msg.altitude]
+        self._backFrontConnection.setTargetGPS.emit(self._lastTargetGlobalPose[0],
+                                                    self._lastTargetGlobalPose[1],
+                                                    self._lastTargetGlobalPose[2])
         return
+
+    def _virtTgGlobalPosCallback(self, msg: NavSatFix):
+        self._backFrontConnection.setVirtualTargetGPS.emit(msg.latitude, msg.longitude, msg.altitude)
+        return
+
+    def _updateDistToTg(self, event=None):
+        if None not in [self._lastWingGlobalPose, self._lastTargetGlobalPose]:
+            self._backFrontConnection.setDistanceToTarget.emit(self._calculateDistance())
+        else:
+            rospy.loginfo(f"Please wait for last position of funnywing and target to be available!")
+        return
+
+    def _calculateDistance(self):
+        tgGlobalWGS = self._ellipsoidMSLConverter.mslToEllipsoid(self._lastTargetGlobalPose)
+        fwGlobalWGS = self._ellipsoidMSLConverter.mslToEllipsoid(self._lastWingGlobalPose)
+
+        tgLocalPos = pymap3d.geodetic2ecef(tgGlobalWGS[0], tgGlobalWGS[1], tgGlobalWGS[2])
+        fwLocalPos = pymap3d.geodetic2ecef(fwGlobalWGS[0], fwGlobalWGS[1], fwGlobalWGS[2])
+        diffVector = np.array(tgLocalPos) - np.array(fwLocalPos)
+
+        return np.linalg.norm(diffVector)

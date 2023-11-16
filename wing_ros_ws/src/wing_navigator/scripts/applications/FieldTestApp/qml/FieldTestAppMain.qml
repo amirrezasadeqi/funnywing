@@ -17,17 +17,22 @@ Window {
     title: qsTr("Field Test App")
 
     property var tgGPS: {'lat': 35.7480, 'lon': 51.603, 'alt': 1382.454545}
+    property var virtTgGPS: {'lat': 35.7481, 'lon': 51.603, 'alt': 1382.454545}
     property var wingGPS: {'lat': 35.7471, 'lon': 51.603, 'alt': 1382.454545}
     property var wingVel: {'vx': -11.454646, 'vy': 2.8777544, 'vz': 0.4565454}
     property real wingHdg: 90
     property string wingFlightState: "GUIDED"
     property real wingRelAlt: 100.432
+    property real distToTg: 54.12
 
     Connections{
         target: backFrontConnections
 
         function onSetTargetGPS(lat, lon, alt){
             mainWindow.tgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
+        }
+        function onSetVirtualTargetGPS(lat, lon, alt){
+            mainWindow.virtTgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
         }
         function onSetWingGPS(lat, lon, alt){
             mainWindow.wingGPS = {'lat': lat, 'lon': lon, 'alt': alt}
@@ -43,6 +48,9 @@ Window {
         }
         function onSetWingRelAlt(alt){
             mainWindow.wingRelAlt = alt
+        }
+        function onSetDistanceToTarget(dist){
+            mainWindow.distToTg = dist
         }
     }
 
@@ -308,6 +316,7 @@ Window {
                                                 tgGpsLatVal: mainWindow.tgGPS.lat
                                                 tgGpsLonVal: mainWindow.tgGPS.lon
                                                 tgGpsAltVal: mainWindow.tgGPS.alt
+                                                distToTg: mainWindow.distToTg
                                             }
                                         }
 
@@ -345,6 +354,7 @@ Window {
                                     anchors.leftMargin: 3
                                     wingLocation: QtPositioning.coordinate(mainWindow.wingGPS.lat, mainWindow.wingGPS.lon)
                                     tgLocation: QtPositioning.coordinate(mainWindow.tgGPS.lat, mainWindow.tgGPS.lon)
+                                    virtTgLocation: QtPositioning.coordinate(mainWindow.virtTgGPS.lat, mainWindow.virtTgGPS.lon)
                                     wingHdg: mainWindow.wingHdg
                                     onSendGoToCommandToBackEnd: {
                                         backFrontConnections.goToLocation(lat, lon, alt)

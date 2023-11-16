@@ -8,11 +8,13 @@ class backFrontEndCommunication(QObject):
     # Arguments are optional and are the name of function arguments in the QML side, e.g. in onDemand(val), val would be
     # the entry in arguments list below.
     setTargetGPS = Signal(float, float, float, arguments=['lat', 'lon', 'alt'])
+    setVirtualTargetGPS = Signal(float, float, float, arguments=['lat', 'lon', 'alt'])
     setWingGPS = Signal(float, float, float, arguments=['lat', 'lon', 'alt'])
     setWingVelocity = Signal(float, float, float, arguments=['vx', 'vy', 'vz'])
     setWingHeading = Signal(float, arguments=['hdg'])
     setWingFlightState = Signal(str, arguments=['flightState'])
     setWingRelAlt = Signal(float, arguments=['alt'])
+    setDistanceToTarget = Signal(float, arguments=['dist'])
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)

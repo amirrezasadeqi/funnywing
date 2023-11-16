@@ -34,6 +34,7 @@ if __name__ == "__main__":
     commandSender.setWayPointRadius(120)
     # To touch the target, virtualTargetOffset must be equal or greater than plane waypoint radius. The optimum offset
     # is waypoint radius plus a little value to be confident about touching the target point.
-    simpleTracker = SimpleTracker(commandSender, wingGPSTopic, targetGPSTopic, virtualTargetOffset=125)
+    simpleTracker = SimpleTracker(commandSender, wingGPSTopic, targetGPSTopic, "/virtualTarget/globalPosition",
+                                  virtualTargetOffset=125)
     # Virtual target is determined around the wing if True and around target if False.
     simpleTracker.useWingForVirtualTargetCenter(True)

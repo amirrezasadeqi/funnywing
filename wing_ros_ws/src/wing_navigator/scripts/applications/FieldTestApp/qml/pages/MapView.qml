@@ -19,6 +19,7 @@ Item {
     property var mapCenter: QtPositioning.coordinate(35.7471, 51.603)
     property var wingLocation: QtPositioning.coordinate(35.7481, 51.613)
     property var tgLocation: QtPositioning.coordinate(35.745, 51.615)
+    property var virtTgLocation: QtPositioning.coordinate(35.7451, 51.615)
     property var wingGoToLocation: QtPositioning.coordinate(35.745, 51.615)
     property real wingGoToAlt: 50.0
     property real wingHdg: 0
@@ -143,6 +144,29 @@ Item {
                         source: targetImage
                         anchors.fill: targetImage
                         color: "red"
+                    }
+                }
+            }
+
+            MapQuickItem {
+                id: virtualTargetMarker
+                zoomLevel: 15
+                coordinate: mapWindow.virtTgLocation
+                anchorPoint{
+                    x: virtualTargetImage.width / 2
+                    y: virtualTargetImage.height / 2
+                }
+                sourceItem: Image {
+                    id: virtualTargetImage
+                    height: 33
+                    width: 33
+                    source: "../../images/svg_images/close_icon.svg"
+
+                    ColorOverlay {
+                        id: virtualTargetColor
+                        source: virtualTargetImage
+                        anchors.fill: virtualTargetImage
+                        color: "yellow"
                     }
                 }
             }

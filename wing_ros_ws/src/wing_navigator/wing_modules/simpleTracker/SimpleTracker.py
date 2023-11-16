@@ -10,12 +10,16 @@ from wing_modules.simpleTracker.CommandSender import CommandSenderInterface
 
 
 class SimpleTracker(object):
-    def __init__(self, commandSender: CommandSenderInterface, wingGPSTopic, targetGPSTopic, virtualTargetOffset=120):
+    def __init__(self, commandSender: CommandSenderInterface, wingGPSTopic, targetGPSTopic, virtualTargetPosTopic,
+                 virtualTargetOffset=120):
         self._commandSender = commandSender
         self._virtualTargetOffset = virtualTargetOffset
         self._last_fw_global_pos = None
         self._virtualAroundFunnywing = True
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
+        # TODO: This publisher only works in remote execution of the SimpleTracker.py node. Add the support the local
+        #   execution, too.
+        self._virtualTargetPosPublisher = rospy.Publisher(virtualTargetPosTopic, NavSatFix, queue_size=1)
         self._wingGPSSubscriber = rospy.Subscriber(wingGPSTopic, NavSatFix, callback=self._wingGPSCallback)
         self._targetGPSSubscriber = rospy.Subscriber(targetGPSTopic, NavSatFix, callback=self._targetGPSCallback)
         self._subscriptionThread = threading.Thread(target=self._subscriptionThreadCallback)
@@ -57,12 +61,19 @@ class SimpleTracker(object):
         fw_pos = self._last_fw_global_pos
         if fw_pos is not None:
             tg_pos = [msg.latitude, msg.longitude, msg.altitude]
-            self._commandSender.sendCommand(
-                self._getVirtualTargetGlobalPosition(tg_pos, fw_pos, self._virtualTargetOffset))
+            virtual_tg_pos = self._getVirtualTargetGlobalPosition(tg_pos, fw_pos, self._virtualTargetOffset)
+            self._publishVirtualTargetPos(virtual_tg_pos)
+            self._commandSender.sendCommand(virtual_tg_pos)
         else:
             rospy.loginfo("The funnywing gps is not subscribed yet!")
         return
 
     def _subscriptionThreadCallback(self):
         rospy.spin()
+        return
+
+    def _publishVirtualTargetPos(self, virtual_tg_pos):
+        rosMsg = NavSatFix()
+        rosMsg.latitude, rosMsg.longitude, rosMsg.altitude = virtual_tg_pos
+        self._virtualTargetPosPublisher.publish(rosMsg)
         return

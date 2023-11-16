@@ -19,6 +19,7 @@ Item {
     property real tgGpsLatVal: -35.56565555
     property real tgGpsLonVal: 51.454554545
     property real tgGpsAltVal: 100.00
+    property real distToTg: 50.46
 
     Rectangle{
         id: bg
@@ -39,9 +40,19 @@ Item {
                 anchors.bottom: parent.bottom
                 clip: true
 
-                ScrollView {
-                    id: wingDataScrollView
+                Flickable {
+                    id: wingDataFlickable
                     anchors.fill: parent
+                    contentHeight: wingDataGridLayout.height
+                    contentWidth: wingDataGridLayout.width
+                    boundsBehavior: Flickable.DragAndOvershootBounds
+                    ScrollBar.horizontal: ScrollBar{
+                        id: wingDataHorizontalScrollBar
+                    }
+                    ScrollBar.vertical: ScrollBar{
+                        id: wingDataVerticalScrollBar
+                    }
+
                     GridLayout {
                         id: wingDataGridLayout
                         columnSpacing: 0
@@ -191,32 +202,74 @@ Item {
                 clip: true
                 anchors.leftMargin: 0
 
-                GridLayout {
-                    id: targetDataGridLayout
+                Flickable {
+                    id: targetDataFlickable
                     anchors.fill: parent
-                    columnSpacing: 2
-                    columns: 2
-                    Label{
-                        id: tgGpsLabel
-                        color: "#d1dde9"
-                        text: qsTr("Traget GPS")
-                        Layout.topMargin: 20
-                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                    contentHeight: targetDataGridLayout.height
+                    contentWidth: targetDataGridLayout.width
+                    boundsBehavior: Flickable.DragAndOvershootBounds
+                    ScrollBar.horizontal: ScrollBar{
+                        id: targetDataHorizontalScrollBar
                     }
-                    Rectangle{
-                        id: tgGpsContainer
-                        Layout.preferredWidth: 180
-                        Layout.preferredHeight: 180
-                        color: "transparent"
-                        anchors.top: tgGpsLabel.top
-                        clip: true
-                        GpsDisplayer{
-                            id: tgGpsDisplayer
-                            anchors.fill: parent
-                            anchors.topMargin: -15
-                            lat: rootItem.tgGpsLatVal
-                            lon: rootItem.tgGpsLonVal
-                            alt: rootItem.tgGpsAltVal
+                    ScrollBar.vertical: ScrollBar{
+                        id: targetDataVerticalScrollBar
+                    }
+
+                    GridLayout {
+                        id: targetDataGridLayout
+                        x: 0
+                        y: 0
+                        anchors.fill: parent
+                        columnSpacing: 2
+                        columns: 2
+                        Label{
+                            id: tgGpsLabel
+                            color: "#d1dde9"
+                            text: qsTr("Traget GPS")
+                            Layout.topMargin: 20
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        }
+                        Rectangle{
+                            id: tgGpsContainer
+                            Layout.preferredWidth: 180
+                            Layout.preferredHeight: 180
+                            color: "transparent"
+                            anchors.top: tgGpsLabel.top
+                            clip: true
+                            GpsDisplayer{
+                                id: tgGpsDisplayer
+                                anchors.fill: parent
+                                anchors.topMargin: -15
+                                lat: rootItem.tgGpsLatVal
+                                lon: rootItem.tgGpsLonVal
+                                alt: rootItem.tgGpsAltVal
+                            }
+                        }
+                        Label{
+                            id: distToTgLabel
+                            color: "#d1dde9"
+                            text: qsTr("Distance to Target")
+                            Layout.topMargin: 20
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        }
+                        Rectangle{
+                            id: distToTgRect
+                            Layout.preferredWidth: 110
+                            Layout.preferredHeight: 30
+                            anchors.top: distToTgLabel.top
+                            color: "#454749"
+                            border.color: "green"
+                            border.width: 2
+                            radius: 2
+                            clip: true
+                            Text{
+                                id: distToTgText
+                                color: "#dee3e7"
+                                anchors.fill: parent
+                                verticalAlignment: Text.AlignVCenter
+                                anchors.leftMargin: 5
+                                text: rootItem.distToTg
+                            }
                         }
                     }
                 }
