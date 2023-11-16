@@ -23,6 +23,7 @@ Item {
     property var wingGoToLocation: QtPositioning.coordinate(35.745, 51.615)
     property real wingGoToAlt: 50.0
     property real wingHdg: 0
+    property bool gotoMarkerVisibility: false
 
     signal sendGoToCommandToBackEnd(real lat, real lon, real alt)
 
@@ -171,6 +172,30 @@ Item {
                 }
             }
 
+            MapQuickItem {
+                id: gotoMarker
+                zoomLevel: 15
+                coordinate: mapWindow.wingGoToLocation
+                visible: mapWindow.gotoMarkerVisibility
+                anchorPoint{
+                    x: gotoImage.width / 2
+                    y: gotoImage.height
+                }
+                sourceItem: Image {
+                    id: gotoImage
+                    height: 24
+                    width: 24
+                    source: "../../images/svg_images/gotoMarker.svg"
+
+                    ColorOverlay {
+                        id: gotoMarkerColor
+                        source: gotoImage
+                        anchors.fill: gotoImage
+                        color: "black"
+                    }
+                }
+            }
+
             MouseArea{
                 id: mapMouseArea
                 anchors.fill: parent
@@ -231,6 +256,7 @@ Item {
                             mapWindow.wingGoToAlt = parseFloat(gotoAltInputPopupTextField.text)
                             mapWindow.sendGoToCommandToBackEnd(mapWindow.wingGoToLocation.latitude, mapWindow.wingGoToLocation.longitude, mapWindow.wingGoToAlt)
                             gotoAltInputPopup.close()
+                            mapWindow.gotoMarkerVisibility = true
                         }
                     }
                 }
