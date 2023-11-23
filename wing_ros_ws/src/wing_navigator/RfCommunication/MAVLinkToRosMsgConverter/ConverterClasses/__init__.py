@@ -33,3 +33,6 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_quaterni
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_to_sensor_msgs_Imu import \
     attitude_to_sensor_msgs_Imu
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.virtual_target_global_position_int_to_sensor_msgs_NavSatFix import \
+    virtual_target_global_position_int_to_sensor_msgs_NavSatFix

@@ -8,3 +8,4 @@ from RfCommunication.Job.Jobs.home_position_job import home_position_job
 from RfCommunication.Job.Jobs.position_target_global_int_job import position_target_global_int_job
 from RfCommunication.Job.Jobs.command_int_job import command_int_job
 from RfCommunication.Job.Jobs.command_long_job import command_long_job
+from RfCommunication.Job.Jobs.virtual_target_global_position_int_job import virtual_target_global_position_int_job

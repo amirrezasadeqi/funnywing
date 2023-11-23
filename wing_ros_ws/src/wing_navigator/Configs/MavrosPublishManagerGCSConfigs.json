@@ -104,5 +104,15 @@
     "rate": 5,
     "queueSize": 5,
     "onMessage": "HOME_POSITION"
+  },
+  {
+    "name": "virtualTargetPositionPublisher",
+    "enable": true,
+    "topicName": "/virtualTarget/globalPosition",
+    "msgPack": "sensor_msgs",
+    "msgType": "NavSatFix",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "VIRTUAL_TARGET_GLOBAL_POSITION_INT"
   }
 ]

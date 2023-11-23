@@ -5,7 +5,8 @@
       "GLOBAL_POSITION_INT",
       "ATTITUDE",
       "HOME_POSITION",
-      "BATTERY_STATUS"
+      "BATTERY_STATUS",
+      "VIRTUAL_TARGET_GLOBAL_POSITION_INT"
     ],
     "blackList": []
   },

@@ -21,10 +21,12 @@ if __name__ == "__main__":
         sysID = mavutil.mavlink.MAV_TYPE_GCS
         compID = 1
         commandSender = CommandSenderRemote(sysID, compID, "/GCS/from")
+        local = False
     elif "RPI" == args.system:
         wingGPSTopic = "/mavros/global_position/global"
         targetGPSTopic = "/funnywing/targetGlobalPosition"
         commandSender = CommandSenderLocal()
+        local = True
     else:
         rospy.logerr("No CommandSenderInterface Implementation exists for the specified system. Please Implement "
                      "CommandSenderInterface for your system!")
@@ -36,7 +38,7 @@ if __name__ == "__main__":
     # is waypoint radius plus a little value to be confident about touching the target point.
     # TODO: For local case we may need to send virtual target position to the GCS. This is not done yet!
     simpleTracker = SimpleTracker(commandSender, wingGPSTopic, targetGPSTopic, "/virtualTarget/globalPosition",
-                                  virtualTargetOffset=125)
+                                  virtualTargetOffset=120, local=local, rfConnectionTopic="/mavlink/from")
     # Virtual target is determined around the wing if True and around target if False.
     simpleTracker.useWingForVirtualTargetCenter(True)
 
