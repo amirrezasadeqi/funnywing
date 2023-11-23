@@ -31,9 +31,11 @@ class CommandSenderInterface(ABC):
         lon = int(commandGlobalPos[1] * 1e7)
         alt = commandGlobalPos[2]
         # Using MAV_FRAME_GLOBAL_INT to not being worry about the home altitude for sending go to command.
+        # Use mavutil.mavlink.MAV_DO_REPOSITION_FLAGS_CHANGE_MODE instead of 0 in param2 of the command to
+        # automatically change the mode to GUIDED, otherwise you should explicitly change the mode to GUIDED and then
+        # the commands will work.
         mavMsg = mavutil.mavlink.MAVLink_command_int_message(0, 0, mavutil.mavlink.MAV_FRAME_GLOBAL_INT,
-                                                             mavutil.mavlink.MAV_CMD_DO_REPOSITION, 0, 0, -1,
-                                                             mavutil.mavlink.MAV_DO_REPOSITION_FLAGS_CHANGE_MODE,
+                                                             mavutil.mavlink.MAV_CMD_DO_REPOSITION, 0, 0, -1, 0,
                                                              self._wayPointRadius, 0, lat, lon, alt)
         return mavMsg
 
