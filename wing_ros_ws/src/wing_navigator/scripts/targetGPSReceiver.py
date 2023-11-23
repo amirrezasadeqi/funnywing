@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import threading
 
@@ -123,7 +125,7 @@ class GPSDataReceiver(object):
 
 
 if __name__ == "__main__":
-    rospy.init_node("/targetGPSReceiver", anonymous=True)
+    rospy.init_node("targetGPSReceiver", anonymous=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB1")
     parser.add_argument("-b", "--baudrate", default=115200)
