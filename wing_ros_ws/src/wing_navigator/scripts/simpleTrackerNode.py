@@ -32,13 +32,14 @@ if __name__ == "__main__":
                      "CommandSenderInterface for your system!")
         sys.exit()
 
-    # Tune this based on your plane maneuverability.
-    commandSender.setWayPointRadius(120)
+    # Tune this based on your plane maneuverability and also set the waypoint radius in the ArduPlane.
+    waypointRadius = 120
+    commandSender.setWayPointRadius(waypointRadius)
     # To touch the target, virtualTargetOffset must be equal or greater than plane waypoint radius. The optimum offset
     # is waypoint radius plus a little value to be confident about touching the target point.
-    # TODO: For local case we may need to send virtual target position to the GCS. This is not done yet!
     simpleTracker = SimpleTracker(commandSender, wingGPSTopic, targetGPSTopic, "/virtualTarget/globalPosition",
-                                  virtualTargetOffset=120, local=local, rfConnectionTopic="/mavlink/from")
+                                  virtualTargetOffset=waypointRadius + 5, local=local,
+                                  rfConnectionTopic="/mavlink/from")
     # Virtual target is determined around the wing if True and around target if False.
     simpleTracker.useWingForVirtualTargetCenter(True)
 
