@@ -96,7 +96,7 @@ class GPSDataReceiver(object):
                 self._publishToGCSRosNetwork(tgGPSPosition)
                 self._publishToRfConnection(tgGPSPosition)
             else:
-                rospy.loginfo("Not received any GPS data yet!")
+                rospy.loginfo("Target GPS publish buffer is empty!")
             self._publishLoopRate.sleep()
         return
 

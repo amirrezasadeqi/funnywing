@@ -26,7 +26,8 @@ class home_position_to_mavros_msgs_HomePosition(object):
 
     def _getRosMsgHeader(self) -> Header:
         header = Header()
-        # HOME_POSITION message time stamp is in micro seconds.
-        header.stamp = rospy.Time.from_sec(self._message.time_usec / 1.0e6)
+        # HOME_POSITION MAVLink2 message time stamp field is in micro seconds, and you can use below line in the case of
+        # using MAVLink2 dialects.
+        # header.stamp = rospy.Time.from_sec(self._message.time_usec / 1.0e6)
         header.frame_id = 'homeGPS'
         return header
