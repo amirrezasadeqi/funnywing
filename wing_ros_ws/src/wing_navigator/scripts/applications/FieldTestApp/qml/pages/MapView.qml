@@ -67,6 +67,12 @@ Item {
             maximumZoomLevel: 20
             tilt: 90
 
+            property int markerSize: 38
+
+            onZoomLevelChanged: {
+                map.markerSize = 38 + 10 * (funnywingMarker.zoomLevel - map.zoomLevel);
+            }
+
             copyrightsVisible: false
 
             MapParameter {
@@ -106,8 +112,8 @@ Item {
                 }
                 sourceItem: Image {
                     id: funnywingImage
-                    height: 38
-                    width: 38
+                    height: map.markerSize
+                    width: height
                     source: "../../images/svg_images/switchblade_inair_icon.svg"
 
                     transform: Rotation{
@@ -136,8 +142,8 @@ Item {
                 }
                 sourceItem: Image {
                     id: targetImage
-                    height: 33
-                    width: 33
+                    height: map.markerSize
+                    width: height
                     source: "../../images/svg_images/close_icon.svg"
 
                     ColorOverlay {
@@ -159,8 +165,8 @@ Item {
                 }
                 sourceItem: Image {
                     id: virtualTargetImage
-                    height: 33
-                    width: 33
+                    height: map.markerSize
+                    width: height
                     source: "../../images/svg_images/close_icon.svg"
 
                     ColorOverlay {
