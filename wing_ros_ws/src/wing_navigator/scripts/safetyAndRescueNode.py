@@ -6,8 +6,9 @@ This code will be run on the Raspberry Pi. So we can access flight data using ma
 
 import rospy
 import threading
-from mavros_msgs.msg import HomePosition, RCIn
-from mavros_msgs.srv import SetMode, SetModeRequest
+from mavros_msgs.msg import HomePosition, RCIn, Waypoint, CommandCode
+from mavros_msgs.srv import SetMode, SetModeRequest, WaypointClear, WaypointClearRequest, WaypointPush, \
+    WaypointPushRequest
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64
 import numpy as np
@@ -17,12 +18,22 @@ from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
 
 
 class safetyAndRecueClass(object):
-    def __init__(self, altThreshold=15, distanceToHomeThreshold=2000):
+    def __init__(self, rcSafetyChannel=7, altThreshold=15, distanceToHomeThreshold=2000, rescueRelAlt=40):
+        self._rcSafetyChannel = rcSafetyChannel
         self._altThreshold = altThreshold
         self._distanceToHomeThreshold = distanceToHomeThreshold
+        self._rescueRelAlt = rescueRelAlt
+        self._homePosition = None
+        self._wingPosition = None
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
+
         rospy.wait_for_service('/mavros/set_mode')
+        rospy.wait_for_service('/mavros/mission/clear')
+        rospy.wait_for_service('/mavros/mission/push')
         self._setModeProxy = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+        self._missionClearProxy = rospy.ServiceProxy('/mavros/mission/clear', WaypointClear)
+        self._missionPushProxy = rospy.ServiceProxy('/mavros/mission/push', WaypointPush, persistent=True)
+
         self._homePosSubscriber = rospy.Subscriber("/mavros/home_position/home", HomePosition, self._getHomePosition)
         self._wingPosSubscriber = rospy.Subscriber("/mavros/global_position/global", NavSatFix, self._getWingPosition)
         self._wingRelAltSubscriber = rospy.Subscriber("/mavros/global_position/rel_alt", Float64, self._getWingRelAlt)
@@ -63,26 +74,72 @@ class safetyAndRecueClass(object):
         return distanceToHome
 
     def _sendChangeModeRequest(self, mode):
-        request = SetModeRequest(mode=mode)
+        request = SetModeRequest()
+        request.custom_mode = mode
         rospy.loginfo(f"Change mode to {mode}, Success: {self._setModeProxy(request).mode_sent}")
         return
+
+    def _isRescueNotActive(self):
+        return 1500 > self._rcIn[self._rcSafetyChannel]
+
+    def _clearCurrentMission(self):
+        try:
+            request = WaypointClearRequest()
+            self._missionClearProxy(request)
+        except rospy.ServiceException as e:
+            print(f"Service call failed: {e}")
+            return False
+
+    def _createRescueMission(self):
+        waypoints = []
+        # create NAV_LOITER_UNLIM waypoint at the current GPS position(probably fake GPS).
+        # For the mission to work correctly, it is necessary to create a dummy waypoint first and then the waypoint
+        # going to be executed.
+        dummyWaypoint = Waypoint()
+        dummyWaypoint.frame = Waypoint.FRAME_GLOBAL_REL_ALT
+        dummyWaypoint.command = CommandCode.NAV_WAYPOINT
+        dummyWaypoint.is_current = False
+        dummyWaypoint.autocontinue = True
+        waypoints.append(dummyWaypoint)
+        # Loiter waypoint at the current lat, lon.
+        waypoint = Waypoint()
+        waypoint.frame = Waypoint.FRAME_GLOBAL_REL_ALT
+        waypoint.command = CommandCode.NAV_LOITER_UNLIM
+        waypoint.is_current = False
+        waypoint.autocontinue = True
+        waypoint.param3 = 120.0
+        waypoint.x_lat = 0
+        waypoint.y_long = 0
+        waypoint.z_alt = self._rescueRelAlt
+        waypoints.append(waypoint)
+        return waypoints
+
+    def _uploadWaypoints(self, waypoints):
+        try:
+            request = WaypointPushRequest()
+            request.waypoints = waypoints
+            request.start_index = 0
+            print(f"Mission upload success: {self._missionPushProxy(request).success}")
+            return True
+        except rospy.ServiceException as e:
+            print(f"Service call failed: {e}")
+            return False
 
     def _rescueThreadWorker(self):
         # TODO: you can also add rate for this loop to prevent from waisting cpu power.
         while not rospy.is_shutdown():
             # TODO: check this condition in field
-            if 1500 < self._rcIn[5]:
-                rospy.logerr("Rescue and Safety checks are disabled!")
-                continue
+            if self._isRescueNotActive():
+                rospy.loginfo("Rescue and Safety checks are disabled!")
             elif (self._homePosition is None) or (self._wingPosition is None):
-                rospy.logerr("Wing and Home position are still None!")
-                continue
-            elif self._wingRelAlt < self._altThreshold:
-                # change mode loiter or circle
-                self._sendChangeModeRequest("LOITER")
-            elif self._distanceToHome() > self._distanceToHomeThreshold:
-                # change mode to loiter or circle
-                self._sendChangeModeRequest("LOITER")
+                rospy.logwarn("Wing and Home position are still None!")
+            elif (self._wingRelAlt < self._altThreshold) or (self._distanceToHome() > self._distanceToHomeThreshold):
+                # Change mode to Auto, since loiter and circle does not get altitude and Guided would have conflict
+                # with simpleTrackerNode running on GCS or RPI.
+                self._clearCurrentMission()
+                waypoints = self._createRescueMission()
+                self._uploadWaypoints(waypoints)
+                self._sendChangeModeRequest("AUTO")
             else:
                 continue
         return
@@ -90,5 +147,6 @@ class safetyAndRecueClass(object):
 
 if __name__ == "__main__":
     rospy.init_node("safetyAndRescueNode", anonymous=True)
-    safetyAndRescueObj = safetyAndRecueClass(altThreshold=15, distanceToHomeThreshold=2000)
+    safetyAndRescueObj = safetyAndRecueClass(rcSafetyChannel=7, altThreshold=15, distanceToHomeThreshold=2000,
+                                             rescueRelAlt=40)
     rospy.spin()
