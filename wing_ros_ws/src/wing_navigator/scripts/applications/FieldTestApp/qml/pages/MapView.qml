@@ -70,7 +70,10 @@ Item {
             property int markerSize: 38
 
             onZoomLevelChanged: {
-                map.markerSize = 38 + 10 * (funnywingMarker.zoomLevel - map.zoomLevel);
+                map.markerSize = 38 + 8 * (funnywingMarker.zoomLevel - map.zoomLevel);
+                if (map.markerSize <= 4){
+                    map.markerSize = 4
+                }
             }
 
             copyrightsVisible: false
@@ -114,7 +117,11 @@ Item {
                     id: funnywingImage
                     height: map.markerSize
                     width: height
-                    source: "../../images/svg_images/switchblade_inair_icon.svg"
+                    source: "../../images/svg_images/switchblade_inair_icon_colorized.svg"
+                    sourceSize.height: 875
+                    sourceSize.width: 875
+                    mipmap: true
+                    fillMode: Image.PreserveAspectFit
 
                     transform: Rotation{
                         id: headingRotation
@@ -125,6 +132,7 @@ Item {
 
                     ColorOverlay {
                         id: funnywingColor
+                        visible: false
                         source: funnywingImage
                         anchors.fill: funnywingImage
                         color: "green"
@@ -144,10 +152,13 @@ Item {
                     id: targetImage
                     height: map.markerSize
                     width: height
-                    source: "../../images/svg_images/close_icon.svg"
+                    source: "../../images/svg_images/target_icon.svg"
+                    sourceSize.height: 288
+                    sourceSize.width: 288
 
                     ColorOverlay {
                         id: targetColor
+                        visible: false
                         source: targetImage
                         anchors.fill: targetImage
                         color: "red"
@@ -167,10 +178,13 @@ Item {
                     id: virtualTargetImage
                     height: map.markerSize
                     width: height
-                    source: "../../images/svg_images/close_icon.svg"
+                    source: "../../images/svg_images/virtual_target_icon.svg"
+                    sourceSize.height: 288
+                    sourceSize.width: 288
 
                     ColorOverlay {
                         id: virtualTargetColor
+                        visible: false
                         source: virtualTargetImage
                         anchors.fill: virtualTargetImage
                         color: "yellow"
