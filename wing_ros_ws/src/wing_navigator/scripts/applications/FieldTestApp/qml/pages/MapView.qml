@@ -26,6 +26,20 @@ Item {
     property bool gotoMarkerVisibility: false
 
     signal sendGoToCommandToBackEnd(real lat, real lon, real alt)
+    signal clearMap()
+
+    onWingLocationChanged: {
+        wingPath.addCoordinate(wingLocation)
+    }
+
+    onTgLocationChanged: {
+        tgPath.addCoordinate(tgLocation)
+    }
+
+    onClearMap: {
+        wingPath.setPath([]);
+        tgPath.setPath([]);
+    }
 
     Rectangle{
         id: mapBg
@@ -280,6 +294,18 @@ Item {
                         }
                     }
                 }
+            }
+
+            MapPolyline {
+                id: wingPath
+                line.width: 3
+                line.color: "#ff00ff"
+            }
+
+            MapPolyline {
+                id: tgPath
+                line.width: 3
+                line.color: "#aaff00"
             }
         }
     }

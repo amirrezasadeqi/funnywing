@@ -397,6 +397,19 @@ Window {
                                             map.mapCenter = map.tgLocation
                                         }
                                     }
+
+                                    CustomTextBtn {
+                                        id: clearBtn
+                                        width: 100
+                                        height: 28
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.right: parent.right
+                                        btnLabel: "Clear Map"
+                                        anchors.rightMargin: 5
+                                        onClicked: {
+                                            map.clearMap();
+                                        }
+                                    }
                                 }
                             }
                         }
