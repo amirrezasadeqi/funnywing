@@ -64,6 +64,13 @@ Item {
                             text: qsTr("Wing GPS")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                            MouseArea{
+                                id: wingGpsLabelMouseArea
+                                anchors.fill: parent
+                                onClicked: {
+                                    wingGpsContainer.Layout.preferredHeight = wingGpsContainer.height != 0 ? 0 : 180;
+                                }
+                            }
                         }
                         Rectangle{
                             id: wingGpsContainer
@@ -87,14 +94,21 @@ Item {
                             text: qsTr("Wing Velocity")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                            MouseArea{
+                                id: wingVelocityLabelMouseArea
+                                anchors.fill: parent
+                                onClicked: {
+                                    wingVelocityContainer.Layout.preferredHeight = wingVelocityContainer.height != 0 ? 0 : 180;
+                                }
+                            }
                         }
                         Rectangle{
                             id: wingVelocityContainer
                             Layout.preferredWidth: 180
-                            Layout.preferredHeight: 180
+                            Layout.preferredHeight: 0
                             color: "transparent"
                             anchors.top: wingVelocityLabel.top
-                            clip: false
+                            clip: true
                             GpsDisplayer{
                                 id: wingVelocityDisplayer
                                 anchors.fill: parent

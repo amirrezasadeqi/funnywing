@@ -411,6 +411,55 @@ Window {
                                         }
                                     }
                                 }
+
+                                Rectangle {
+                                    id: mapDataDisplayerContainer
+                                    width: 160
+                                    height: 50
+                                    color: "#9938383c"
+                                    border.width: 3
+                                    border.color: "#38383c"
+                                    clip: true
+                                    anchors {
+                                        left: parent.left
+                                        top: parent.top
+                                        leftMargin: 5
+                                        topMargin: 5
+                                    }
+                                    Label {
+                                        id: wingFlightMode
+                                        text: mainWindow.wingFlightState
+                                        color: "red"
+                                        anchors {
+                                            top: parent.top
+                                            topMargin: 5
+                                            left: parent.left
+                                            leftMargin: 5
+                                        }
+                                    }
+                                    Label {
+                                        id: wingRelAltLabel
+                                        text: "Wing Rel Alt: "
+                                        color: "red"
+                                        anchors {
+                                            top: wingFlightMode.bottom
+                                            topMargin: 5
+                                            left: parent.left
+                                            leftMargin: 5
+                                        }
+                                    }
+                                    Label {
+                                        id: wingRelAltValueLabel
+                                        text: mainWindow.wingRelAlt
+                                        color: "red"
+                                        anchors {
+                                            top: wingFlightMode.bottom
+                                            topMargin: 5
+                                            left: wingRelAltLabel.right
+                                            leftMargin: 5
+                                        }
+                                    }
+                                }
                             }
                         }
 
