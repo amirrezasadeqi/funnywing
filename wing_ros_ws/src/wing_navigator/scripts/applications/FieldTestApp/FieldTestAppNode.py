@@ -10,7 +10,7 @@ from geometry_msgs.msg import TwistStamped
 from mavros_msgs.msg import State
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 
 from source.backEnd import backEnd
 from source.backFrontEndCommunication import backFrontEndCommunication
@@ -49,6 +49,7 @@ if __name__ == "__main__":
         {"topicName": "/target/globalPosition", "dataType": NavSatFix, "callbackType": "targetGlobalPosition"},
         {"topicName": "/virtualTarget/globalPosition", "dataType": NavSatFix,
          "callbackType": "virtualTargetGlobalPosition"},
+        {"topicName": "/funnywing/rescueStatus", "dataType": Bool, "callbackType": "rescueStatus"}
     ]
 
     backend = backEnd(dataSubscriptionConfig, backFrontConnections, sysId, compId, tgSysId, tgCompId)

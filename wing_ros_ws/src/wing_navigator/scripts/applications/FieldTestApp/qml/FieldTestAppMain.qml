@@ -24,6 +24,7 @@ Window {
     property string wingFlightState: "GUIDED"
     property real wingRelAlt: 100.432
     property real distToTg: 54.12
+    property string rescueStatus: "OFF"
 
     Connections{
         target: backFrontConnections
@@ -51,6 +52,9 @@ Window {
         }
         function onSetDistanceToTarget(dist){
             mainWindow.distToTg = dist
+        }
+        function onShowRescueStatus(rescueStatus){
+            mainWindow.rescueStatus = rescueStatus ? "ON" : "OFF";
         }
     }
 
@@ -363,8 +367,10 @@ Window {
 
                                 Rectangle {
                                     id: mapHorizontalControlsContainer
-                                    height: 30
-                                    color: "#00ffffff"
+                                    height: 36
+                                    color: "#9938383c"
+                                    border.color: "#38383c"
+                                    border.width: 3
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.bottom: parent.bottom
@@ -410,12 +416,38 @@ Window {
                                             map.clearMap();
                                         }
                                     }
+
+                                    CustomTextBtn {
+                                        id: rescueOnBtn
+                                        width: 120
+                                        height: 28
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.right: clearBtn.left
+                                        btnLabel: "Rescue ON"
+                                        anchors.rightMargin: 5
+                                        onClicked: {
+                                            backFrontConnections.sendSetRescueStatus(true);
+                                        }
+                                    }
+
+                                    CustomTextBtn {
+                                        id: rescueOffBtn
+                                        width: 120
+                                        height: 28
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.right: rescueOnBtn.left
+                                        btnLabel: "Rescue OFF"
+                                        anchors.rightMargin: 5
+                                        onClicked: {
+                                            backFrontConnections.sendSetRescueStatus(false);
+                                        }
+                                    }
                                 }
 
                                 Rectangle {
                                     id: mapDataDisplayerContainer
                                     width: 160
-                                    height: 50
+                                    height: 70
                                     color: "#9938383c"
                                     border.width: 3
                                     border.color: "#38383c"
@@ -456,7 +488,29 @@ Window {
                                             top: wingFlightMode.bottom
                                             topMargin: 5
                                             left: wingRelAltLabel.right
+                                            leftMargin: 0
+                                        }
+                                    }
+                                    Label {
+                                        id: rescueStateLabel
+                                        text: "Rescue: "
+                                        color: "red"
+                                        anchors {
+                                            top: wingRelAltLabel.bottom
+                                            topMargin: 5
+                                            left: parent.left
                                             leftMargin: 5
+                                        }
+                                    }
+                                    Label {
+                                        id: rescueStateValueLabel
+                                        text: mainWindow.rescueStatus
+                                        color: "red"
+                                        anchors {
+                                            top: wingRelAltLabel.bottom
+                                            topMargin: 5
+                                            left: rescueStateLabel.right
+                                            leftMargin: 0
                                         }
                                     }
                                 }

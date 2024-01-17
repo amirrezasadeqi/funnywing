@@ -15,11 +15,13 @@ class backFrontEndCommunication(QObject):
     setWingFlightState = Signal(str, arguments=['flightState'])
     setWingRelAlt = Signal(float, arguments=['alt'])
     setDistanceToTarget = Signal(float, arguments=['dist'])
+    showRescueStatus = Signal(bool, arguments=['rescueStatus'])
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)
     setFlightModeSignal = Signal(str)
     goToLocationSignal = Signal(float, float, float)
+    sendSetRescueStatusSignal = Signal(bool)
 
     def __init__(self):
         super().__init__()
@@ -42,4 +44,9 @@ class backFrontEndCommunication(QObject):
                 print("Please Enter Valid GPS Location!")
                 return
         self.goToLocationSignal.emit(lat, lon, alt)
+        return
+
+    @Slot(bool)
+    def sendSetRescueStatus(self, rescueState):
+        self.sendSetRescueStatusSignal.emit(rescueState)
         return

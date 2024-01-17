@@ -36,3 +36,6 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_to_senso
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.virtual_target_global_position_int_to_sensor_msgs_NavSatFix import \
     virtual_target_global_position_int_to_sensor_msgs_NavSatFix
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.rescue_status_to_std_msgs_Bool import \
+    rescue_status_to_std_msgs_Bool

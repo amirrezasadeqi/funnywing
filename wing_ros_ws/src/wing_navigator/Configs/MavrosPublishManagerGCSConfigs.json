@@ -114,5 +114,15 @@
     "rate": 5,
     "queueSize": 5,
     "onMessage": "VIRTUAL_TARGET_GLOBAL_POSITION_INT"
+  },
+  {
+    "name": "rescueStatusPublisher",
+    "enable": true,
+    "topicName": "/funnywing/rescueStatus",
+    "msgPack": "std_msgs",
+    "msgType": "Bool",
+    "rate": 1,
+    "queueSize": 1,
+    "onMessage": "RESCUE_STATUS"
   }
 ]

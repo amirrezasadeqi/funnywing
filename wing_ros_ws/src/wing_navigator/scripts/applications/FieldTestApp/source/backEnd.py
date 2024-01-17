@@ -22,6 +22,7 @@ class backEnd(QObject):
         self._backFrontConnection.setArmStateSignal.connect(self.pubArmDisarmCommand)
         self._backFrontConnection.setFlightModeSignal.connect(self.pubSetModeCommand)
         self._backFrontConnection.goToLocationSignal.connect(self.pubGoToCommand)
+        self._backFrontConnection.sendSetRescueStatusSignal.connect(self.pubSetRescueStateCommand)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -85,6 +86,15 @@ class backEnd(QObject):
                                                              mavutil.mavlink.MAV_CMD_DO_REPOSITION, 0, 0, -1,
                                                              mavutil.mavlink.MAV_DO_REPOSITION_FLAGS_CHANGE_MODE, 120,
                                                              0, lat, lon, alt)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(bool)
+    def pubSetRescueStateCommand(self, rescueState):
+        mavMsg = mavutil.mavlink.MAVLink_rescue_set_state_message(
+            mavutil.mavlink.RESCUE_ENABLED if rescueState else mavutil.mavlink.RESCUE_DISABLED)
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         self._toRfComPublisher.publish(rosMsg)

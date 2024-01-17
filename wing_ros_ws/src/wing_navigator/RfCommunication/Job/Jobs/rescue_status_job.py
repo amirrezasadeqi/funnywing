@@ -1,0 +1,17 @@
+import rospy
+from RfCommunication.Job.Interface.JobInterface import JobInterface
+from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
+
+
+class rescue_status_job(JobInterface):
+
+    def __init__(self, message, rfConnection: ConnectionInterface, system, component):
+        """
+
+        @type message: MAVLink_rescue_status_message
+        """
+        super().__init__(message, rfConnection, system, component)
+        return
+
+    def _doJob(self):
+        rospy.loginfo(f"{self.getMessage()}")

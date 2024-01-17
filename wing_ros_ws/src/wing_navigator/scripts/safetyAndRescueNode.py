@@ -4,17 +4,27 @@
 This code will be run on the Raspberry Pi. So we can access flight data using mavros nodes and topics.
 """
 
-import rospy
 import threading
-from mavros_msgs.msg import HomePosition, RCIn, Waypoint, CommandCode
-from mavros_msgs.srv import SetMode, SetModeRequest, WaypointClear, WaypointClearRequest, WaypointPush, \
-    WaypointPushRequest
-from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import Float64
+from enum import Enum
+
 import numpy as np
 import pymap3d
+import rospy
+from mavros import mavlink
+from mavros_msgs.msg import HomePosition, RCIn, Waypoint, CommandCode, Mavlink
+from mavros_msgs.srv import SetMode, SetModeRequest, WaypointClear, WaypointClearRequest, WaypointPush, \
+    WaypointPushRequest
+from pymavlink import mavutil
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Float64
+from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 
 from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
+
+
+class rescueState(Enum):
+    DISABLE = 0
+    ENABLE = 1
 
 
 class safetyAndRecueClass(object):
@@ -25,6 +35,7 @@ class safetyAndRecueClass(object):
         self._rescueRelAlt = rescueRelAlt
         self._homePosition = None
         self._wingPosition = None
+        self._setRescueState(rescueState.DISABLE)
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
 
         rospy.wait_for_service('/mavros/set_mode')
@@ -34,12 +45,24 @@ class safetyAndRecueClass(object):
         self._missionClearProxy = rospy.ServiceProxy('/mavros/mission/clear', WaypointClear)
         self._missionPushProxy = rospy.ServiceProxy('/mavros/mission/push', WaypointPush, persistent=True)
 
+        self._setRescueStateService = rospy.Service("/funnywing/setRescueState", SetBool,
+                                                    self._setRescueStateServiceHandler)
+
+        # RfCommunicationHandler automatically sends data from /mavlink/from(coming from autopilot). So publish to it.
+        self._rescueStatePublisher = rospy.Publisher('/mavlink/from', Mavlink, queue_size=1)
+        self._rescueStatePublisherTimer = rospy.Timer(rospy.Duration(1), self._rescueStateTimerCallback)
+        self._mavProtocolObj = mavutil.mavlink.MAVLink("", mavutil.mavlink.MAV_TYPE_FIXED_WING, 1)
+
         self._homePosSubscriber = rospy.Subscriber("/mavros/home_position/home", HomePosition, self._getHomePosition)
         self._wingPosSubscriber = rospy.Subscriber("/mavros/global_position/global", NavSatFix, self._getWingPosition)
         self._wingRelAltSubscriber = rospy.Subscriber("/mavros/global_position/rel_alt", Float64, self._getWingRelAlt)
         self._wingRcInSubscriber = rospy.Subscriber("/mavros/rc/in", RCIn, self._getWingRcIn)
         self._rescueThread = threading.Thread(target=self._rescueThreadWorker)
         self._rescueThread.start()
+        return
+
+    def _setRescueState(self, rescueState: rescueState):
+        self._rescueState = rescueState
         return
 
     def _getHomePosition(self, msg: HomePosition):
@@ -58,8 +81,33 @@ class safetyAndRecueClass(object):
         return
 
     def _getWingRcIn(self, msg: RCIn):
+        try:
+            if msg.channels[self._rcSafetyChannel] >= 1500 and self._rcIn[self._rcSafetyChannel] < 1500:
+                self._setRescueState(rescueState.ENABLE)
+            elif msg.channels[self._rcSafetyChannel] < 1500 and self._rcIn[self._rcSafetyChannel] >= 1500:
+                self._setRescueState(rescueState.DISABLE)
+        except Exception as e:
+            rospy.logwarn("RC channels are not set till now!")
         self._rcIn = msg.channels
         rospy.loginfo(self._rcIn)
+        return
+
+    def _setRescueStateServiceHandler(self, setRescueStateRequest: SetBoolRequest):
+        response = SetBoolResponse()
+        try:
+            self._setRescueState(rescueState.ENABLE if setRescueStateRequest.data else rescueState.DISABLE)
+            response.success = True
+        except rospy.ServiceException as e:
+            response.success = False
+            print(f"Service call failed: {e}")
+        return response
+
+    def _rescueStateTimerCallback(self, event=None):
+        rescueStatusMavMsg = mavutil.mavlink.MAVLink_rescue_status_message(
+            mavutil.mavlink.RESCUE_ENABLED if rescueState.ENABLE == self._rescueState else mavutil.mavlink.RESCUE_DISABLED)
+        rescueStatusMavMsg.pack(self._mavProtocolObj)
+        rescueStatusRosMsg = mavlink.convert_to_rosmsg(rescueStatusMavMsg)
+        self._rescueStatePublisher.publish(rescueStatusRosMsg)
         return
 
     def _distanceToHome(self):
@@ -78,9 +126,6 @@ class safetyAndRecueClass(object):
         request.custom_mode = mode
         rospy.loginfo(f"Change mode to {mode}, Success: {self._setModeProxy(request).mode_sent}")
         return
-
-    def _isRescueNotActive(self):
-        return 1500 > self._rcIn[self._rcSafetyChannel]
 
     def _clearCurrentMission(self):
         try:
@@ -129,7 +174,7 @@ class safetyAndRecueClass(object):
         # TODO: you can also add rate for this loop to prevent from waisting cpu power.
         while not rospy.is_shutdown():
             # TODO: check this condition in field
-            if self._isRescueNotActive():
+            if self._rescueState is rescueState.DISABLE:
                 rospy.loginfo("Rescue and Safety checks are disabled!")
             elif (self._homePosition is None) or (self._wingPosition is None):
                 rospy.logwarn("Wing and Home position are still None!")

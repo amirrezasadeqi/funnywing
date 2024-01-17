@@ -9,3 +9,5 @@ from RfCommunication.Job.Jobs.position_target_global_int_job import position_tar
 from RfCommunication.Job.Jobs.command_int_job import command_int_job
 from RfCommunication.Job.Jobs.command_long_job import command_long_job
 from RfCommunication.Job.Jobs.virtual_target_global_position_int_job import virtual_target_global_position_int_job
+from RfCommunication.Job.Jobs.rescue_status_job import rescue_status_job
+from RfCommunication.Job.Jobs.rescue_set_state_job import rescue_set_state_job

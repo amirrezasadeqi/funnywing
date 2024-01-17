@@ -4,7 +4,8 @@
       "HEARTBEAT",
       "COMMAND_LONG",
       "COMMAND_INT",
-      "POSITION_TARGET_GLOBAL_INT"
+      "POSITION_TARGET_GLOBAL_INT",
+      "RESCUE_SET_STATE"
     ],
     "blackList": []
   },

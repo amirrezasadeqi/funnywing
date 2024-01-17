@@ -7,7 +7,7 @@ from PySide2.QtCore import QObject
 from geometry_msgs.msg import TwistStamped
 from mavros_msgs.msg import State
 from sensor_msgs.msg import NavSatFix
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 
 from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
 
@@ -44,7 +44,8 @@ class dataUpdater(QObject):
             "funnywingGpsHeading": self._gpsHeadingCallback,
             "funnywingGpsRelativeAltitude": self._gpsRelAltCallback,
             "targetGlobalPosition": self._tgGlobalPositionCallback,
-            "virtualTargetGlobalPosition": self._virtTgGlobalPosCallback
+            "virtualTargetGlobalPosition": self._virtTgGlobalPosCallback,
+            "rescueStatus": self._rescueStatusCallback
         }
         return
 
@@ -93,6 +94,10 @@ class dataUpdater(QObject):
 
     def _virtTgGlobalPosCallback(self, msg: NavSatFix):
         self._backFrontConnection.setVirtualTargetGPS.emit(msg.latitude, msg.longitude, msg.altitude)
+        return
+
+    def _rescueStatusCallback(self, msg: Bool):
+        self._backFrontConnection.showRescueStatus.emit(msg.data)
         return
 
     def _updateDistToTg(self, event=None):
