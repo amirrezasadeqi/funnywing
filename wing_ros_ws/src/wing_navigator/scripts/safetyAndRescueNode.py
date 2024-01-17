@@ -29,7 +29,7 @@ class rescueState(Enum):
 
 class safetyAndRecueClass(object):
     def __init__(self, rcSafetyChannel=7, altThreshold=15, distanceToHomeThreshold=2000, rescueRelAlt=40):
-        self._rcSafetyChannel = rcSafetyChannel
+        self._rcSafetyChannelIndex = rcSafetyChannel - 1
         self._altThreshold = altThreshold
         self._distanceToHomeThreshold = distanceToHomeThreshold
         self._rescueRelAlt = rescueRelAlt
@@ -82,9 +82,9 @@ class safetyAndRecueClass(object):
 
     def _getWingRcIn(self, msg: RCIn):
         try:
-            if msg.channels[self._rcSafetyChannel] >= 1500 and self._rcIn[self._rcSafetyChannel] < 1500:
+            if msg.channels[self._rcSafetyChannelIndex] >= 1500 and self._rcIn[self._rcSafetyChannelIndex] < 1500:
                 self._setRescueState(rescueState.ENABLE)
-            elif msg.channels[self._rcSafetyChannel] < 1500 and self._rcIn[self._rcSafetyChannel] >= 1500:
+            elif msg.channels[self._rcSafetyChannelIndex] < 1500 and self._rcIn[self._rcSafetyChannelIndex] >= 1500:
                 self._setRescueState(rescueState.DISABLE)
         except Exception as e:
             rospy.logwarn("RC channels are not set till now!")

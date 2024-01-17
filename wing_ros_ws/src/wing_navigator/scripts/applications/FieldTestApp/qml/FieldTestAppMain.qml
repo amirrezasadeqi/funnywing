@@ -461,7 +461,7 @@ Window {
                                     Label {
                                         id: wingFlightMode
                                         text: mainWindow.wingFlightState
-                                        color: "red"
+                                        color: "white"
                                         anchors {
                                             top: parent.top
                                             topMargin: 5
@@ -472,7 +472,7 @@ Window {
                                     Label {
                                         id: wingRelAltLabel
                                         text: "Wing Rel Alt: "
-                                        color: "red"
+                                        color: "white"
                                         anchors {
                                             top: wingFlightMode.bottom
                                             topMargin: 5
@@ -483,7 +483,7 @@ Window {
                                     Label {
                                         id: wingRelAltValueLabel
                                         text: mainWindow.wingRelAlt
-                                        color: "red"
+                                        color: "white"
                                         anchors {
                                             top: wingFlightMode.bottom
                                             topMargin: 5
@@ -494,7 +494,7 @@ Window {
                                     Label {
                                         id: rescueStateLabel
                                         text: "Rescue: "
-                                        color: "red"
+                                        color: "white"
                                         anchors {
                                             top: wingRelAltLabel.bottom
                                             topMargin: 5
@@ -505,7 +505,7 @@ Window {
                                     Label {
                                         id: rescueStateValueLabel
                                         text: mainWindow.rescueStatus
-                                        color: "red"
+                                        color: "white"
                                         anchors {
                                             top: wingRelAltLabel.bottom
                                             topMargin: 5
