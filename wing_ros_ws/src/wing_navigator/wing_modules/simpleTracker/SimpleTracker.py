@@ -19,6 +19,9 @@ class SimpleTracker(object):
         self._virtualTargetOffset = virtualTargetOffset
         self._last_fw_global_pos = None
         self._virtualAroundFunnywing = True
+        # The value by which the virtual target offset is greater than the waypoint radius.
+        self._radiusOffset = 5
+        self._activated = False
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
         self._local = local
         if local:
@@ -32,10 +35,27 @@ class SimpleTracker(object):
         self._wingGPSSubscriber = rospy.Subscriber(wingGPSTopic, NavSatFix, callback=self._wingGPSCallback)
         self._targetGPSSubscriber = rospy.Subscriber(targetGPSTopic, NavSatFix, callback=self._targetGPSCallback)
         self._subscriptionThread = threading.Thread(target=self._subscriptionThreadCallback)
+        self._subscriptionThread.start()
         return
 
     def useWingForVirtualTargetCenter(self, useWing):
         self._virtualAroundFunnywing = useWing
+        return
+
+    def setVirtualTargetOffset(self, virtualTargetOffset):
+        self._virtualTargetOffset = virtualTargetOffset
+        # Update the commanded waypoints radius based on the virtual target offset.
+        self._commandSender.setWayPointRadius(virtualTargetOffset - self._radiusOffset)
+        return
+
+    def setActivated(self, activated):
+        self._activated = activated
+        return
+
+    def setSettings(self, useWing, virtualTargetOffset):
+        self.useWingForVirtualTargetCenter(useWing)
+        self.setVirtualTargetOffset(virtualTargetOffset)
+        return
 
     def _getVirtualTargetGlobalPosition(self, tg_global, fw_global, offset):
         """
@@ -67,6 +87,9 @@ class SimpleTracker(object):
         return
 
     def _targetGPSCallback(self, msg: NavSatFix):
+        # To enable and disable the simple tracker algorithm.
+        if not self._activated:
+            return
         fw_pos = self._last_fw_global_pos
         if fw_pos is not None:
             tg_pos = [msg.latitude, msg.longitude, msg.altitude]

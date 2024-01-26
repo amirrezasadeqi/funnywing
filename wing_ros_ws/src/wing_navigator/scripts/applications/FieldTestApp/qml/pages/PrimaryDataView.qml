@@ -20,6 +20,8 @@ Item {
     property real tgGpsLonVal: 51.454554545
     property real tgGpsAltVal: 100.00
     property real distToTg: 50.46
+    property real tgRecvDataRate: 5.0
+    property real tgRelAlt: 50.0
 
     Rectangle{
         id: bg
@@ -283,6 +285,58 @@ Item {
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
                                 text: rootItem.distToTg
+                            }
+                        }
+                        Label{
+                            id: tgDataRateLabel
+                            color: "#d1dde9"
+                            text: qsTr("Target Recieved Data Rate")
+                            Layout.topMargin: 20
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        }
+                        Rectangle{
+                            id: tgDataRateRect
+                            Layout.preferredWidth: 110
+                            Layout.preferredHeight: 30
+                            anchors.top: tgDataRateLabel.top
+                            color: "#454749"
+                            border.color: "green"
+                            border.width: 2
+                            radius: 2
+                            clip: true
+                            Text{
+                                id: tgDataRateText
+                                color: "#dee3e7"
+                                anchors.fill: parent
+                                verticalAlignment: Text.AlignVCenter
+                                anchors.leftMargin: 5
+                                text: rootItem.tgRecvDataRate
+                            }
+                        }
+                        Label{
+                            id: tgRelAltLabel
+                            color: "#d1dde9"
+                            text: qsTr("Target Relative Altitude")
+                            Layout.topMargin: 20
+                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        }
+                        Rectangle{
+                            id: tgRelAltRect
+                            Layout.preferredWidth: 110
+                            Layout.preferredHeight: 30
+                            anchors.top: tgRelAltLabel.top
+                            color: "#454749"
+                            border.color: "green"
+                            border.width: 2
+                            radius: 2
+                            clip: true
+                            Text{
+                                id: tgRelAltText
+                                color: "#dee3e7"
+                                anchors.fill: parent
+                                verticalAlignment: Text.AlignVCenter
+                                anchors.leftMargin: 5
+                                text: rootItem.tgRelAlt
                             }
                         }
                     }

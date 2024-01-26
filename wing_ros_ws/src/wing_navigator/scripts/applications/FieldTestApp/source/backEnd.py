@@ -23,6 +23,9 @@ class backEnd(QObject):
         self._backFrontConnection.setFlightModeSignal.connect(self.pubSetModeCommand)
         self._backFrontConnection.goToLocationSignal.connect(self.pubGoToCommand)
         self._backFrontConnection.sendSetRescueStatusSignal.connect(self.pubSetRescueStateCommand)
+        self._backFrontConnection.handleTestScenarioSignal.connect(self.handleTestScenario)
+        self._backFrontConnection.setSimpleTrackerSettingsSignal.connect(self.setSimpleTrackerSettings)
+        self._backFrontConnection.setSimpleTrackerActivationSignal.connect(self.setSimpleTrackerActivation)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -95,6 +98,51 @@ class backEnd(QObject):
     def pubSetRescueStateCommand(self, rescueState):
         mavMsg = mavutil.mavlink.MAVLink_rescue_set_state_message(
             mavutil.mavlink.RESCUE_ENABLED if rescueState else mavutil.mavlink.RESCUE_DISABLED)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(int, bool)
+    def handleTestScenario(self, scenarioIdx, active):
+        int_params = [0] * 5
+        bool_params = [False] * 5
+        float_params = [0.0] * 5
+        int_params[0] = scenarioIdx
+        bool_params[0] = active
+        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
+                                                                          mavutil.mavlink.SET_TEST_SCENARIO_ACTIVATION,
+                                                                          int_params, bool_params, float_params)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(float, bool, bool)
+    def setSimpleTrackerSettings(self, waypointRadius, local, wingAsVirtualCenter):
+        int_params = [0] * 5
+        bool_params = [False] * 5
+        float_params = [0.0] * 5
+        float_params[0] = waypointRadius
+        bool_params[0] = local
+        bool_params[1] = wingAsVirtualCenter
+        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
+                                                                          mavutil.mavlink.SET_SIMPLE_TRACKER_SETTINGS,
+                                                                          int_params, bool_params, float_params)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(bool)
+    def setSimpleTrackerActivation(self, active):
+        int_params = [0] * 5
+        bool_params = [False] * 5
+        float_params = [0.0] * 5
+        bool_params[0] = active
+        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
+                                                                          mavutil.mavlink.SET_SIMPLE_TRACKER_ACTIVATION,
+                                                                          int_params, bool_params, float_params)
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         self._toRfComPublisher.publish(rosMsg)

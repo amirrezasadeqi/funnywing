@@ -22,6 +22,9 @@ class backFrontEndCommunication(QObject):
     setFlightModeSignal = Signal(str)
     goToLocationSignal = Signal(float, float, float)
     sendSetRescueStatusSignal = Signal(bool)
+    handleTestScenarioSignal = Signal(int, bool)
+    setSimpleTrackerSettingsSignal = Signal(float, bool, bool)
+    setSimpleTrackerActivationSignal = Signal(bool)
 
     def __init__(self):
         super().__init__()
@@ -49,4 +52,19 @@ class backFrontEndCommunication(QObject):
     @Slot(bool)
     def sendSetRescueStatus(self, rescueState):
         self.sendSetRescueStatusSignal.emit(rescueState)
+        return
+
+    @Slot(int, bool)
+    def handleTestScenario(self, scenarioIdx, active):
+        self.handleTestScenarioSignal.emit(scenarioIdx, active)
+        return
+
+    @Slot(float, bool, bool)
+    def setSimpleTrackerSettings(self, waypointRadius, local, wingAsVirtualCenter):
+        self.setSimpleTrackerSettingsSignal.emit(waypointRadius, local, wingAsVirtualCenter)
+        return
+
+    @Slot(bool)
+    def setSimpleTrackerActivation(self, active):
+        self.setSimpleTrackerActivationSignal.emit(active)
         return

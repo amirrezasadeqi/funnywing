@@ -5,7 +5,8 @@
       "COMMAND_LONG",
       "COMMAND_INT",
       "POSITION_TARGET_GLOBAL_INT",
-      "RESCUE_SET_STATE"
+      "RESCUE_SET_STATE",
+      "FUNNYWING_CUSTOM_COMMAND"
     ],
     "blackList": []
   },

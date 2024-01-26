@@ -11,3 +11,4 @@ from RfCommunication.Job.Jobs.command_long_job import command_long_job
 from RfCommunication.Job.Jobs.virtual_target_global_position_int_job import virtual_target_global_position_int_job
 from RfCommunication.Job.Jobs.rescue_status_job import rescue_status_job
 from RfCommunication.Job.Jobs.rescue_set_state_job import rescue_set_state_job
+from RfCommunication.Job.Jobs.funnywing_custom_command_job import funnywing_custom_command_job

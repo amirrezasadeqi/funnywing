@@ -1,0 +1,4 @@
+uint8 scenarioIdx
+bool active
+---
+bool success

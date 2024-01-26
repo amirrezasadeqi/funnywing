@@ -25,6 +25,9 @@ Window {
     property real wingRelAlt: 100.432
     property real distToTg: 54.12
     property string rescueStatus: "OFF"
+    property real tgRecvDataRate: 5.0
+    property real wingRecvDataRate: 10.0
+    property real tgRelAlt: 50.0
 
     Connections{
         target: backFrontConnections
@@ -321,6 +324,8 @@ Window {
                                                 tgGpsLonVal: mainWindow.tgGPS.lon
                                                 tgGpsAltVal: mainWindow.tgGPS.alt
                                                 distToTg: mainWindow.distToTg
+                                                tgRecvDataRate: mainWindow.tgRecvDataRate
+                                                tgRelAlt: mainWindow.tgRelAlt
                                             }
                                         }
 
@@ -447,7 +452,7 @@ Window {
                                 Rectangle {
                                     id: mapDataDisplayerContainer
                                     width: 160
-                                    height: 70
+                                    height: 100
                                     color: "#9938383c"
                                     border.width: 3
                                     border.color: "#38383c"
@@ -513,6 +518,28 @@ Window {
                                             leftMargin: 0
                                         }
                                     }
+                                    Label {
+                                        id: wingRecvDataRateLabel
+                                        text: "Wing Data Rate: "
+                                        color: "white"
+                                        anchors {
+                                            top: rescueStateLabel.bottom
+                                            topMargin: 5
+                                            left: parent.left
+                                            leftMargin: 5
+                                        }
+                                    }
+                                    Label {
+                                        id: wingRecvDataRateValueLabel
+                                        text: mainWindow.wingRecvDataRate
+                                        color: "white"
+                                        anchors {
+                                            top: rescueStateLabel.bottom
+                                            topMargin: 5
+                                            left: wingRecvDataRateLabel.right
+                                            leftMargin: 0
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -557,11 +584,15 @@ Window {
                                         currentIndex: actionSwipeView.currentIndex
                                         TabButton{
                                             id: stateActionBtn
-                                            text: qsTr("State Actions")
+                                            text: qsTr("Actions")
+                                        }
+                                        TabButton{
+                                            id: configPageBtn
+                                            text: qsTr("Configuration")
                                         }
                                         TabButton{
                                             id: gotoServiceBtn
-                                            text: qsTr('Goto Service')
+                                            text: qsTr('Services')
                                         }
                                     }
                                 }
@@ -583,15 +614,33 @@ Window {
 
                                         Item {
                                             id: stateActionTab
-                                            StateActionView{
-                                                id: stateActionView
+                                            ActionView{
+                                                id: actionView
                                                 anchors.fill: parent
                                                 onArmDisarmBtnSignal: {
-                                                    backFrontConnections.setArmState(arming)
+                                                    backFrontConnections.setArmState(arming);
                                                 }
                                                 onModeChangerBtnsSignal: {
-                                                    backFrontConnections.setFlightMode(mode)
+                                                    backFrontConnections.setFlightMode(mode);
                                                 }
+                                                onTestScenarioBtnSignal: {
+                                                    backFrontConnections.handleTestScenario(scenarioIdx, active);
+                                                }
+                                                onSetSettingsBtnSignal: {
+                                                    backFrontConnections.setSimpleTrackerSettings(waypointRadius, local, wingAsVirtualCenter);
+                                                }
+                                                onSimpleTrackerBtnsSignal: {
+                                                    backFrontConnections.setSimpleTrackerActivation(active);
+                                                }
+                                            }
+                                        }
+
+                                        Item {
+                                            id: configurationView
+                                            Rectangle{
+                                                id: configurationContainer
+                                                anchors.fill: parent
+                                                color: "transparent"
                                             }
                                         }
 

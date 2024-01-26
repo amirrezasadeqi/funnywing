@@ -1,0 +1,4 @@
+bool wingAsVirtualCenter
+float64 waypointRadius
+---
+bool success
