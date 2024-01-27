@@ -8,6 +8,8 @@ from RfCommunication.Job.Interface.JobInterface import JobInterface
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
 
 
+# TODO: Redesign and Refactor this File.
+
 def setSimpleTrackerSettingsHandler(mavMsg):
     request = SetSimpleTrackerSettingsRequest()
     request.waypointRadius = mavMsg.float_params[0]
@@ -42,9 +44,11 @@ funnywingCustomCommandHandlerMapping = {
 
 
 class funnywing_custom_command_job(JobInterface):
-    _activeSimpleTrackerProxy = None
-    _setSimpleTrackerSettingsProxy = None
-    _runTestScenarioProxy = None
+    # TODO: Rethink about the design for creating these proxies and check that they works correctly. Specially the way
+    #   we have created them in the constructor.
+    _activeSimpleTrackerProxy = rospy.ServiceProxy("/funnywing/activeSimpleTracker", SetBool)
+    _setSimpleTrackerSettingsProxy = rospy.ServiceProxy("/funnywing/setSimpleTrackerSettings", SetSimpleTrackerSettings)
+    _runTestScenarioProxy = rospy.ServiceProxy("/funnywing/runTestScenario", RunTestScenario)
 
     def __init__(self, message, rfConnection: ConnectionInterface, system, component):
         """

@@ -2,7 +2,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../controls"
-import QtQuick.Studio.Components 1.0
 
 Item {
     id: actionView
@@ -196,11 +195,13 @@ Item {
                         }
                     }
 
-                    GroupItem {
+                    Rectangle {
+                        id: simpleTrackerSettingsGroupContainer
                         x: 334
                         y: 88
                         width: 122
                         height: 96
+                        color: "transparent"
 
                         Label {
                             id: localityExecutionLabel
@@ -254,9 +255,13 @@ Item {
                         }
                     }
 
-                    GroupItem {
+                    Rectangle {
+                        id: waypointRadiusGroupItem
                         x: 32
                         y: 30
+                        color: "transparent"
+                        width: waypointRadiusCustomTextfield.width
+                        height: waypointRadiusCustomTextfield.width + waypointRadiusLabel.height
 
                         CustomTextField {
                             id: waypointRadiusCustomTextfield

@@ -117,7 +117,7 @@ class NavigatorNode(object):
 
         # Hold until the wing reaches last waypoint
         while 3 != self._currentWaypoint:
-            rospy.sleep(0.5)
+            rospy.sleep(0.1)
 
         self._simpleTracker.setActivated(True)
 
@@ -128,6 +128,13 @@ class NavigatorNode(object):
 
     def _testScenario1InactiveHandler(self):
         self._simpleTracker.setActivated(False)
+
+        # Change to guided mode, since in the test scenario(AUTO mode) the following command rejected by the autopilot
+        # (I think) and the scenario mission does not stop and not being cleared.
+        request = SetModeRequest()
+        request.custom_mode = "GUIDED"
+        self._setModeProxy(request)
+
         request = CommandIntRequest()
         request.broadcast = 0
         request.frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT
@@ -136,12 +143,13 @@ class NavigatorNode(object):
         request.autocontinue = False
         request.param1 = -1
         request.param2 = mavutil.mavlink.MAV_DO_REPOSITION_FLAGS_CHANGE_MODE
-        request.param3 = 120
+        request.param3 = 80.0
         request.param4 = 0
         request.x = 0
         request.y = 0
         request.z = 40
         self._comIntProxy(request)
+
         request = WaypointClearRequest()
         self._missionClearProxy(request)
         return
@@ -149,6 +157,7 @@ class NavigatorNode(object):
     def _createTestScenarioMission(self):
         waypoints = []
         mission_rel_alt = 40
+        waypointRadius = self._simpleTrackerCommandSender._wayPointRadius
         dummyWaypoint = Waypoint()
         dummyWaypoint.frame = Waypoint.FRAME_GLOBAL_REL_ALT
         dummyWaypoint.command = CommandCode.NAV_WAYPOINT
@@ -161,7 +170,7 @@ class NavigatorNode(object):
         waypoint.command = CommandCode.NAV_WAYPOINT
         waypoint.is_current = False
         waypoint.autocontinue = True
-        waypoint.param3 = 50.0
+        waypoint.param3 = waypointRadius
         waypoint.x_lat = 35.74805410878459
         waypoint.y_long = 51.60696543545722
         waypoint.z_alt = mission_rel_alt
@@ -172,7 +181,7 @@ class NavigatorNode(object):
         waypoint.command = CommandCode.NAV_WAYPOINT
         waypoint.is_current = False
         waypoint.autocontinue = True
-        waypoint.param3 = 50.0
+        waypoint.param3 = waypointRadius
         waypoint.x_lat = 35.748078036064534
         waypoint.y_long = 51.60518915432342
         waypoint.z_alt = mission_rel_alt
@@ -183,7 +192,7 @@ class NavigatorNode(object):
         waypoint.command = CommandCode.NAV_WAYPOINT
         waypoint.is_current = False
         waypoint.autocontinue = True
-        waypoint.param3 = 50.0
+        waypoint.param3 = waypointRadius
         waypoint.x_lat = 35.74807205424523
         waypoint.y_long = 51.60364872794597
         waypoint.z_alt = mission_rel_alt
