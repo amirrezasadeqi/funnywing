@@ -59,6 +59,12 @@ Window {
         function onShowRescueStatus(rescueStatus){
             mainWindow.rescueStatus = rescueStatus ? "ON" : "OFF";
         }
+        function onSetWingRecvDataRate(rate){
+            mainWindow.wingRecvDataRate = rate
+        }
+        function onSetTgRecvDataRate(rate){
+            mainWindow.tgRecvDataRate = rate
+        }
     }
 
     Rectangle {

@@ -16,6 +16,8 @@ class backFrontEndCommunication(QObject):
     setWingRelAlt = Signal(float, arguments=['alt'])
     setDistanceToTarget = Signal(float, arguments=['dist'])
     showRescueStatus = Signal(bool, arguments=['rescueStatus'])
+    setWingRecvDataRate = Signal(float, arguments=['rate'])
+    setTgRecvDataRate = Signal(float, arguments=['rate'])
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)

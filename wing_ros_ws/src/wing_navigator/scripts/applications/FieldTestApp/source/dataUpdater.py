@@ -3,6 +3,7 @@ import threading
 import numpy as np
 import pymap3d
 import rospy
+import rostopic
 from PySide2.QtCore import QObject
 from geometry_msgs.msg import TwistStamped
 from mavros_msgs.msg import State
@@ -24,10 +25,14 @@ class dataUpdater(QObject):
         self._callbackTypeMap = {}
         self._setupCallbackTypeMap()
         self._createSubscriptions()
+        # Set up the monitor mechanism for the rates of target GPS and wing mavlink data streams.
+        self._createDataRateMonitors()
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
         self._lastWingGlobalPose = None
         self._lastTargetGlobalPose = None
 
+        # ROS Timer to update data rate monitors
+        self._dataRateUpdaterTimer = rospy.Timer(rospy.Duration(secs=1), self._updateDataRateMonitors)
         # ROS Timer to update distance to target
         self._distToTgUpdaterTimer = rospy.Timer(rospy.Duration(0, int((1.0 / 5.0) * 1e9)), self._updateDistToTg)
         # create listener thread to spin
@@ -116,3 +121,18 @@ class dataUpdater(QObject):
         diffVector = np.array(tgLocalPos) - np.array(fwLocalPos)
 
         return np.linalg.norm(diffVector)
+
+    def _createDataRateMonitors(self):
+        self._wingTopicHz = rostopic.ROSTopicHz(-1)
+        self._tgGPSTopicHz = rostopic.ROSTopicHz(-1)
+        self._subscriberList.append(rospy.Subscriber("/funnywing/from", rospy.AnyMsg, self._wingTopicHz.callback_hz,
+                                                     callback_args="/funnywing/from"))
+        self._subscriberList.append(
+            rospy.Subscriber("/target/globalPosition", rospy.AnyMsg, self._tgGPSTopicHz.callback_hz,
+                             callback_args="/target/globalPosition"))
+        return
+
+    def _updateDataRateMonitors(self, event=None):
+        self._backFrontConnection.setWingRecvDataRate.emit(self._wingTopicHz.get_hz("/funnywing/from")[0])
+        self._backFrontConnection.setTgRecvDataRate.emit(self._tgGPSTopicHz.get_hz("/target/globalPosition")[0])
+        return
