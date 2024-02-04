@@ -37,8 +37,8 @@ Item {
     }
 
     onClearMap: {
-        wingPath.setPath([]);
-        tgPath.setPath([]);
+        wingPath.path = [];
+        tgPath.path = [];
     }
 
     Rectangle{

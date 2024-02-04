@@ -32,7 +32,7 @@ class dataUpdater(QObject):
         self._lastTargetGlobalPose = None
 
         # ROS Timer to update data rate monitors
-        self._dataRateUpdaterTimer = rospy.Timer(rospy.Duration(secs=1), self._updateDataRateMonitors)
+        self._dataRateUpdaterTimer = rospy.Timer(rospy.Duration(secs=0, nsecs=500000000), self._updateDataRateMonitors)
         # ROS Timer to update distance to target
         self._distToTgUpdaterTimer = rospy.Timer(rospy.Duration(0, int((1.0 / 5.0) * 1e9)), self._updateDistToTg)
         # create listener thread to spin
@@ -123,8 +123,8 @@ class dataUpdater(QObject):
         return np.linalg.norm(diffVector)
 
     def _createDataRateMonitors(self):
-        self._wingTopicHz = rostopic.ROSTopicHz(-1)
-        self._tgGPSTopicHz = rostopic.ROSTopicHz(-1)
+        self._wingTopicHz = rostopic.ROSTopicHz(100)
+        self._tgGPSTopicHz = rostopic.ROSTopicHz(100)
         self._subscriberList.append(rospy.Subscriber("/funnywing/from", rospy.AnyMsg, self._wingTopicHz.callback_hz,
                                                      callback_args="/funnywing/from"))
         self._subscriberList.append(
@@ -133,6 +133,16 @@ class dataUpdater(QObject):
         return
 
     def _updateDataRateMonitors(self, event=None):
-        self._backFrontConnection.setWingRecvDataRate.emit(self._wingTopicHz.get_hz("/funnywing/from")[0])
-        self._backFrontConnection.setTgRecvDataRate.emit(self._tgGPSTopicHz.get_hz("/target/globalPosition")[0])
+        try:
+            rate = self._wingTopicHz.get_hz("/funnywing/from")[0]
+            self._backFrontConnection.setWingRecvDataRate.emit(rate)
+        except Exception as e:
+            rospy.loginfo("Wing data stream is down.")
+
+        try:
+            rate = self._tgGPSTopicHz.get_hz("/target/globalPosition")[0]
+            self._backFrontConnection.setTgRecvDataRate.emit(rate)
+        except Exception as e:
+            rospy.loginfo("Target data stream is down.")
+
         return

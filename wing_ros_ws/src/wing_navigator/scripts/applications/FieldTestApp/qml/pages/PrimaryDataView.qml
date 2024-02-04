@@ -310,7 +310,7 @@ Item {
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
-                                text: rootItem.tgRecvDataRate
+                                text: rootItem.tgRecvDataRate.toFixed(2)
                             }
                         }
                         Label{

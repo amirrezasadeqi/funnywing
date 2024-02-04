@@ -537,7 +537,7 @@ Window {
                                     }
                                     Label {
                                         id: wingRecvDataRateValueLabel
-                                        text: mainWindow.wingRecvDataRate
+                                        text: mainWindow.wingRecvDataRate.toFixed(2)
                                         color: "white"
                                         anchors {
                                             top: rescueStateLabel.bottom
