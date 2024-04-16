@@ -15,6 +15,7 @@ Item {
     signal testScenarioBtnSignal(int scenarioIdx, bool active)
     signal setSettingsBtnSignal(real waypointRadius, bool local, bool wingAsVirtualCenter)
     signal simpleTrackerBtnsSignal(bool active)
+    signal setApParamBtnSignal(string paramName, real paramValue)
 
     Rectangle {
         id: bg
@@ -29,7 +30,7 @@ Item {
             ScrollView {
                 id: scrollView
                 anchors.fill: parent
-                contentHeight: 400
+                contentHeight: 630
                 Rectangle {
                     id: armingActionContianer
                     width: 120
@@ -269,7 +270,11 @@ Item {
                             y: 21
                             width: 284
                             height: 31
-                            placeholderText: "Enter Waypoint Radius"
+                            placeholderText: "Enter Virtual Target Offset"
+                            ToolTip.visible: hovered
+                            ToolTip.text: qsTr("Enter a value 5 meters above the wing loiter radius.")
+                            ToolTip.delay: 1000
+                            ToolTip.timeout: 3000
                         }
 
                         Label {
@@ -277,7 +282,7 @@ Item {
                             x: -20
                             y: 0
                             color: "#ffffff"
-                            text: qsTr("Waypoint Radius")
+                            text: qsTr("Virtual Target Offset")
                             font.pointSize: 9
                         }
                     }
@@ -391,6 +396,348 @@ Item {
                         onClicked: {
                             let radius = (waypointRadiusCustomTextfield.text.length === 0) ? 120.0 : parseFloat(waypointRadiusCustomTextfield.text);
                             actionView.setSettingsBtnSignal(radius, !localityExecutionSwitch.checked, !virtualCenterSwitch.checked)
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: arduplaneConfigContainer
+                    height: 463
+                    color: "transparent"
+                    anchors{
+                        left: parent.left
+                        leftMargin: 15
+                        top: armingActionContianer.bottom
+                        topMargin: 5
+                        right: testActionContainer.left
+                        rightMargin: 5
+                    }
+                    border.color: "green"
+                    border.width: 3
+                    radius: 5
+
+                    Component {
+                        id: submitControlComp
+                        Rectangle {
+                            id: bg
+                            implicitWidth: compTextField.width + compSetBtn.width + 5
+                            implicitHeight: compLabel.height + compTextField.height + 5
+                            color: "#00ffffff"
+                            border.color: "#00000000"
+                            property string compLabelText: qsTr("LIM_ROLL_CD")
+                            property string paramID: qsTr("LIM_ROLL_CD")
+                            property string compTextFieldPlaceHolderText: qsTr("Default: 20")
+                            property string compTextFieldTooltipText: qsTr("Some Explanations about this input.")
+                            property string compSetBtnImageSrc: "../../images/svg_images/submitIcon.svg"
+                            Label{
+                                id: compLabel
+                                color: "white"
+                                anchors{
+                                    top: parent.top
+                                    left: parant.left
+                                }
+                                text: bg.compLabelText
+                            }
+                            CustomTextField {
+                                id: compTextField
+                                width: 250
+                                height: 30
+                                anchors.left: parent.left
+                                anchors.top: compLabel.bottom
+                                placeholderText: bg.compTextFieldPlaceHolderText
+                                anchors.topMargin: 5
+                                anchors.leftMargin: 0
+                                ToolTip.visible: hovered
+                                ToolTip.text: bg.compTextFieldTooltipText
+                                ToolTip.delay: 1000
+                                ToolTip.timeout: 3000
+                            }
+                            CustomTextBtn {
+                                id: compSetBtn
+                                width: 50
+                                height: 27
+                                anchors.verticalCenter: compTextField.verticalCenter
+                                anchors.left: compTextField.right
+                                anchors.leftMargin: 5
+                                contentItem: Image {
+                                    id: compSetBtnImage
+                                    anchors.fill: parent
+                                    source: bg.compSetBtnImageSrc
+                                    fillMode: Image.PreserveAspectFit
+                                }
+                                onClicked: {
+                                    actionView.setApParamBtnSignal(bg.paramID, parseFloat(compTextField.text))
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: arduplaneConfigLabelContainer
+                        width: 190
+                        height: 22
+                        radius: 5
+                        color: "green"
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.leftMargin: 0
+                        anchors.topMargin: 0
+                        Label{
+                            id: arduplaneConfigLabel
+                            text: "ArduPlane Configurations"
+                            color: "white"
+                            anchors.centerIn: parent
+                        }
+                    }
+
+                    Rectangle {
+                        id: flightRadiusConfigContainer
+                        y: 35
+                        height: 151
+                        color: "#00ffffff"
+                        radius: 5
+                        border.color: "green"
+                        border.width: 3
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.rightMargin: 10
+                        anchors.leftMargin: 10
+
+                        Rectangle {
+                            id: flightRadiusConfigLabelContainer
+                            width: 141
+                            height: 20
+                            color: "green"
+                            radius: 5
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.leftMargin: 0
+                            anchors.topMargin: 0
+
+                            Label {
+                                id: flightRadiusConfigLabel
+                                color: "white"
+                                text: qsTr("Flight Radius Config")
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.verticalCenterOffset: 1
+                                anchors.leftMargin: 3
+                            }
+                        }
+                        Loader{
+                            id: wpLoiterRadSubLoader
+                            sourceComponent: submitControlComp
+                            anchors{
+                                top: flightRadiusConfigLabelContainer.bottom
+                                topMargin: 5
+                                left: parent.left
+                                leftMargin: 10
+                            }
+                            onLoaded: {
+                                item.paramID = qsTr("WP_LOITER_RAD")
+                                item.compLabelText = qsTr("Waypoint Loiter Radius")
+                                item.compTextFieldPlaceHolderText = qsTr("Default: 120")
+                                item.compTextFieldTooltipText = qsTr("The radius that wing tries to hold when turning around waypoint.")
+                            }
+                        }
+                        Loader{
+                            id: wpRadSubLoader
+                            sourceComponent: submitControlComp
+                            anchors{
+                                top: wpLoiterRadSubLoader.bottom
+                                topMargin: 10
+                                left: parent.left
+                                leftMargin: 10
+                            }
+                            onLoaded: {
+                                item.paramID = qsTr("WP_RADIUS")
+                                item.compLabelText = qsTr("Waypoint Radius")
+                                item.compTextFieldPlaceHolderText = qsTr("Default: 120")
+                                item.compTextFieldTooltipText = qsTr("The radius within that the waypoint is considered to be reached.")
+                            }
+                        }
+                    }
+                    Rectangle {
+                        id: controllerParamsContainer
+                        y: 35
+                        height: 150
+                        color: "#00ffffff"
+                        radius: 5
+                        border.color: "green"
+                        border.width: 3
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: flightRadiusConfigContainer.bottom
+                        anchors.rightMargin: 10
+                        anchors.leftMargin: 10
+                        anchors.topMargin: 5
+
+                        Rectangle {
+                            id: controllerParamsLabelContainer
+                            width: 141
+                            height: 20
+                            color: "green"
+                            radius: 5
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.leftMargin: 0
+                            anchors.topMargin: 0
+
+                            Label {
+                                id: controllerParamsLabel
+                                color: "white"
+                                text: qsTr("Controller Params")
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.verticalCenterOffset: 1
+                                anchors.leftMargin: 3
+                            }
+                        }
+                        Loader {
+                            id: navL1PeriodLoader
+                            sourceComponent: submitControlComp
+                            anchors{
+                                top: controllerParamsLabelContainer.bottom
+                                topMargin: 5
+                                left: parent.left
+                                leftMargin: 10
+                            }
+                            onLoaded: {
+                                item.paramID = qsTr("NAVL1_PERIOD")
+                                item.compLabelText = qsTr("NAVL1_PERIOD")
+                                item.compTextFieldPlaceHolderText = qsTr("Default: 17")
+                                item.compTextFieldTooltipText = qsTr("Time constant of the L1 controller. Smaller value, more aggressive turns. Too small[10] value leads to stall.")
+                            }
+                        }
+                        Loader {
+                            id: limRollCdLoader
+                            sourceComponent: submitControlComp
+                            anchors{
+                                top: navL1PeriodLoader.bottom
+                                topMargin: 5
+                                left: parent.left
+                                leftMargin: 10
+                            }
+                            onLoaded: {
+                                item.paramID = qsTr("LIM_ROLL_CD")
+                                item.compLabelText = qsTr("LIM_ROLL_CD")
+                                item.compTextFieldPlaceHolderText = qsTr("Default: 20")
+                                item.compTextFieldTooltipText = qsTr("Maximum bank angle commanded in modes with stabilized limits. Increase this value for sharper turns.")
+                            }
+                        }
+                    }
+                    Rectangle {
+                        id: allApParamsConfigContainer
+                        y: 35
+                        height: 93
+                        color: "#00ffffff"
+                        radius: 5
+                        border.color: "green"
+                        border.width: 3
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: controllerParamsContainer.bottom
+                        anchors.rightMargin: 10
+                        anchors.leftMargin: 10
+                        anchors.topMargin: 5
+
+                        Rectangle {
+                            id: allApParamsConfigLabelContainer
+                            width: 180
+                            height: 20
+                            color: "green"
+                            radius: 5
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.leftMargin: 0
+                            anchors.topMargin: 0
+
+                            Label {
+                                id: allApParamsConfigLabel
+                                color: "white"
+                                text: qsTr("ArduPlane Params Config")
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.verticalCenterOffset: 1
+                                anchors.leftMargin: 3
+                            }
+                        }
+                        Rectangle {
+                            id: allApParamsSubmitterBg
+                            implicitWidth: apParamIDTextField.width + apParamValueTextField.width + allApParamSetBtn.width + 5
+                            implicitHeight: apParamIDTextField.height + apParamLabel.height + 5
+                            anchors {
+                                top: allApParamsConfigLabelContainer.bottom
+                                topMargin: 5
+                                left: parent.left
+                                leftMargin: 10
+                            }
+                            color: "#00ffffff"
+                            border.color: "#00000000"
+                            Label{
+                                id: apParamLabel
+                                color: "white"
+                                anchors{
+                                    top: parent.top
+                                    left: parant.left
+                                }
+                                text: qsTr("ArduPlane Parameter ID")
+                            }
+                            CustomTextField {
+                                id: apParamIDTextField
+                                width: 250
+                                height: 30
+                                anchors.left: parent.left
+                                anchors.top: apParamLabel.bottom
+                                placeholderText: qsTr("e.g. LIM_PITCH_MIN")
+                                anchors.topMargin: 5
+                                anchors.leftMargin: 0
+                                ToolTip.visible: hovered
+                                ToolTip.text: qsTr("ID or name of the parameters defined in the installed version of arduplane's parameter list.")
+                                ToolTip.delay: 1000
+                                ToolTip.timeout: 3000
+                            }
+                            Label{
+                                id: apParamValueLabel
+                                color: "white"
+                                anchors{
+                                    top: parent.top
+                                    left: apParamIDTextField.right
+                                    leftMargin: 10
+                                }
+                                text: qsTr("ArduPlane Parameter Value")
+                            }
+                            CustomTextField {
+                                id: apParamValueTextField
+                                width: 200
+                                height: 30
+                                anchors.left: apParamIDTextField.right
+                                anchors.top: apParamValueLabel.bottom
+                                anchors.leftMargin: 10
+                                anchors.topMargin: 5
+                                placeholderText: qsTr("Enter Value ...")
+                                ToolTip.visible: hovered
+                                ToolTip.text: qsTr("Value of the specified parameter in parameter ID text field.")
+                                ToolTip.delay: 1000
+                                ToolTip.timeout: 3000
+                            }
+                            CustomTextBtn {
+                                id: allApParamSetBtn
+                                width: 50
+                                height: 27
+                                anchors.verticalCenter: apParamValueTextField.verticalCenter
+                                anchors.left: apParamValueTextField.right
+                                anchors.leftMargin: 5
+                                contentItem: Image {
+                                    id: allApParamSetBtnImage
+                                    anchors.fill: parent
+                                    source: "../../images/svg_images/submitIcon.svg"
+                                    fillMode: Image.PreserveAspectFit
+                                }
+                                onClicked: {
+                                    actionView.setApParamBtnSignal(apParamIDTextField.text, parseFloat(apParamValueTextField.text))
+                                }
+                            }
                         }
                     }
                 }

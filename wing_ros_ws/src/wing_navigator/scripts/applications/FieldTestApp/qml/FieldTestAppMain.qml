@@ -638,6 +638,9 @@ Window {
                                                 onSimpleTrackerBtnsSignal: {
                                                     backFrontConnections.setSimpleTrackerActivation(active);
                                                 }
+                                                onSetApParamBtnSignal: {
+                                                    backFrontConnections.setArduplaneParam(paramName, paramValue);
+                                                }
                                             }
                                         }
 

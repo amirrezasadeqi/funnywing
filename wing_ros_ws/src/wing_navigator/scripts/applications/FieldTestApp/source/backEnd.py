@@ -26,6 +26,7 @@ class backEnd(QObject):
         self._backFrontConnection.handleTestScenarioSignal.connect(self.handleTestScenario)
         self._backFrontConnection.setSimpleTrackerSettingsSignal.connect(self.setSimpleTrackerSettings)
         self._backFrontConnection.setSimpleTrackerActivationSignal.connect(self.setSimpleTrackerActivation)
+        self._backFrontConnection.setArduplaneParamSignal.connect(self.setArduplaneParameter)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -145,5 +146,17 @@ class backEnd(QObject):
                                                                           int_params, bool_params, float_params)
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(str, float)
+    def setArduplaneParameter(self, paramName, paramValue):
+        # create mavlink message
+        mavMsg = mavutil.mavlink.MAVLink_param_set_message(self._tgSystemID, self._tgComponentID, paramName.encode(),
+                                                           paramValue, mavutil.mavlink.MAV_PARAM_TYPE_REAL32)
+        # convert it to mavros_msgs/Mavlink message
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        # publish the message, and it will automatically be sent.
         self._toRfComPublisher.publish(rosMsg)
         return

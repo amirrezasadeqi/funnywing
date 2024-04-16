@@ -12,3 +12,4 @@ from RfCommunication.Job.Jobs.virtual_target_global_position_int_job import virt
 from RfCommunication.Job.Jobs.rescue_status_job import rescue_status_job
 from RfCommunication.Job.Jobs.rescue_set_state_job import rescue_set_state_job
 from RfCommunication.Job.Jobs.funnywing_custom_command_job import funnywing_custom_command_job
+from RfCommunication.Job.Jobs.param_set_job import param_set_job

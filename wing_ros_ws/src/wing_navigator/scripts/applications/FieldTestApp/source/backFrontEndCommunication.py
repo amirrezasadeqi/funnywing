@@ -27,6 +27,7 @@ class backFrontEndCommunication(QObject):
     handleTestScenarioSignal = Signal(int, bool)
     setSimpleTrackerSettingsSignal = Signal(float, bool, bool)
     setSimpleTrackerActivationSignal = Signal(bool)
+    setArduplaneParamSignal = Signal(str, float)
 
     def __init__(self):
         super().__init__()
@@ -69,4 +70,9 @@ class backFrontEndCommunication(QObject):
     @Slot(bool)
     def setSimpleTrackerActivation(self, active):
         self.setSimpleTrackerActivationSignal.emit(active)
+        return
+
+    @Slot(str, float)
+    def setArduplaneParam(self, paramName, paramValue):
+        self.setArduplaneParamSignal.emit(paramName, paramValue)
         return
