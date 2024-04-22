@@ -4,7 +4,6 @@
 This code will be run on the Raspberry Pi. So we can access flight data using mavros nodes and topics.
 """
 
-import threading
 from enum import Enum
 
 import numpy as np
@@ -35,8 +34,17 @@ class safetyAndRecueClass(object):
         self._rescueRelAlt = rescueRelAlt
         self._homePosition = None
         self._wingPosition = None
+        self._wingRelAlt = None
+        self._wingHomeDistance = None
         self._setRescueState(rescueState.DISABLE)
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
+        # TODO: add the manual rescue situation to this dictionary.
+        self._rescueOperationDict = {
+            "lowAltitude": {"criticality": 0, "isActive": False,
+                            "operationHandler": self._lowAltitudeRescueHandler},
+            "highHomeDistance": {"criticality": 1, "isActive": False,
+                                 "operationHandler": self._highHomeDistanceRescueHandler}
+        }
 
         rospy.wait_for_service('/mavros/set_mode')
         rospy.wait_for_service('/mavros/mission/clear')
@@ -57,27 +65,56 @@ class safetyAndRecueClass(object):
         self._wingPosSubscriber = rospy.Subscriber("/mavros/global_position/global", NavSatFix, self._getWingPosition)
         self._wingRelAltSubscriber = rospy.Subscriber("/mavros/global_position/rel_alt", Float64, self._getWingRelAlt)
         self._wingRcInSubscriber = rospy.Subscriber("/mavros/rc/in", RCIn, self._getWingRcIn)
-        self._rescueThread = threading.Thread(target=self._rescueThreadWorker)
-        self._rescueThread.start()
         return
 
     def _setRescueState(self, rescueState: rescueState):
         self._rescueState = rescueState
         return
 
+    def _changeRescueOperationState(self, rescueSituation: str, requestedRescueOperationState: bool):
+        self._rescueOperationDict[rescueSituation]["isActive"] = requestedRescueOperationState
+        if requestedRescueOperationState:
+            # Deactivate other situations to not prevent them from re-activating after current situation criticality
+            # terminated.
+            for k in [key for key in self._rescueOperationDict.keys() if key != rescueSituation]:
+                self._rescueOperationDict[k]["isActive"] = False
+            self._rescueOperationDict[rescueSituation]["operationHandler"]()
+            rospy.logwarn(f"The operation of {rescueSituation} has been uploaded and running.")
+        else:
+            rospy.logwarn(f"The operation of {rescueSituation} has been terminated.")
+        return
+
     def _getHomePosition(self, msg: HomePosition):
         self._homePosition = [msg.geo.latitude, msg.geo.longitude, msg.geo.altitude]
-        rospy.loginfo(self._homePosition)
+        rospy.loginfo(f"Wing Home Position: {self._homePosition}")
         return
 
     def _getWingPosition(self, msg: NavSatFix):
+        if (self._homePosition is not None) and (self._wingPosition is not None):
+            currentWingHomeDistance = self._distanceToHome()
+            # Checking for emergency situation which can be inferred by wing and home positions, e.g. spoof and going
+            # too far away accidentally or by bad behavior of algorithms.
+            if currentWingHomeDistance > self._distanceToHomeThreshold:
+                if (self._rescueState is rescueState.ENABLE) and self._isRescueSituationCritical("highHomeDistance"):
+                    self._changeRescueOperationState("highHomeDistance", True)
+            else:
+                if (self._wingHomeDistance is not None) and (self._wingHomeDistance > self._distanceToHomeThreshold):
+                    self._changeRescueOperationState("highHomeDistance", False)
+            # Updating the wing to home distance after comparing it with the new one. This needs both home position
+            # and wing position, so must be done in the if statement.
+            self._wingHomeDistance = currentWingHomeDistance
         self._wingPosition = [msg.latitude, msg.longitude, msg.altitude]
-        rospy.loginfo(self._wingPosition)
         return
 
     def _getWingRelAlt(self, msg: Float64):
+        # Checking for emergency situation which can be inferred by wing relative altitude data.
+        if msg.data < self._altThreshold:
+            if (self._rescueState is rescueState.ENABLE) and self._isRescueSituationCritical("lowAltitude"):
+                self._changeRescueOperationState("lowAltitude", True)
+        else:
+            if (self._wingRelAlt is not None) and (self._wingRelAlt < self._altThreshold):
+                self._changeRescueOperationState("lowAltitude", False)
         self._wingRelAlt = msg.data
-        rospy.loginfo(self._wingRelAlt)
         return
 
     def _getWingRcIn(self, msg: RCIn):
@@ -89,7 +126,6 @@ class safetyAndRecueClass(object):
         except Exception as e:
             rospy.logwarn("RC channels are not set till now!")
         self._rcIn = msg.channels
-        rospy.loginfo(self._rcIn)
         return
 
     def _setRescueStateServiceHandler(self, setRescueStateRequest: SetBoolRequest):
@@ -129,6 +165,8 @@ class safetyAndRecueClass(object):
 
     def _clearCurrentMission(self):
         try:
+            # Change to a mode other than AUTO to be able to clear the mission from the autopilot.
+            self._sendChangeModeRequest("GUIDED")
             request = WaypointClearRequest()
             self._missionClearProxy(request)
         except rospy.ServiceException as e:
@@ -170,23 +208,26 @@ class safetyAndRecueClass(object):
             print(f"Service call failed: {e}")
             return False
 
-    def _rescueThreadWorker(self):
-        # TODO: you can also add rate for this loop to prevent from waisting cpu power.
-        while not rospy.is_shutdown():
-            # TODO: check this condition in field
-            if self._rescueState is rescueState.DISABLE:
-                rospy.loginfo("Rescue and Safety checks are disabled!")
-            elif (self._homePosition is None) or (self._wingPosition is None):
-                rospy.logwarn("Wing and Home position are still None!")
-            elif (self._wingRelAlt < self._altThreshold) or (self._distanceToHome() > self._distanceToHomeThreshold):
-                # Change mode to Auto, since loiter and circle does not get altitude and Guided would have conflict
-                # with simpleTrackerNode running on GCS or RPI.
-                self._clearCurrentMission()
-                waypoints = self._createRescueMission()
-                self._uploadWaypoints(waypoints)
-                self._sendChangeModeRequest("AUTO")
-            else:
-                continue
+    def _isRescueSituationCritical(self, rescueSituation: str):
+        if True not in [self._rescueOperationDict[key]["isActive"] for key in self._rescueOperationDict.keys() if
+                        self._rescueOperationDict[key]["criticality"] <= self._rescueOperationDict[rescueSituation][
+                            "criticality"]]:
+            return True
+        return False
+
+    def _lowAltitudeRescueHandler(self):
+        self._clearCurrentMission()
+        waypoints = self._createRescueMission()
+        self._uploadWaypoints(waypoints)
+        # Change mode to Auto, since loiter and circle does not get altitude and Guided would have conflict
+        # with simpleTrackerNode running on GCS or RPI.
+        self._sendChangeModeRequest("AUTO")
+        return
+
+    def _highHomeDistanceRescueHandler(self):
+        self._clearCurrentMission()
+        # Circle mode does not use GPS data and is good for this situation which may cause by spoofing.
+        self._sendChangeModeRequest("CIRCLE")
         return
 
 

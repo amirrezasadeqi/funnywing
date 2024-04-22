@@ -105,6 +105,11 @@ class NavigatorNode(object):
         return response
 
     def _testScenario1ActiveHandler(self):
+        # Mode must be changed to a mode other than AUTO for being able to remove old missions.
+        # This solves the bug when rescue operation is done and we want to replay the test scenario.
+        request = SetModeRequest()
+        request.custom_mode = "GUIDED"
+        self._setModeProxy(request)
         request = WaypointClearRequest()
         self._missionClearProxy(request)
         waypoints = self._createTestScenarioMission()

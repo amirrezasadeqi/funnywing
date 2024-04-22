@@ -19,12 +19,28 @@ class param_set_job(JobInterface):
         super().__init__(message, rfConnection, system, component)
 
         if (param_set_job._paramSetProxy is None) and self._isSystemMavrosSide():
-            rospy.wait_for_service("/mavros/param/set")
-            param_set_job._paramSetProxy = rospy.ServiceProxy("/mavros/param/set", ParamSet)
+            # Although we could just wait and create the service, but for an unknown reason we need to have the
+            # ServiceProxy creation in two seperated places(not in two adjacent lines), like in static variables
+            # (not good since we may use this in other machines that the mavros does not exist and this blocks
+            # the code) and constructor body, or like what we see below, otherwise the first reqeust that has been sent
+            # by GUI does not work(by debugging I found that the job isn't be created for no error and just in the
+            # jobfactory the creation raises an exception that more or less exactly saying the byte object does not have
+            # 'encode' method.) and from the second click we can set parameters. Anyway, I think below code snippet is a
+            # good and nice piece of code for this purpose, since it directly creates the proxy and if it is necessary
+            # it waits for loading the service. Note that, till now I have seen this wierd problem only in the parameter
+            # set messages and services. In the future, I will find the reason and solve it deeply.
+            try:
+                param_set_job._paramSetProxy = rospy.ServiceProxy("/mavros/param/set", ParamSet)
+            except Exception:
+                rospy.wait_for_service("/mavros/param/set")
+                param_set_job._paramSetProxy = rospy.ServiceProxy("/mavros/param/set", ParamSet)
 
         if (param_set_job._paramGetProxy is None) and self._isSystemMavrosSide():
-            rospy.wait_for_service("/mavros/param/get")
-            param_set_job._paramGetProxy = rospy.ServiceProxy("/mavros/param/get", ParamGet)
+            try:
+                param_set_job._paramGetProxy = rospy.ServiceProxy("/mavros/param/get", ParamGet)
+            except Exception:
+                rospy.wait_for_service("/mavros/param/get")
+                param_set_job._paramGetProxy = rospy.ServiceProxy("/mavros/param/get", ParamGet)
 
         self._request = self._createRequest()
         self._response = ParamSetResponse()
@@ -33,7 +49,7 @@ class param_set_job(JobInterface):
     def _doJob(self):
         if self._isSystemMavrosSide():
             self._response = param_set_job._paramSetProxy(self._request)
-            rospy.loginfo(f"Success: {self._response.success}.")
+            rospy.loginfo(f"Set Parameter Result: Success: {self._response.success}.")
         return
 
     def _createRequest(self) -> ParamSetRequest:
@@ -45,11 +61,15 @@ class param_set_job(JobInterface):
         # 1. get the param from the autopilot
         paramGetResponse: ParamGetResponse = param_set_job._paramGetProxy(
             ParamGetRequest(param_id=self.getMessage().param_id))
-        # 2. check its type and Set the corresponding field of the 'request.value' based on its type.
+        # 2. Check its type and Set the corresponding field of the 'request.value' based on its type. Note that I have
+        # figured out that only the integer block is executed and actually all the parameters returned in integer field
+        # of ParamValue, although their values are correct even in the case of floating point numbers. But anyway,
+        # because the below logic is correct and also since it has been stated in the documents of mavros ParamValue
+        # message and finally, because it works well, we use it in our code.
         if paramGetResponse.value.integer != 0:
-            request.value = ParamValue(integer=self.getMessage().param_value)
+            request.value = ParamValue(integer=int(self.getMessage().param_value))
         elif paramGetResponse.value.real != 0.0:
-            request.value = ParamValue(real=self.getMessage().param_value)
+            request.value = ParamValue(real=float(self.getMessage().param_value))
         else:
             request.value = ParamValue()
         return request
