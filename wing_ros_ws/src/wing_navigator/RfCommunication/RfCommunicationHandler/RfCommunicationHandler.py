@@ -103,6 +103,12 @@ class RfCommunicationHandler(object):
         """
         bits = mavlink.convert_to_bytes(mavrosMsg)
         mavlinkMsg = self._rfConnection.getPort().mav.decode(bits)
+        if mavlinkMsg.get_type() in ('PARAM_SET', 'PARAM_VALUE', 'PARAM_REQUEST_READ'):
+            if type(mavlinkMsg.param_id) == str:
+                mavlinkMsg.param_id = mavlinkMsg.param_id.encode()
+        elif mavlinkMsg.get_type() == 'STATUSTEXT':
+            if type(mavlinkMsg.text) == str:
+                mavlinkMsg.text = mavlinkMsg.text.encode()
         return mavlinkMsg
 
     def _applyMessageFilters(self, mavrosMsg) -> bool:
