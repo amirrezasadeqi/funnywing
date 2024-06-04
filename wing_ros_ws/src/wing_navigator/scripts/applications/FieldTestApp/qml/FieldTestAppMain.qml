@@ -458,7 +458,7 @@ Window {
                                 Rectangle {
                                     id: mapDataDisplayerContainer
                                     width: 160
-                                    height: 100
+                                    height: 115
                                     color: "#9938383c"
                                     border.width: 3
                                     border.color: "#38383c"
@@ -543,6 +543,28 @@ Window {
                                             top: rescueStateLabel.bottom
                                             topMargin: 5
                                             left: wingRecvDataRateLabel.right
+                                            leftMargin: 0
+                                        }
+                                    }
+                                    Label {
+                                        id: tgRecvDataRateLabel
+                                        text: "Target Data Rate: "
+                                        color: "white"
+                                        anchors {
+                                            top: wingRecvDataRateLabel.bottom
+                                            topMargin: 5
+                                            left: parent.left
+                                            leftMargin: 5
+                                        }
+                                    }
+                                    Label {
+                                        id: tgRecvDataRateValueLabel
+                                        text: mainWindow.tgRecvDataRate.toFixed(2)
+                                        color: "white"
+                                        anchors {
+                                            top: wingRecvDataRateLabel.bottom
+                                            topMargin: 5
+                                            left: tgRecvDataRateLabel.right
                                             leftMargin: 0
                                         }
                                     }
