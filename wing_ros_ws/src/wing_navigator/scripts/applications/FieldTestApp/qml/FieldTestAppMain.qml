@@ -1,10 +1,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtQuick.Window 2.15
 import QtGraphicalEffects 1.15
 import QtPositioning 5.15
 import "controls"
 import "pages"
+import "theme" 1.0
 
 Window {
     id: mainWindow
@@ -142,6 +144,34 @@ Window {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     anchors.leftMargin: 10
+
+                    RoundButton {
+                        id: themeSwitchBtn
+                        height: 0.85 * parent.height
+                        width: height
+                        anchors {
+                            right: parent.right
+                            rightMargin: 10
+                            verticalCenter: parent.verticalCenter
+                        }
+
+                        Image {
+                            id: themeSwitchBtnIcon
+                            source: "../images/svg_images/lightModeIcon.svg"
+                            anchors.centerIn: parent
+                            width: 0.5 * parent.width
+                            height: 0.5 * parent.height
+                        }
+
+                        onClicked: {
+                            ThemeManager.themeName = ThemeManager.themeName === "customLight" ? "customDark" : "customLight";
+                            themeSwitchBtnIcon.source = ThemeManager.themeName === "customLight" ? "../images/svg_images/lightModeIcon.svg" : "../images/svg_images/darkModeIcon.svg";
+                        }
+
+                        Component.onCompleted: {
+                            ThemeManager.register(themeSwitchBtn);
+                        }
+                    }
                 }
             }
 
@@ -294,6 +324,9 @@ Window {
                                         TabButton{
                                             id: otherMonitors
                                             text: qsTr('Other Monitors')
+                                        }
+                                        Component.onCompleted: {
+                                            ThemeManager.register(monitorBtnBar);
                                         }
                                     }
                                 }
@@ -622,6 +655,9 @@ Window {
                                             id: gotoServiceBtn
                                             text: qsTr('Services')
                                         }
+                                        Component.onCompleted: {
+                                            ThemeManager.register(actionBtnBar);
+                                        }
                                     }
                                 }
 
@@ -672,6 +708,17 @@ Window {
                                                 id: configurationContainer
                                                 anchors.fill: parent
                                                 color: "transparent"
+
+                                                Button {
+                                                    id: testButton
+                                                    text: qsTr("Material themed Button")
+                                                    anchors.centerIn: parent
+                                                    width: 300
+                                                    height: 100
+                                                    Component.onCompleted: {
+                                                        ThemeManager.register(testButton);
+                                                    }
+                                                }
                                             }
                                         }
 
