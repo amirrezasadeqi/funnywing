@@ -13,6 +13,10 @@ Item {
     // Material.theme changes only apply in this file, not in the whole application.
     readonly property int materialTheme: Material.theme
 
+    // m3 material design color roles: m3.material.io
+    // use ThemeManager.m3["primary"] for example to get your theme's primary.
+    property var m3: themeLoader.item.theme.m3
+
     property var registeredComponents: []
 
     ThemeFileMap {

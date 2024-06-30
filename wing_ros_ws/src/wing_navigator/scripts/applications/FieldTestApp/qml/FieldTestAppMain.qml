@@ -157,7 +157,7 @@ Window {
 
                         Image {
                             id: themeSwitchBtnIcon
-                            source: "../images/svg_images/lightModeIcon.svg"
+                            source: "../images/svg_images/darkModeIcon.svg"
                             anchors.centerIn: parent
                             width: 0.5 * parent.width
                             height: 0.5 * parent.height
@@ -165,7 +165,7 @@ Window {
 
                         onClicked: {
                             ThemeManager.themeName = ThemeManager.themeName === "customLight" ? "customDark" : "customLight";
-                            themeSwitchBtnIcon.source = ThemeManager.themeName === "customLight" ? "../images/svg_images/lightModeIcon.svg" : "../images/svg_images/darkModeIcon.svg";
+                            themeSwitchBtnIcon.source = ThemeManager.themeName === "customLight" ? "../images/svg_images/darkModeIcon.svg" : "../images/svg_images/lightModeIcon.svg";
                         }
 
                         Component.onCompleted: {
@@ -717,6 +717,30 @@ Window {
                                                     height: 100
                                                     Component.onCompleted: {
                                                         ThemeManager.register(testButton);
+                                                    }
+                                                }
+
+                                                Button {
+                                                    id: anotherTestBtn
+                                                    width: 200
+                                                    height: 30
+                                                    anchors {
+                                                        left: testButton.right
+                                                        verticalCenter: testButton.verticalCenter
+                                                        leftMargin: 10
+                                                    }
+
+                                                    background: Rectangle {
+                                                        id: anotherTestBtnRect
+                                                        anchors.fill: parent
+                                                        color: ThemeManager.m3["secondary"]
+                                                        Text {
+                                                            id: textTest
+                                                            anchors.centerIn: parent
+                                                            text: qsTr("Another Material Button")
+                                                            font.styleName: "Bold"
+                                                            color: ThemeManager.m3["onSecondary"]
+                                                        }
                                                     }
                                                 }
                                             }
