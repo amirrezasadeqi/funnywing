@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../controls"
+import "../theme" 1.0
 
 Item {
     id: rootItem
@@ -22,21 +23,25 @@ Item {
     property real distToTg: 50.46
     property real tgRecvDataRate: 5.0
     property real tgRelAlt: 50.0
+    property color labelColor: ThemeManager.m3["onSurface"]
+    property color borderColor: ThemeManager.m3["outline"]
+    property color valRectBg: ThemeManager.m3["surfaceBright"]
+    property color valTextColor: ThemeManager.m3["onSurface"]
 
     Rectangle{
         id: bg
-        color: "#e8232323"
+        color: ThemeManager.m3["surfaceBright"]
         anchors.fill: parent
 
         Rectangle {
             id: container
-            color: "#00ffffff"
+            color: "transparent"
             anchors.fill: parent
 
             Rectangle {
                 id: wingDataContainer
                 width: parent.width / 2
-                color: "#00ffffff"
+                color: "transparent"
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
@@ -62,7 +67,7 @@ Item {
                         columns: 2
                         Label{
                             id: wingGpsLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Wing GPS")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -92,7 +97,7 @@ Item {
                         }
                         Label{
                             id: wingVelocityLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Wing Velocity")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -125,7 +130,7 @@ Item {
                         }
                         Label{
                             id: wingHeadingLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Wing Heading")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -135,14 +140,14 @@ Item {
                             Layout.preferredWidth: 110
                             Layout.preferredHeight: 30
                             anchors.top: wingHeadingLabel.top
-                            color: "#454749"
-                            border.color: "green"
+                            color: valRectBg
+                            border.color: borderColor
                             border.width: 2
                             radius: 2
                             clip: true
                             Text{
                                 id: headingText
-                                color: "#dee3e7"
+                                color: valTextColor
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
@@ -151,7 +156,7 @@ Item {
                         }
                         Label{
                             id: wingFlightStateLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Wing Flight State")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -161,14 +166,14 @@ Item {
                             Layout.preferredWidth: 110
                             Layout.preferredHeight: 30
                             anchors.top: wingFlightStateLabel.top
-                            color: "#454749"
-                            border.color: "green"
+                            color: valRectBg
+                            border.color: borderColor
                             border.width: 2
                             radius: 2
                             clip: true
                             Text{
                                 id: wingFlightStateText
-                                color: "#dee3e7"
+                                color: valTextColor
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
@@ -177,7 +182,7 @@ Item {
                         }
                         Label{
                             id: wingRelativeAltLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Wing Relative Altitude")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -188,14 +193,14 @@ Item {
                             Layout.preferredHeight: 30
                             anchors.top: wingRelativeAltLabel.top
                             Layout.bottomMargin: height
-                            color: "#454749"
-                            border.color: "green"
+                            color: valRectBg
+                            border.color: borderColor
                             border.width: 2
                             radius: 2
                             clip: false
                             Text{
                                 id: wingRelativeAltText
-                                color: "#dee3e7"
+                                color: valTextColor
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
@@ -240,7 +245,7 @@ Item {
                         columns: 2
                         Label{
                             id: tgGpsLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Traget GPS")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -263,7 +268,7 @@ Item {
                         }
                         Label{
                             id: distToTgLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Distance to Target")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -273,14 +278,14 @@ Item {
                             Layout.preferredWidth: 110
                             Layout.preferredHeight: 30
                             anchors.top: distToTgLabel.top
-                            color: "#454749"
-                            border.color: "green"
+                            color: valRectBg
+                            border.color: borderColor
                             border.width: 2
                             radius: 2
                             clip: true
                             Text{
                                 id: distToTgText
-                                color: "#dee3e7"
+                                color: valTextColor
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
@@ -289,7 +294,7 @@ Item {
                         }
                         Label{
                             id: tgDataRateLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Target Recieved Data Rate")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -299,14 +304,14 @@ Item {
                             Layout.preferredWidth: 110
                             Layout.preferredHeight: 30
                             anchors.top: tgDataRateLabel.top
-                            color: "#454749"
-                            border.color: "green"
+                            color: valRectBg
+                            border.color: borderColor
                             border.width: 2
                             radius: 2
                             clip: true
                             Text{
                                 id: tgDataRateText
-                                color: "#dee3e7"
+                                color: valTextColor
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5
@@ -315,7 +320,7 @@ Item {
                         }
                         Label{
                             id: tgRelAltLabel
-                            color: "#d1dde9"
+                            color: rootItem.labelColor
                             text: qsTr("Target Relative Altitude")
                             Layout.topMargin: 20
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
@@ -325,14 +330,14 @@ Item {
                             Layout.preferredWidth: 110
                             Layout.preferredHeight: 30
                             anchors.top: tgRelAltLabel.top
-                            color: "#454749"
-                            border.color: "green"
+                            color: valRectBg
+                            border.color: borderColor
                             border.width: 2
                             radius: 2
                             clip: true
                             Text{
                                 id: tgRelAltText
-                                color: "#dee3e7"
+                                color: valTextColor
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 anchors.leftMargin: 5

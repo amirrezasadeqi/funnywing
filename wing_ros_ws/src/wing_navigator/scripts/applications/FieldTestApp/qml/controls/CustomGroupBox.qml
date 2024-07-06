@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import "../theme" 1.0
 
 Item {
     id: actionGroupBox
@@ -8,13 +9,13 @@ Item {
     implicitHeight: 171
     property string title: "actionGroupBoxTitle"
     property color bgColor: "transparent"
-    property color borderColor: "green"
+    property color borderColor: ThemeManager.m3["outlineVariant"]
     property int borderWidth: 3
     property var contentItem: Rectangle{
         id: contentItem
         width: 100
         height: 30
-        color: "green"
+        color: ThemeManager.m3["surface"]
     }
 
     Rectangle {
@@ -45,7 +46,7 @@ Item {
                 x: groupBox.leftPadding
                 width: groupBox.availableWidth
                 text: groupBox.title
-                color: "#21be2b"
+                color: ThemeManager.m3["onSurface"]
                 elide: Text.ElideRight
             }
 
