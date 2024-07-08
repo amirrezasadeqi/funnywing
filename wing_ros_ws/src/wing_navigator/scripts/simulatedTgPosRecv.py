@@ -74,7 +74,7 @@ class PosClient(object):
 if "__main__" == __name__:
     rospy.init_node("simulatedTgPosRecv", anonymous=True)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server_ip", default="192.168.1.2")
+    parser.add_argument("--server_ip", default="110.110.1.10")
     parser.add_argument("--server_port", default=60006)
     parser.add_argument("--gpsTopicName", default="/target/globalPosition")
     parser.add_argument("--rfConnectionTopicName", default="/GCS/from")

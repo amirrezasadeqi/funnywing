@@ -11,6 +11,7 @@ Item {
     property color clickedBgColor: ThemeManager.m3["surfaceContainerHighest"]
     property color defaultBorderColor: ThemeManager.m3["outlineVariant"]
     property color clickedBorderColor: ThemeManager.m3["outline"]
+    property string currentText: customComboBox.currentText
 
     ComboBox {
         id: customComboBox
