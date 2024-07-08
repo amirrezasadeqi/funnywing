@@ -1,10 +1,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtQuick.Window 2.15
 import QtGraphicalEffects 1.15
 import QtPositioning 5.15
 import "controls"
 import "pages"
+import "theme" 1.0
 
 Window {
     id: mainWindow
@@ -73,7 +75,7 @@ Window {
         y: 173
         width: 200
         height: 200
-        color: "#2a2a2a"
+        color: ThemeManager.m3["surface"]
         anchors.fill: parent
 
         Rectangle {
@@ -82,72 +84,79 @@ Window {
             y: 182
             width: 200
             height: 200
-            color: "#002a2a2a"
+            color: "transparent"
             anchors.fill: parent
 
             Rectangle {
                 id: topBar
                 height: 60
-                color: "#232323"
+                color: ThemeManager.m3["surfaceContainerHighest"]
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                Rectangle{
-                    id: appIconBg
+
+                Rectangle {
+                    id: appIconContainer
                     width: 50
-                    height: width
-                    color: iconBgColor
-                    radius: width / 2
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    property url switchBlade: "../images/svg_images/switchblade_launch_icon.svg"
-                    property color iconBgColor: "#98A8BB"
-
-                    MouseArea{
-                        id: appIconMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onEntered: {
-                            appIconBg.switchBlade = "../images/svg_images/switchblade_inair_icon.svg"
-                            appIconBg.iconBgColor = "#bbb6a3"
-                        }
-                        onExited: {
-                            appIconBg.switchBlade = "../images/svg_images/switchblade_launch_icon.svg"
-                            appIconBg.iconBgColor = "#98A8BB"
-                        }
+                    anchors {
+                        left: parent.left
+                        leftMargin: 10
+                        verticalCenter: parent.verticalCenter
                     }
-
-                    Image {
-                        id: appIcon
-                        anchors.fill: parent
-                        source: appIconBg.switchBlade
-                        sourceSize.height: 512
-                        sourceSize.width: 512
-                        fillMode: Image.PreserveAspectFit
-
-                        ColorOverlay{
-                            anchors.fill: parent
-                            source: appIcon
-                            color: "#675F51"
-                        }
+                    color: "transparent"
+                    RoundButton {
+                        id: appIconBtn
+                        anchors.centerIn: parent
+                        radius: 50
+                        Material.background: ThemeManager.m3["secondaryContainer"]
+                        Material.elevation: 2
+                        icon.source: hovered ? "../images/svg_images/switchblade_inair_icon.svg" : "../images/svg_images/switchblade_launch_icon.svg"
+                        icon.color: ThemeManager.m3["onSecondaryContainer"]
+                        icon.width: 40
+                        icon.height: 40
                     }
                 }
 
                 Rectangle {
                     id: topBarContainer
-                    color: "#00ffffff"
+                    color: "transparent"
                     anchors.left: appIconBg.right
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     anchors.leftMargin: 10
+
+                    RoundButton {
+                        id: themeSwitchBtn
+                        height: 0.85 * parent.height
+                        width: height
+                        Material.background: ThemeManager.m3["secondaryContainer"]
+
+                        anchors {
+                            right: parent.right
+                            rightMargin: 10
+                            verticalCenter: parent.verticalCenter
+                        }
+
+                        Image {
+                            id: themeSwitchBtnIcon
+                            source: "../images/svg_images/darkModeIcon.svg"
+                            anchors.centerIn: parent
+                            width: 0.5 * parent.width
+                            height: 0.5 * parent.height
+                        }
+
+                        onClicked: {
+                            ThemeManager.themeName = ThemeManager.themeName === "customLight" ? "customDark" : "customLight";
+                            themeSwitchBtnIcon.source = ThemeManager.themeName === "customLight" ? "../images/svg_images/darkModeIcon.svg" : "../images/svg_images/lightModeIcon.svg";
+                        }
+                    }
                 }
             }
 
             Rectangle {
                 id: sideBarContainer
-                color: "#00ffffff"
+                color: "transparent"
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: topBar.bottom
@@ -157,7 +166,7 @@ Window {
                 Rectangle {
                     id: leftBar
                     width: 40
-                    color: "#232323"
+                    color: ThemeManager.m3["surfaceContainerHighest"]
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
@@ -165,7 +174,7 @@ Window {
                     Rectangle {
                         id: dataDisplaySideContainer
                         height: baseContentTopContainer.height
-                        color: "#00ffffff"
+                        color: "transparent"
                         anchors{
                             top: parent.top
                             left: parent.left
@@ -174,7 +183,7 @@ Window {
 
                         Label {
                             id: dataMonitorTitle
-                            color: "#dddddd"
+                            color: ThemeManager.m3["onSurface"]
                             text: qsTr("Monitor Panel")
                             anchors.verticalCenter: parent.verticalCenter
                             horizontalAlignment: Text.AlignHCenter
@@ -195,7 +204,7 @@ Window {
                     Rectangle {
                         id: sideBarTitleSeparator
                         height: baseContentSeparator.height * 0.2
-                        color: "#2a2a2a"
+                        color: ThemeManager.m3["outlineVariant"]
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: dataDisplaySideContainer.bottom
@@ -204,7 +213,7 @@ Window {
 
                     Rectangle {
                         id: actionsSideContainer
-                        color: "#00ffffff"
+                        color: "transparent"
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: sideBarTitleSeparator.bottom
@@ -213,7 +222,7 @@ Window {
 
                         Label {
                             id: actionPanelTitle
-                            color: "#dddddd"
+                            color: ThemeManager.m3["onSurface"]
                             text: qsTr("Action Panel")
                             anchors.verticalCenter: parent.verticalCenter
                             horizontalAlignment: Text.AlignHCenter
@@ -234,7 +243,7 @@ Window {
 
                 Rectangle {
                     id: sideBarRightContainer
-                    color: "#00ffffff"
+                    color: "transparent"
                     anchors.left: leftBar.right
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -245,7 +254,7 @@ Window {
                         id: bottomBar
                         y: 302
                         height: 30
-                        color: "#232323"
+                        color: ThemeManager.m3["surfaceContainerHighest"]
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
@@ -253,7 +262,7 @@ Window {
 
                     Rectangle {
                         id: baseContent
-                        color: "#00ffffff"
+                        color: "transparent"
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -262,7 +271,7 @@ Window {
 
                         Rectangle {
                             id: baseContentTopContainer
-                            color: "#00ffffff"
+                            color: "transparent"
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.top: parent.top
@@ -272,35 +281,58 @@ Window {
                             Rectangle {
                                 id: dataDisplayContainer
                                 width: baseContentTopContainer.width * 0.45
-                                color: "#e8232323"
+//                                color: ThemeManager.m3["surfaceContainerHigh"]
+                                color: "transparent"
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.bottom: parent.bottom
                                 Rectangle {
                                     id: dataMonitorTabContainer
-                                    height: 41
-                                    color: "#ffffff"
+                                    height: 40
+                                    color: "transparent"
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.top: parent.top
                                     TabBar {
                                         id: monitorBtnBar
-                                        width: parent.width
+                                        anchors.fill: parent
                                         currentIndex: monitorSwipeView.currentIndex
+                                        Material.background: ThemeManager.materialTheme === Material.Light ? Qt.lighter(ThemeManager.m3["secondaryContainer"], 2.5) : ThemeManager.m3["secondaryContainer"]
+                                        Material.accent: ThemeManager.m3["tertiary"]
                                         TabButton{
                                             id: primaryDataMonitorBtn
-                                            text: qsTr("Primary Data")
+                                            anchors {
+                                                top: parent.top
+                                                bottom: parent.bottom
+                                            }
+                                            contentItem: Text {
+                                                id: primaryDataMonitorBtnText
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: qsTr("Primary Data")
+                                                font.bold: true
+                                                color: ThemeManager.m3["onSecondaryContainer"]
+                                            }
                                         }
                                         TabButton{
                                             id: otherMonitors
-                                            text: qsTr('Other Monitors')
+                                            anchors {
+                                                top: parent.top
+                                                bottom: parent.bottom
+                                            }
+                                            contentItem: Text {
+                                                id: otherMonitorsText
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: qsTr("Other Monitors")
+                                                font.bold: true
+                                                color: ThemeManager.m3["onSecondaryContainer"]
+                                            }
                                         }
                                     }
                                 }
 
                                 Rectangle {
                                     id: monitorSwipeViewContainer
-                                    color: "#00ffffff"
+                                    color: "transparent"
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.top: dataMonitorTabContainer.bottom
@@ -357,7 +389,7 @@ Window {
 
                             Rectangle {
                                 id: mapContainer
-                                color: "#00ffffff"
+                                color: "transparent"
                                 anchors.left: dataDisplayContainer.right
                                 anchors.right: parent.right
                                 anchors.top: parent.top
@@ -378,77 +410,119 @@ Window {
 
                                 Rectangle {
                                     id: mapHorizontalControlsContainer
-                                    height: 36
-                                    color: "#9938383c"
-                                    border.color: "#38383c"
-                                    border.width: 3
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    anchors.rightMargin: 0
-                                    anchors.leftMargin: 0
-                                    anchors.bottomMargin: 0
-
-                                    CustomTextBtn {
+                                    height: 60
+                                    color: "transparent"
+                                    anchors {
+                                        left: map.left
+                                        right: parent.right
+                                        bottom: parent.bottom
+                                    }
+                                    RoundButton {
                                         id: moveToWingBtn
-                                        width: 80
-                                        height: 28
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.left: parent.left
-                                        btnLabel: "Wing"
-                                        anchors.leftMargin: 5
+                                        width: 50
+                                        height: 50
+                                        opacity: 0.9
+                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                        anchors {
+                                            verticalCenter: parent.verticalCenter
+                                            left: parent.left
+                                            leftMargin: 5
+                                        }
+                                        text: qsTr("Wing")
+                                        icon {
+                                            source: "../images/svg_images/switchblade_inair_icon.svg"
+                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                            width: 50
+                                            height: 50
+                                        }
                                         onClicked: {
                                             map.mapCenter = map.wingLocation
                                         }
                                     }
 
-                                    CustomTextBtn {
+                                    RoundButton {
                                         id: moveToTgBtn
-                                        width: 80
-                                        height: 28
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.left: moveToWingBtn.right
-                                        btnLabel: "Target"
-                                        anchors.leftMargin: 5
+                                        width: 50
+                                        height: 50
+                                        opacity: 0.9
+                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                        anchors {
+                                            verticalCenter: parent.verticalCenter
+                                            left: moveToWingBtn.right
+                                            leftMargin: 5
+                                        }
+                                        icon {
+                                            source: "../images/svg_images/goToTargetIcon.svg"
+                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                            width: 40
+                                            height: 40
+                                        }
                                         onClicked: {
                                             map.mapCenter = map.tgLocation
                                         }
                                     }
 
-                                    CustomTextBtn {
+                                    RoundButton {
                                         id: clearBtn
-                                        width: 100
-                                        height: 28
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.right: parent.right
-                                        btnLabel: "Clear Map"
-                                        anchors.rightMargin: 5
+                                        width: 50
+                                        height: 50
+                                        opacity: 0.9
+                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                        anchors {
+                                            verticalCenter: parent.verticalCenter
+                                            right: parent.right
+                                            rightMargin: 5
+                                        }
+                                        icon {
+                                            source: "../images/png_images/clearIcon.png"
+                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                            width: 20
+                                            height: 20
+                                        }
                                         onClicked: {
                                             map.clearMap();
                                         }
                                     }
 
-                                    CustomTextBtn {
+                                    RoundButton {
                                         id: rescueOnBtn
-                                        width: 120
-                                        height: 28
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.right: clearBtn.left
-                                        btnLabel: "Rescue ON"
-                                        anchors.rightMargin: 5
+                                        width: 50
+                                        height: 50
+                                        opacity: 0.9
+                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                        anchors {
+                                            verticalCenter: parent.verticalCenter
+                                            right: clearBtn.left
+                                            rightMargin: 5
+                                        }
+                                        icon {
+                                            source: "../images/png_images/protectedIcon.png"
+                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                            width: 20
+                                            height: 20
+                                        }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(true);
                                         }
                                     }
 
-                                    CustomTextBtn {
+                                    RoundButton {
                                         id: rescueOffBtn
-                                        width: 120
-                                        height: 28
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.right: rescueOnBtn.left
-                                        btnLabel: "Rescue OFF"
-                                        anchors.rightMargin: 5
+                                        width: 50
+                                        height: 50
+                                        opacity: 0.9
+                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                        anchors {
+                                            verticalCenter: parent.verticalCenter
+                                            right: rescueOnBtn.left
+                                            rightMargin: 5
+                                        }
+                                        icon {
+                                            source: "../images/png_images/unprotectedIcon.png"
+                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                            width: 20
+                                            height: 20
+                                        }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(false);
                                         }
@@ -459,9 +533,12 @@ Window {
                                     id: mapDataDisplayerContainer
                                     width: 160
                                     height: 115
-                                    color: "#9938383c"
-                                    border.width: 3
-                                    border.color: "#38383c"
+                                    color: ThemeManager.m3["surfaceContainer"]
+                                    opacity: 0.8
+                                    border {
+                                        color: ThemeManager.m3["outlineVariant"]
+                                        width: 3
+                                    }
                                     clip: true
                                     anchors {
                                         left: parent.left
@@ -472,7 +549,7 @@ Window {
                                     Label {
                                         id: wingFlightMode
                                         text: mainWindow.wingFlightState
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: parent.top
                                             topMargin: 5
@@ -483,7 +560,7 @@ Window {
                                     Label {
                                         id: wingRelAltLabel
                                         text: "Wing Rel Alt: "
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: wingFlightMode.bottom
                                             topMargin: 5
@@ -494,7 +571,7 @@ Window {
                                     Label {
                                         id: wingRelAltValueLabel
                                         text: mainWindow.wingRelAlt
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: wingFlightMode.bottom
                                             topMargin: 5
@@ -505,7 +582,7 @@ Window {
                                     Label {
                                         id: rescueStateLabel
                                         text: "Rescue: "
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: wingRelAltLabel.bottom
                                             topMargin: 5
@@ -516,7 +593,7 @@ Window {
                                     Label {
                                         id: rescueStateValueLabel
                                         text: mainWindow.rescueStatus
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: wingRelAltLabel.bottom
                                             topMargin: 5
@@ -527,7 +604,7 @@ Window {
                                     Label {
                                         id: wingRecvDataRateLabel
                                         text: "Wing Data Rate: "
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: rescueStateLabel.bottom
                                             topMargin: 5
@@ -538,7 +615,7 @@ Window {
                                     Label {
                                         id: wingRecvDataRateValueLabel
                                         text: mainWindow.wingRecvDataRate.toFixed(2)
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: rescueStateLabel.bottom
                                             topMargin: 5
@@ -549,7 +626,7 @@ Window {
                                     Label {
                                         id: tgRecvDataRateLabel
                                         text: "Target Data Rate: "
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: wingRecvDataRateLabel.bottom
                                             topMargin: 5
@@ -560,7 +637,7 @@ Window {
                                     Label {
                                         id: tgRecvDataRateValueLabel
                                         text: mainWindow.tgRecvDataRate.toFixed(2)
-                                        color: "white"
+                                        color: ThemeManager.m3["onSurface"]
                                         anchors {
                                             top: wingRecvDataRateLabel.bottom
                                             topMargin: 5
@@ -592,7 +669,7 @@ Window {
 
                             Rectangle {
                                 id: bottomContainer
-                                color: "#00ffffff"
+                                color: "transparent"
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: baseContentSeparator.bottom
@@ -601,39 +678,69 @@ Window {
 
                                 Rectangle {
                                     id: actionTabcontainer
-                                    height: 41
-                                    color: "#ffffff"
+                                    height: 40
+                                    color: "transparent"
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.top: parent.top
                                     TabBar {
                                         id: actionBtnBar
-                                        width: parent.width
+                                        anchors.fill: parent
                                         currentIndex: actionSwipeView.currentIndex
+                                        Material.background: ThemeManager.materialTheme === Material.Light ? Qt.lighter(ThemeManager.m3["secondaryContainer"], 2.5) : ThemeManager.m3["secondaryContainer"]
+                                        Material.accent: ThemeManager.m3["tertiary"]
                                         TabButton{
                                             id: stateActionBtn
-                                            text: qsTr("Actions")
+                                            anchors {
+                                                top: parent.top
+                                                bottom: parent.bottom
+                                            }
+                                            contentItem: Text {
+                                                id: stateActionBtnText
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: qsTr("Actions")
+                                                font.bold: true
+                                                color: ThemeManager.m3["onSecondaryContainer"]
+                                            }
                                         }
                                         TabButton{
                                             id: configPageBtn
-                                            text: qsTr("Configuration")
+                                            anchors {
+                                                top: parent.top
+                                                bottom: parent.bottom
+                                            }
+                                            contentItem: Text {
+                                                id: configPageBtnText
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: qsTr("Configuration")
+                                                font.bold: true
+                                                color: ThemeManager.m3["onSecondaryContainer"]
+                                            }
                                         }
                                         TabButton{
                                             id: gotoServiceBtn
-                                            text: qsTr('Services')
+                                            anchors {
+                                                top: parent.top
+                                                bottom: parent.bottom
+                                            }
+                                            contentItem: Text {
+                                                id: gotoServiceBtnText
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: qsTr("Services")
+                                                font.bold: true
+                                                color: ThemeManager.m3["onSecondaryContainer"]
+                                            }
                                         }
                                     }
                                 }
 
                                 Rectangle {
                                     id: actionSwipeViewContainer
-                                    color: "#00ffffff"
+                                    color: "transparent"
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.top: actionTabcontainer.bottom
                                     anchors.bottom: parent.bottom
-                                    anchors.topMargin: 0
-
                                     SwipeView {
                                         id: actionSwipeView
                                         anchors.fill: parent
@@ -672,6 +779,41 @@ Window {
                                                 id: configurationContainer
                                                 anchors.fill: parent
                                                 color: "transparent"
+
+                                                Button {
+                                                    id: testButton
+                                                    text: qsTr("Material themed Button")
+                                                    anchors.centerIn: parent
+                                                    width: 300
+                                                    height: 100
+                                                    Component.onCompleted: {
+                                                        ThemeManager.register(testButton);
+                                                    }
+                                                }
+
+                                                Button {
+                                                    id: anotherTestBtn
+                                                    width: 200
+                                                    height: 30
+                                                    anchors {
+                                                        left: testButton.right
+                                                        verticalCenter: testButton.verticalCenter
+                                                        leftMargin: 10
+                                                    }
+
+                                                    background: Rectangle {
+                                                        id: anotherTestBtnRect
+                                                        anchors.fill: parent
+                                                        color: ThemeManager.m3["secondary"]
+                                                        Text {
+                                                            id: textTest
+                                                            anchors.centerIn: parent
+                                                            text: qsTr("Another Material Button")
+                                                            font.styleName: "Bold"
+                                                            color: ThemeManager.m3["onSecondary"]
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
 

@@ -2,8 +2,10 @@ import QtLocation 5.15
 import QtPositioning 5.15
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtGraphicalEffects 1.15
 import "../controls"
+import "../theme" 1.0
 
 Item {
     id: mapWindow
@@ -256,23 +258,47 @@ Item {
                 id: gotoAltInputPopup
                 anchors.centerIn: parent
                 width: parent.width * 0.4
-                height: 100
+                height: 125
                 focus: true
                 background: Rectangle{
                     id: gotoAltInputPopupBg
-                    color: "#2e2f30"
                     anchors.fill: parent
+                    color: ThemeManager.m3["surfaceContainerHighest"]
+                    border {
+                        color: ThemeManager.m3["outline"]
+                        width: 2
+                    }
+
                     radius: 10
-                    CustomTextField{
+
+                    TextField {
                         id: gotoAltInputPopupTextField
                         width: parent.width - 20
-                        anchors.top: parent.top
-                        color_on_focus: "#1c2411"
-                        color_mouse_hover: "#21261a"
-                        default_color: "#2c361d"
-                        anchors.topMargin: 15
+                        leftPadding: 10
+                        topPadding: 15
+                        Material.accent: ThemeManager.m3["tertiary"]
+                        anchors {
+                            top: parent.top
+                            topMargin: 15
+                            horizontalCenter: parent.horizontalCenter
+                        }
                         placeholderText: "Enter Command Altitude"
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        color: ThemeManager.m3["onSurface"]
+                        placeholderTextColor: Qt.lighter(ThemeManager.m3["onSurfaceVariant"], 2)
+                        selectByMouse: true
+                        selectedTextColor: ThemeManager.m3["onSurface"]
+                        selectionColor: ThemeManager.m3["inversePrimary"]
+                        background: Rectangle {
+                            id: gotoAltInputPopupTextFieldBg
+                            implicitWidth: 300
+                            implicitHeight: 30
+                            radius: 10
+                            color: ThemeManager.m3["surfaceContainerLowest"]
+                            border {
+                                color: borderColor
+                                width: 1
+                            }
+                        }
                         onAccepted: {
                             gotoAltInputPopupBtn.clicked()
                         }
@@ -281,10 +307,11 @@ Item {
                     CustomTextBtn{
                         id: gotoAltInputPopupBtn
                         width: 150
-                        height: 30
+                        height: 50
+                        defaultColor: ThemeManager.m3["primary"]
                         btnLabel: "Set Altitude"
                         anchors.top: gotoAltInputPopupTextField.bottom
-                        anchors.topMargin: 10
+                        anchors.topMargin: 5
                         anchors.horizontalCenter: parent.horizontalCenter
                         onClicked: {
                             mapWindow.wingGoToAlt = parseFloat(gotoAltInputPopupTextField.text)

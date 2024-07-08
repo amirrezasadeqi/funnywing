@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtQuick.Layouts 1.15
+import "../theme" 1.0
 
 Item {
     id: rootItem
@@ -12,16 +14,21 @@ Item {
     property string latLabelText: qsTr("Lat: ")
     property string lonLabelText: qsTr("Lon: ")
     property string altLabelText: qsTr("Alt: ")
+    property color labelColor: ThemeManager.m3["onSurface"]
+    property color borderColor: ThemeManager.m3["outline"]
+    property color valRectBg: ThemeManager.m3["surfaceBright"]
+    property color valTextColor: ThemeManager.m3["onSurface"]
 
     Rectangle {
         id: bg
-        color: "#2a2a2a"
+        color: ThemeManager.m3["surfaceDim"]
         anchors.fill: parent
+        radius: 5
         clip: false
 
         Rectangle {
             id: container
-            color: "#00ffffff"
+            color: "transparent"
             anchors.fill: parent
             GridLayout{
                 id: gpsDisplayRowLayout
@@ -31,21 +38,21 @@ Item {
                 Label{
                     id: latLabel
                     text: rootItem.latLabelText
-                    color: "#b1bbc5"
+                    color: labelColor
                     font.pointSize: 14
                 }
                 Rectangle{
                     id: latRect
                     Layout.preferredWidth: 110
                     Layout.preferredHeight: 30
-                    color: "#454749"
-                    border.color: "green"
+                    color: valRectBg
+                    border.color: borderColor
                     border.width: 2
                     radius: 2
                     clip: true
                     Text{
                         id: latText
-                        color: "#dee3e7"
+                        color: valTextColor
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         anchors.leftMargin: 5
@@ -55,21 +62,21 @@ Item {
                 Label{
                     id: lonLabel
                     text: rootItem.lonLabelText
-                    color: "#b1bbc5"
+                    color: labelColor
                     font.pointSize: 14
                 }
                 Rectangle{
                     id: lonRect
                     Layout.preferredWidth: 110
                     Layout.preferredHeight: 30
-                    color: "#454749"
-                    border.color: "green"
+                    color: valRectBg
+                    border.color: borderColor
                     border.width: 2
                     radius: 2
                     clip: true
                     Text{
                         id: lonText
-                        color: "#dee3e7"
+                        color: valTextColor
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         anchors.leftMargin: 5
@@ -79,21 +86,21 @@ Item {
                 Label{
                     id: altLabel
                     text: rootItem.altLabelText
-                    color: "#b1bbc5"
+                    color: labelColor
                     font.pointSize: 14
                 }
                 Rectangle{
                     id: altRect
                     Layout.preferredWidth: 110
                     Layout.preferredHeight: 30
-                    color: "#454749"
-                    border.color: "green"
+                    color: valRectBg
+                    border.color: borderColor
                     border.width: 2
                     radius: 2
                     clip: true
                     Text{
                         id: altText
-                        color: "#dee3e7"
+                        color: valTextColor
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         anchors.leftMargin: 5

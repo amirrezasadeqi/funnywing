@@ -71,7 +71,7 @@ class PosServer(object):
 if __name__ == "__main__":
     rospy.init_node("simulatedTgPosSender", anonymous=True)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server_ip", default="192.168.1.2")
+    parser.add_argument("--server_ip", default="110.110.1.10")
     parser.add_argument("--server_port", default=60006)
     parser.add_argument("--sitl_connection_string", default="tcp:localhost:5773")
     parser.add_argument("--pos_stream_freq", default=5)
