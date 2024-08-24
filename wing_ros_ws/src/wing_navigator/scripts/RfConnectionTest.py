@@ -36,7 +36,7 @@ if __name__ == "__main__":
     rospy.init_node("RfConnectionTest", anonymous=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--system")
-    parser.add_argument("-p", "--serial_port", default="/dev/ttyUSB0")
+    parser.add_argument("-p", "--connection_string", default="udp:localhost:14550")
     parser.add_argument("-b", "--baudrate", default=115200)
     parser.add_argument("-d", "--dialect", default="funnywing")
     args = parser.parse_args()
@@ -63,7 +63,8 @@ if __name__ == "__main__":
     mavrosMavLinkIdFilter = Filters.mavrosMavlinkIdFilter(filterConfigPath)
     messageFilters.append(mavrosMavLinkIdFilter)
 
-    connection = RfConnection(args.serial_port, args.baudrate, systemAddress["systemID"], systemAddress["componentID"],
+    connection = RfConnection(args.connection_string, args.baudrate, systemAddress["systemID"],
+                              systemAddress["componentID"],
                               args.dialect)
 
     mavrosPubMng = MavrosPublishManager(publisherConfigPath, connection)

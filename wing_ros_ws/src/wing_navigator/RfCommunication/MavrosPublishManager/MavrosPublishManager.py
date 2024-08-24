@@ -4,12 +4,12 @@ import threading
 from importlib import import_module
 from typing import List, Dict
 
-from RfCommunication.RfConnection.RfConnection import RfConnection
+from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
 from RfCommunication.MAVLinkToRosMsgConverter.MAVLinkToRosMsgConverter import MAVLinkToRosMsgConverter
 
 
 class MavrosPublishManager(object):
-    def __init__(self, configPath, rfConnection: RfConnection, publishBufferWaitForMsg=1e-4):
+    def __init__(self, configPath, rfConnection: ConnectionInterface, publishBufferWaitForMsg=1e-4):
         self._configs = self._readConfigs(configPath)
         self._rfConnection = rfConnection
         self._publishBufferWaitForMsg = publishBufferWaitForMsg

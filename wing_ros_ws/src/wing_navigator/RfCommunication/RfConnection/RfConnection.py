@@ -7,11 +7,11 @@ from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import
 
 # TODO: check if singleton pattern is suitable for this connection
 class RfConnection(ConnectionInterface):
-    def __init__(self, serialPort, baudRate, srcSystem, srcComponent, dialect, outBufWaitForMsg=1e-4):
+    def __init__(self, connectionString, baudRate, srcSystem, srcComponent, dialect, outBufWaitForMsg=1e-4):
         self._outBufWaitForMsg = outBufWaitForMsg
         self._inBuf = []
         self._outBuf = []
-        self._serialPort = serialPort
+        self._connectionString = connectionString
         self._baudRate = baudRate
         self._srcSystem = srcSystem
         self._srcComponent = srcComponent
@@ -48,9 +48,14 @@ class RfConnection(ConnectionInterface):
         # TODO: Using mavlink 2.0 raises some CRC error, so commented below line.
         # os.environ["MAVLINK20"] = "1"
         try:
-            self._port = mavutil.mavlink_connection(self._serialPort, baud=self._baudRate,
-                                                    source_system=self._srcSystem, source_component=self._srcComponent,
-                                                    dialect=self._dialect)
+            if "/dev/tty" in self._connectionString:  # For serial port connections
+                self._port = mavutil.mavlink_connection(self._connectionString, baud=self._baudRate,
+                                                        source_system=self._srcSystem,
+                                                        source_component=self._srcComponent,
+                                                        dialect=self._dialect)
+            else:  # For UDP/TCP connections, no baud rate is needed
+                self._port = mavutil.mavlink_connection(self._connectionString, source_system=self._srcSystem,
+                                                        source_component=self._srcComponent, dialect=self._dialect)
         except Exception:
             self._port = None
             print("The Connection is Not initialized Correctly!")
