@@ -26,7 +26,8 @@ if [[ $multi_vehicle_sim -eq 1 ]]; then
 fi
 
 
-xterm -hold -e "gazebo --verbose ${world_file}" &
+# xterm -hold -e "gazebo --verbose ${world_file}" &
+xterm -hold -e "roslaunch gazebo_ros empty_world.launch world_name:=${world_file}" &
 
 # This exit function and the previous & command suddenly found by GOD and I Solved the problems
 # "is not responding errors". I think by not exiting this bash script the application python script
