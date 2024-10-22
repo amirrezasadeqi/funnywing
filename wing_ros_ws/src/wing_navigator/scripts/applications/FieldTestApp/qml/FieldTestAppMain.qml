@@ -67,6 +67,18 @@ Window {
         function onSetTgRecvDataRate(rate){
             mainWindow.tgRecvDataRate = rate
         }
+        function onUpdateCameraMonitorFrame(){
+            cameraMonitorOutPut.reload()
+        }
+    }
+
+    // Ignore the Invalid property name "onClosing". (M16) error. This is a bug of the IDE.
+    onClosing: function(close) {
+        // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
+        // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
+        close.accepted = false
+        // QQmlApplicationEngine does not send quit signal automaticaly, so send it to close the back-end.
+        backFrontConnections.closeBackend()
     }
 
     Rectangle {
@@ -281,7 +293,6 @@ Window {
                             Rectangle {
                                 id: dataDisplayContainer
                                 width: baseContentTopContainer.width * 0.45
-//                                color: ThemeManager.m3["surfaceContainerHigh"]
                                 color: "transparent"
                                 anchors.left: parent.left
                                 anchors.top: parent.top
@@ -314,15 +325,15 @@ Window {
                                             }
                                         }
                                         TabButton{
-                                            id: otherMonitors
+                                            id: cameraMonitorBtn
                                             anchors {
                                                 top: parent.top
                                                 bottom: parent.bottom
                                             }
                                             contentItem: Text {
-                                                id: otherMonitorsText
+                                                id: cameraMonitorBtnText
                                                 horizontalAlignment: Text.AlignHCenter
-                                                text: qsTr("Other Monitors")
+                                                text: qsTr("Camera")
                                                 font.bold: true
                                                 color: ThemeManager.m3["onSecondaryContainer"]
                                             }
@@ -368,11 +379,26 @@ Window {
                                         }
 
                                         Item {
-                                            id: otherMonitorTab
+                                            id: cameraMonitorTab
                                             Rectangle{
-                                                id: otherMonitorContainer
+                                                id: cameraMonitorContainer
                                                 anchors.fill: parent
                                                 color: "transparent"
+
+                                                Image {
+                                                    id: cameraMonitorOutPut
+                                                    property bool frameFlipper: false
+                                                    source: "image://cameraMonitorFrameProvider/frame"
+                                                    anchors.fill: parent
+                                                    cache: false
+                                                    fillMode: Image.PreserveAspectFit
+
+                                                    function reload() {
+                                                        // This is just for change in the source name, to force the image to reload.
+                                                        frameFlipper = !frameFlipper
+                                                        source = "image://cameraMonitorFrameProvider/frame?id=" + frameFlipper
+                                                    }
+                                                }
                                             }
                                         }
                                     }

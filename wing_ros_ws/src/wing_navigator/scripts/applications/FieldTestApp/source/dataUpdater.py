@@ -37,8 +37,16 @@ class dataUpdater(QObject):
         self._distToTgUpdaterTimer = rospy.Timer(rospy.Duration(0, int((1.0 / 5.0) * 1e9)), self._updateDistToTg)
         # create listener thread to spin
         self._rosSpinnerThread = threading.Thread(target=self._rosSpinnerThreadCallback)
+        self._stopSpinnerThread = False
         # start the thread
         self._rosSpinnerThread.start()
+        return
+
+    def stop(self):
+        self._stopSpinnerThread = True
+        self._rosSpinnerThread.join()
+        self._distToTgUpdaterTimer.shutdown()
+        self._dataRateUpdaterTimer.shutdown()
         return
 
     def _setupCallbackTypeMap(self):
@@ -64,7 +72,8 @@ class dataUpdater(QObject):
         return
 
     def _rosSpinnerThreadCallback(self):
-        rospy.spin()
+        while not rospy.is_shutdown() and not self._stopSpinnerThread:
+            rospy.sleep(0.5)
         return
 
     def _stateCallback(self, msg: State):

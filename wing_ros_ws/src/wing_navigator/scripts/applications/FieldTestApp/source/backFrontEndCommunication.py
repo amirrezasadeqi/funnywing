@@ -18,6 +18,7 @@ class backFrontEndCommunication(QObject):
     showRescueStatus = Signal(bool, arguments=['rescueStatus'])
     setWingRecvDataRate = Signal(float, arguments=['rate'])
     setTgRecvDataRate = Signal(float, arguments=['rate'])
+    updateCameraMonitorFrame = Signal()
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)
@@ -28,6 +29,7 @@ class backFrontEndCommunication(QObject):
     setSimpleTrackerSettingsSignal = Signal(float, bool, bool)
     setSimpleTrackerActivationSignal = Signal(bool)
     setArduplaneParamSignal = Signal(str, float)
+    closeBackendSignal = Signal()
 
     def __init__(self):
         super().__init__()
@@ -75,4 +77,9 @@ class backFrontEndCommunication(QObject):
     @Slot(str, float)
     def setArduplaneParam(self, paramName, paramValue):
         self.setArduplaneParamSignal.emit(paramName, paramValue)
+        return
+
+    @Slot()
+    def closeBackend(self):
+        self.closeBackendSignal.emit()
         return
