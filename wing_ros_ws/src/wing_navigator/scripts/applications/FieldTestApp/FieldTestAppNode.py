@@ -14,7 +14,8 @@ from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
 
 from source.backEnd import backEnd
-from wing_modules.OpencvCameraFrameCapture import OpencvCameraFrameCapture
+from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvCameraFrameCapture import \
+    OpencvCameraFrameCapture
 
 if __name__ == "__main__":
 
@@ -57,7 +58,8 @@ if __name__ == "__main__":
     # otherwise the signals emitted by provider to the front-end, cause segfault error, since their
     # corresponding QML sides are not loaded and actually this leads to accessing to (I think!) uninitialized
     # memory parts and so segfault error.
-    cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://127.0.0.1:8554/stream")
+    # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://127.0.0.1:8554/stream")
+    cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
     backend.createAndSetupFrameProvider(cameraFrameCapture, app)
     ################################################################################################
     sys.exit(app.exec_())

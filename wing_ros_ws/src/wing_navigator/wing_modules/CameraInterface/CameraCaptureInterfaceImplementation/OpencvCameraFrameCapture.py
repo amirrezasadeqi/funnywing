@@ -3,19 +3,22 @@ from threading import Thread
 import cv2
 import rospy
 
-from wing_modules.CameraFrameCaptureInterface import CameraFrameCaptureInterface
+from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 
 
 class OpencvCameraFrameCapture(CameraFrameCaptureInterface):
     def __init__(self, frame_source, image_buffer_size=2):
         super().__init__(frame_source=frame_source, image_buffer_size=image_buffer_size)
-        self._cap = cv2.VideoCapture(frame_source)
+        self._cap = None
         self._running = True
         self._frameCaptureThread = Thread(target=self._capturing)
         self._frameCaptureThread.start()
         return
 
     def _capturing(self):
+        # VideoCapture constructed in the thread target to prevent blocking, which in turn blocks the event loop of the
+        # Qt and the program won't start without video stream source.
+        self._cap = cv2.VideoCapture(self._frame_source)
         while self._running:
             try:
                 ret, frame = self._cap.read()

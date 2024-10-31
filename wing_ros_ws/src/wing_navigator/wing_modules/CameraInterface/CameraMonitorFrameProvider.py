@@ -2,7 +2,7 @@ from PySide2.QtCore import QObject, Signal, Slot
 from PySide2.QtGui import QImage, QColor
 from PySide2.QtQuick import QQuickImageProvider
 
-from wing_modules.CameraFrameCaptureInterface import CameraFrameCaptureInterface
+from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 
 
 class CameraMonitorFrameProvider(QObject, QQuickImageProvider):

@@ -6,8 +6,8 @@ from mavros import mavlink
 from mavros_msgs.msg import Mavlink
 from pymavlink import mavutil
 
-from wing_modules.CameraFrameCaptureInterface import CameraFrameCaptureInterface
-from wing_modules.CameraMonitorFrameProvider import CameraMonitorFrameProvider
+from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
+from wing_modules.CameraInterface.CameraMonitorFrameProvider import CameraMonitorFrameProvider
 from .backFrontEndCommunication import backFrontEndCommunication
 from .dataUpdater import dataUpdater
 
