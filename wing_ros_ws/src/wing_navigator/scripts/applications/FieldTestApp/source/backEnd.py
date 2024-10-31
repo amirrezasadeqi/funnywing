@@ -1,24 +1,32 @@
 import rospy
 from PySide2.QtCore import QObject, Slot
+from PySide2.QtQml import QQmlApplicationEngine
+from PySide2.QtWidgets import QApplication
 from mavros import mavlink
 from mavros_msgs.msg import Mavlink
 from pymavlink import mavutil
 
+from wing_modules.CameraFrameCaptureInterface import CameraFrameCaptureInterface
+from wing_modules.CameraMonitorFrameProvider import CameraMonitorFrameProvider
+from .backFrontEndCommunication import backFrontEndCommunication
 from .dataUpdater import dataUpdater
 
 
 class backEnd(QObject):
-    def __init__(self, dataSubscriptionConfig, backFrontConnection, systemID, componentID, tgSystemID, tgComponentID,
-                 gcsFromTopic="/GCS/from"):
+    def __init__(self, qmlEngine: QQmlApplicationEngine, dataSubscriptionConfig, systemID, componentID, tgSystemID,
+                 tgComponentID, gcsFromTopic="/GCS/from"):
         super().__init__()
+        self._qmlEngine = qmlEngine
         self._dataSubscriptionConfig = dataSubscriptionConfig
         self._systemID = systemID
         self._componentID = componentID
         self._tgSystemID = tgSystemID
         self._tgComponentID = tgComponentID
+        self._cameraMonitorFrameProvider = None
 
         # Setup signals and connections
-        self._backFrontConnection = backFrontConnection
+        self._backFrontConnection = backFrontEndCommunication()
+        self._qmlEngine.rootContext().setContextProperty("backFrontConnections", self._backFrontConnection)
         self._backFrontConnection.setArmStateSignal.connect(self.pubArmDisarmCommand)
         self._backFrontConnection.setFlightModeSignal.connect(self.pubSetModeCommand)
         self._backFrontConnection.goToLocationSignal.connect(self.pubGoToCommand)
@@ -28,7 +36,6 @@ class backEnd(QObject):
         self._backFrontConnection.setSimpleTrackerActivationSignal.connect(self.setSimpleTrackerActivation)
         self._backFrontConnection.setArduplaneParamSignal.connect(self.setArduplaneParameter)
         self._backFrontConnection.closeBackendSignal.connect(self.closeBackend)
-
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -56,6 +63,16 @@ class backEnd(QObject):
         "LOITER": 12,
         "GUIDED": 15
     }
+
+    def createAndSetupFrameProvider(self, frameCapture: CameraFrameCaptureInterface, qtApplication: QApplication):
+        self._cameraMonitorFrameProvider = CameraMonitorFrameProvider(frame_capture=frameCapture,
+                                                                      backFrontConnection=self._backFrontConnection)
+        self._qmlEngine.addImageProvider("cameraMonitorFrameProvider", self._cameraMonitorFrameProvider)
+        # close.accepted = false on QML front-end, holds the front-end up till the back-end to be closed. so,
+        # we need to close the app using its quit slot, after the camera monitor frame provider was stopped.
+        # Note: we may move this line in future to the FieldTestAppNode for better logic!!!
+        self._cameraMonitorFrameProvider.cameraMonitorFrameProviderQuited.connect(qtApplication.quit)
+        return
 
     @Slot(bool)
     def pubArmDisarmCommand(self, armState):

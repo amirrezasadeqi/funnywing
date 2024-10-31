@@ -1,8 +1,9 @@
 from threading import Thread
 
-from wing_modules.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 import cv2
 import rospy
+
+from wing_modules.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 
 
 class OpencvCameraFrameCapture(CameraFrameCaptureInterface):
