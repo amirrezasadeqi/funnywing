@@ -14,8 +14,13 @@ from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
 
 from source.backEnd import backEnd
+from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.FfmpegCameraFrameCapture import \
+    FfmpegCameraFrameCapture
+from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.GiCameraFrameCapture import GiCameraFrameCapture
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvCameraFrameCapture import \
     OpencvCameraFrameCapture
+from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvGstBackedCameraFrameCapture import \
+    OpencvGstBackedCameraFrameCapture
 
 if __name__ == "__main__":
 
@@ -58,8 +63,25 @@ if __name__ == "__main__":
     # otherwise the signals emitted by provider to the front-end, cause segfault error, since their
     # corresponding QML sides are not loaded and actually this leads to accessing to (I think!) uninitialized
     # memory parts and so segfault error.
-    # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://127.0.0.1:8554/stream")
-    cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
+    # TODO: clean up here after through field tests
+    # Uncomment or select capture based on your camera
+    # For runcam6
+    # cameraFrameCapture = GiCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
+    # For univision camera
+    # cameraFrameCapture = GiCameraFrameCapture(frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
+    # For runcam6
+    # cameraFrameCapture = FfmpegCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
+    # For univision camera
+    # cameraFrameCapture = FfmpegCameraFrameCapture(frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
+    # For runcam6 camera
+    # cameraFrameCapture = OpencvGstBackedCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
+    # For univision camera
+    cameraFrameCapture = OpencvGstBackedCameraFrameCapture(
+        frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
+    # For runcam6 camera
+    # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
+    # For univision camera
+    # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
     backend.createAndSetupFrameProvider(cameraFrameCapture, app)
     ################################################################################################
     sys.exit(app.exec_())
