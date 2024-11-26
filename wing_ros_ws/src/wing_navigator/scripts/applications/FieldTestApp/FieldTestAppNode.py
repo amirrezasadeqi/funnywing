@@ -64,6 +64,7 @@ if __name__ == "__main__":
     # corresponding QML sides are not loaded and actually this leads to accessing to (I think!) uninitialized
     # memory parts and so segfault error.
     # TODO: clean up here after through field tests
+    # For gazebo simulation camera use: rtsp://127.0.0.1:8554/test
     # Uncomment or select capture based on your camera
     # For runcam6
     # cameraFrameCapture = GiCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")

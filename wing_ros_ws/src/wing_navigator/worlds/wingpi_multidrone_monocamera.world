@@ -7,6 +7,8 @@
         <projection_type>perspective</projection_type>
       </camera>
       <plugin name='keyboard' filename='libKeyboardGUIPlugin.so'/>
+      <!-- This plugin must be installed by PX4-Autopilot repository -->
+      <plugin name="video_widget" filename="libgazebo_video_stream_widget.so"/>
     </gui>
     <physics type='ode'>
       <ode>
@@ -1707,8 +1709,8 @@
             <horizontal_fov>0.5</horizontal_fov>
             <image>
               <format>R8G8B8</format>
-              <width>976</width>
-              <height>582</height>
+              <width>1920</width>
+              <height>1080</height>
             </image>
             <clip>
               <near>0.1</near>
@@ -1723,6 +1725,14 @@
             <imageTopicName>image_raw</imageTopicName>
             <cameraInfoTopicName>camera_info</cameraInfoTopicName>
             <frameName>zephyr_monocamera::front_camera_optical_link</frameName>
+          </plugin>
+          <!-- This plugin must be installed by PX4-Autopilot repository -->
+          <plugin name="GstCameraPlugin" filename="libgazebo_gst_camera_plugin.so">
+            <robotNamespace></robotNamespace>
+            <!-- udpHost is the IP of the system we run GCS on it. -->
+            <!-- <udpHost>127.0.0.1</udpHost> -->
+            <udpHost>192.168.1.3</udpHost>
+            <udpPort>8500</udpPort>
           </plugin>
         </sensor>
         <self_collide>0</self_collide>
