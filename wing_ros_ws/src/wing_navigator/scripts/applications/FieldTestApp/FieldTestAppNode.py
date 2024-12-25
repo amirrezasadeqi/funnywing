@@ -77,8 +77,10 @@ if __name__ == "__main__":
     # For runcam6 camera
     # cameraFrameCapture = OpencvGstBackedCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
     # For univision camera
-    cameraFrameCapture = OpencvGstBackedCameraFrameCapture(
-        frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
+    # cameraFrameCapture = OpencvGstBackedCameraFrameCapture(
+    #     frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
+    # For gazebo simulation camera
+    cameraFrameCapture = OpencvGstBackedCameraFrameCapture(frame_source="rtsp://127.0.0.1:8554/test")
     # For runcam6 camera
     # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
     # For univision camera

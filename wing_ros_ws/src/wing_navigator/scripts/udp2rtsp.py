@@ -8,7 +8,7 @@ import gi
 
 gi.require_version('Gst', '1.0')
 gi.require_version('GstRtspServer', '1.0')
-from gi.repository import Gst, GstRtspServer, GObject
+from gi.repository import Gst, GLib, GstRtspServer
 
 
 class RestreamingRTSPServer(GstRtspServer.RTSPMediaFactory):
@@ -31,12 +31,12 @@ class Server:
 
         self.server.get_mount_points().add_factory(stream_name, factory)
         self.server.attach(None)
-        print(f"RTSP stream ready at rtsp://127.0.0.1:8554/{stream_name}")
+        print(f"RTSP stream ready at rtsp://127.0.0.1:8554{stream_name}")
 
 
 if __name__ == "__main__":
-    server = Server(port=8500, stream_name="test")
-    loop = GObject.MainLoop()
+    server = Server(port=8500, stream_name="/test")
+    loop = GLib.MainLoop()
     try:
         loop.run()
     except KeyboardInterrupt:
