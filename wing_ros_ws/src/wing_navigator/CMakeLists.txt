@@ -205,7 +205,12 @@ target_link_libraries(simple_marble_map Marble Qt5::Widgets ${catkin_LIBRARIES})
 set_property(TARGET simple_marble_map PROPERTY AUTOMOC ON)
 add_executable(msl_wgs_conv_service src/msl_wgs_conv_service.cpp src/msl_ellipsoid_conversion.cpp src/msl_ellipsoid_conversion.h)
 target_link_libraries(msl_wgs_conv_service ${catkin_LIBRARIES} ${GeographicLib_LIBRARIES})
+add_dependencies(msl_wgs_conv_service wing_navigator_generate_messages_cpp)
 
 # Compiling the zoom camera gazebo-ROS plugin
 add_library(ZoomCameraPlugin SHARED src/zoom_camera_plugin.cpp)
 target_link_libraries(ZoomCameraPlugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+# This add_dependencies is necessary to build the target, because the service and message header files used in the
+# source code of these targets, must be generated before their usages, otherwise the will be No such file or directory
+# errors caused by late generation of <some_package/some_message_or_service.h>.
+add_dependencies(ZoomCameraPlugin wing_navigator_generate_messages_cpp)
