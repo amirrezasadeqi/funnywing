@@ -1714,7 +1714,7 @@
             </image>
             <clip>
               <near>0.1</near>
-              <far>200</far>
+              <far>1000</far>
             </clip>
           </camera>
           <always_on>1</always_on>
@@ -1733,6 +1733,12 @@
             <!-- <udpHost>127.0.0.1</udpHost> -->
             <udpHost>192.168.1.3</udpHost>
             <udpPort>8500</udpPort>
+          </plugin>
+          <plugin name="zoom_camera_plugin" filename="libZoomCameraPlugin.so">
+            <zoom_speed>10.0</zoom_speed>
+            <min_zoom_factor>1.0</min_zoom_factor>
+            <max_zoom_factor>10.0</max_zoom_factor>
+            <initial_zoom_factor>1.0</initial_zoom_factor>
           </plugin>
         </sensor>
         <self_collide>0</self_collide>

@@ -16,13 +16,19 @@ find_package(
              message_generation
              mavros
              mavros_msgs
-             roslib)
+             roslib
+             gazebo_ros)
 
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Network REQUIRED)
 find_package(Marble REQUIRED)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/geographiclib")
 find_package(GeographicLib REQUIRED)
+
+# Adding to compile zoom camera gazebo-ROS plugin
+find_package(gazebo REQUIRED)
+link_directories(${GAZEBO_LIBRARY_DIRS})
+
 
 # System dependencies are found with CMake's conventions find_package(Boost
 # REQUIRED COMPONENTS system)
@@ -71,6 +77,7 @@ add_service_files(
   MSL_WGS_CONV.srv
   SetSimpleTrackerSettings.srv
   RunTestScenario.srv
+  SetDouble.srv
 )
 
 # Generate actions in the 'action' folder add_action_files( FILES Action1.action
@@ -106,6 +113,9 @@ generate_messages(DEPENDENCIES std_msgs sensor_msgs geometry_msgs)
 catkin_package(
   # INCLUDE_DIRS include LIBRARIES wing_navigator CATKIN_DEPENDS roscpp rospy
   # std_msgs DEPENDS system_lib
+  DEPENDS
+    roscpp
+    gazebo_ros
 )
 catkin_package(CATKIN_DEPENDS message_runtime)
 
@@ -116,7 +126,9 @@ catkin_package(CATKIN_DEPENDS message_runtime)
 # Specify additional locations of header files Your package locations should be
 # listed before other locations
 include_directories(# include
-                    ${catkin_INCLUDE_DIRS})
+                    ${Boost_INCLUDE_DIR}
+                    ${catkin_INCLUDE_DIRS}
+                    ${GAZEBO_INCLUDE_DIRS})
 
 # Declare a C++ library add_library(${PROJECT_NAME}
 # src/${PROJECT_NAME}/wing_navigator.cpp )
@@ -193,3 +205,7 @@ target_link_libraries(simple_marble_map Marble Qt5::Widgets ${catkin_LIBRARIES})
 set_property(TARGET simple_marble_map PROPERTY AUTOMOC ON)
 add_executable(msl_wgs_conv_service src/msl_wgs_conv_service.cpp src/msl_ellipsoid_conversion.cpp src/msl_ellipsoid_conversion.h)
 target_link_libraries(msl_wgs_conv_service ${catkin_LIBRARIES} ${GeographicLib_LIBRARIES})
+
+# Compiling the zoom camera gazebo-ROS plugin
+add_library(ZoomCameraPlugin SHARED src/zoom_camera_plugin.cpp)
+target_link_libraries(ZoomCameraPlugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
