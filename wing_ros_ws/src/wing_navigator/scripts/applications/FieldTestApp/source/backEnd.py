@@ -36,6 +36,7 @@ class backEnd(QObject):
         self._backFrontConnection.setSimpleTrackerActivationSignal.connect(self.setSimpleTrackerActivation)
         self._backFrontConnection.setArduplaneParamSignal.connect(self.setArduplaneParameter)
         self._backFrontConnection.closeBackendSignal.connect(self.closeBackend)
+        self._backFrontConnection.setZoomPercentageSignal.connect(self.setZoomPercentage)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -183,4 +184,18 @@ class backEnd(QObject):
     @Slot()
     def closeBackend(self):
         self._dataUpdater.stop()
+        return
+
+    @Slot(int)
+    def setZoomPercentage(self, zoom_percentage):
+        int_params = [0] * 5
+        bool_params = [False] * 5
+        float_params = [0.0] * 5
+        int_params[0] = zoom_percentage
+        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
+                                                                          mavutil.mavlink.SET_CAMERA_PRESET_INDEX,
+                                                                          int_params, bool_params, float_params)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
         return

@@ -1,6 +1,7 @@
 import rospy
 from pymavlink import mavutil
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+from wing_navigator.srv import SetDouble, SetDoubleRequest, SetDoubleResponse
 from wing_navigator.srv import SetSimpleTrackerSettings, SetSimpleTrackerSettingsRequest, \
     SetSimpleTrackerSettingsResponse, RunTestScenario, RunTestScenarioRequest, RunTestScenarioResponse
 
@@ -36,10 +37,21 @@ def setTestScenarioActivation(mavMsg):
     return request, response, proxy
 
 
+def setCameraPresetIndexHandler(mavMsg):
+    # Using the SetDouble for setting integer value to not have to create another service for setting integer values.
+    request = SetDoubleRequest()
+    # [0-100] preset index converted to float to be able to use the SetDouble service.
+    request.data = float(mavMsg.int_params[0])
+    response = SetDoubleResponse()
+    proxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
+    return request, response, proxy
+
+
 funnywingCustomCommandHandlerMapping = {
     mavutil.mavlink.SET_SIMPLE_TRACKER_SETTINGS: setSimpleTrackerSettingsHandler,
     mavutil.mavlink.SET_SIMPLE_TRACKER_ACTIVATION: setSimpleTrackerActivationHandler,
-    mavutil.mavlink.SET_TEST_SCENARIO_ACTIVATION: setTestScenarioActivation
+    mavutil.mavlink.SET_TEST_SCENARIO_ACTIVATION: setTestScenarioActivation,
+    mavutil.mavlink.SET_CAMERA_PRESET_INDEX: setCameraPresetIndexHandler
 }
 
 
@@ -49,6 +61,7 @@ class funnywing_custom_command_job(JobInterface):
     _activeSimpleTrackerProxy = rospy.ServiceProxy("/funnywing/activeSimpleTracker", SetBool)
     _setSimpleTrackerSettingsProxy = rospy.ServiceProxy("/funnywing/setSimpleTrackerSettings", SetSimpleTrackerSettings)
     _runTestScenarioProxy = rospy.ServiceProxy("/funnywing/runTestScenario", RunTestScenario)
+    _setCameraPresetIndexProxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
 
     def __init__(self, message, rfConnection: ConnectionInterface, system, component):
         """
@@ -68,6 +81,10 @@ class funnywing_custom_command_job(JobInterface):
             rospy.wait_for_service("/funnywing/runTestScenario")
             funnywing_custom_command_job._runTestScenarioProxy = rospy.ServiceProxy(
                 "/funnywing/runTestScenario", RunTestScenario)
+        elif funnywing_custom_command_job._setCameraPresetIndexProxy is None:
+            rospy.wait_for_service("/funnywing/camera/set_preset_index")
+            funnywing_custom_command_job._setCameraPresetIndexProxy = rospy.ServiceProxy(
+                "/funnywing/camera/set_preset_index", SetDouble)
 
         self._handler = funnywingCustomCommandHandlerMapping[self.getMessage().command]
         self._request, self._response, self._proxy = self._handler(self.getMessage())

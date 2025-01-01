@@ -399,6 +399,71 @@ Window {
                                                         source = "image://cameraMonitorFrameProvider/frame?id=" + frameFlipper
                                                     }
                                                 }
+
+                                                Rectangle {
+                                                    id: cameraMonitorHorizontalControlContainer
+                                                    height: 60
+                                                    anchors {
+                                                        left: parent.left
+                                                        right: parent.right
+                                                        bottom: parent.bottom
+                                                    }
+                                                    color: "transparent"
+
+                                                    CustomSpinBox {
+                                                        id: cameraMonitorZoomSpinBox
+                                                        height: 60
+                                                        width: 100
+                                                        anchors {
+                                                            verticalCenter: parent.verticalCenter
+                                                            right: parent.right
+                                                        }
+                                                        stepSize: 10
+                                                        onCameraMonitorSpinBoxSignal: {
+                                                            backFrontConnections.setZoomPercentage(zoom_percentage);
+                                                        }
+                                                    }
+
+                                                    Rectangle {
+                                                        id: cameraMonitorZoomStepSizeFieldContainer
+                                                        width: 30
+                                                        height: 30
+                                                        anchors {
+                                                            right: cameraMonitorZoomSpinBox.left
+                                                            verticalCenter: parent.verticalCenter
+                                                            rightMargin: 3
+                                                        }
+                                                        border.width: 1
+                                                        border.color: ThemeManager.m3["outlineVariant"]
+                                                        color: ThemeManager.m3["surfaceContainerHighest"]
+                                                        radius: 5
+                                                        TextInput {
+                                                            id: cameraMonitorZoomStepSizeTextInput
+                                                            anchors.fill: parent
+                                                            inputMethodHints: Qt.ImhFormattedNumbersOnly
+                                                            color: ThemeManager.m3["onSurface"]
+                                                            selectByMouse: true
+                                                            topPadding: 5
+                                                            leftPadding: 3
+                                                            clip: true
+                                                            maximumLength: 3
+                                                            validator: IntValidator {
+                                                                bottom: 0
+                                                                top: 100
+                                                            }
+                                                            HoverHandler {
+                                                                id: cameraMonitorZoomStepSizeHoverHandler
+                                                            }
+                                                            ToolTip.visible: cameraMonitorZoomStepSizeHoverHandler.hovered
+                                                            ToolTip.text: qsTr("Enter the step size of zooming in/out!")
+                                                            ToolTip.delay: 1000
+                                                            ToolTip.timeout: 3000
+                                                            Keys.onReturnPressed: {
+                                                                cameraMonitorZoomSpinBox.stepSize = parseInt(cameraMonitorZoomStepSizeTextInput.text, 10);
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
