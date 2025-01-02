@@ -91,6 +91,9 @@ class funnywing_custom_command_job(JobInterface):
         return
 
     def _doJob(self):
-        self._response = self._proxy(self._request)
-        rospy.loginfo(f"{self._response}")
+        try:
+            self._response = self._proxy(self._request)
+            rospy.loginfo(f"{self._response}")
+        except rospy.ServiceException as e:
+            rospy.logwarn(f"Service call failed: {e}")
         return

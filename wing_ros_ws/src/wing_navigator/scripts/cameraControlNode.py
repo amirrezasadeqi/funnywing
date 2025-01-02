@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 
 import rospy
+from rospkg import RosPack as rospack
 from wing_navigator.srv import SetDouble, SetDoubleRequest, SetDoubleResponse
 
 from wing_modules.CameraInterface.CameraControlInterface import CameraControlInterface
@@ -28,11 +29,15 @@ def main():
     arg_parser = ArgumentParser()
     arg_parser.add_argument("-t", "--camera_type", type=str, default="gazebo_ros",
                             help="Type of the camera. possible options are 'gazebo_ros', 'tamron' and 'univision'")
+    arg_parser.add_argument("-p", "--preset_table_file", type=str,
+                            default=rospack().get_path("wing_navigator") + "/Configs/tamron_preset_table.csv",
+                            help="Path of the CSV file containing the preset table.")
     args = arg_parser.parse_args()
     if "gazebo_ros" == args.camera_type:
         camera_controller = GazeboROSCameraController((1, 10), "/front_camera/zoom_camera_plugin/set_camera_zoom")
     elif "tamron" == args.camera_type:
-        camera_controller = TamronCameraController((1, 10), port="/dev/ttyUSB0", baudrate=9600)
+        camera_controller = TamronCameraController((1, 10), port="/dev/ttyUSB0", baudrate=9600,
+                                                   preset_table_file=args.preset_table_file)
     else:
         rospy.logerr(f"{args.camera_type} camera controller is not implemented yet!")
         return

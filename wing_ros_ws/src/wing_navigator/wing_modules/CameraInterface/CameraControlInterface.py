@@ -5,7 +5,7 @@ class CameraControlInterface(ABC):
     def __init__(self, zoom_range):
         """
         preset table is a list of preset dictionaries with below structure:
-        {"preset_name": name[string], "zoom": zoom_value[int], "focus": focus_value[int]}
+        {"preset_name": name[string], "zoom": zoom_value[HEX], "focus": focus_value[HEX]}
         """
         # zoom range is for example a tuple (1, 100) which means that the zoom level can be set from 1 to 100.
         self._zoom_range = zoom_range

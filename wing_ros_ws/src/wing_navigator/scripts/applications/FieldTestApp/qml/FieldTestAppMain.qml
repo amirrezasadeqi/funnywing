@@ -455,7 +455,7 @@ Window {
                                                                 id: cameraMonitorZoomStepSizeHoverHandler
                                                             }
                                                             ToolTip.visible: cameraMonitorZoomStepSizeHoverHandler.hovered
-                                                            ToolTip.text: qsTr("Enter the step size of zooming in/out!")
+                                                            ToolTip.text: qsTr("Enter the step size of zooming in/out! For Tamron camera step size is 100 divided by (#presets - 1).")
                                                             ToolTip.delay: 1000
                                                             ToolTip.timeout: 3000
                                                             Keys.onReturnPressed: {
