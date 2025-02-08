@@ -21,7 +21,8 @@ class GiCameraFrameCapture(CameraFrameCaptureInterface):
         super().__init__(frame_source=frame_source, frame_size=frame_size, image_buffer_size=image_buffer_size)
         self._running = True
         # Creating and setting the Gstreamer pipeline to the ready to use state
-        self._gstPipeline = Gst.parse_launch(f"rtspsrc location={frame_source} latency=0 ! decodebin ! videoconvert ! video/x-raw, format=RGB ! appsink name=sink sync=false")
+        self._gstPipeline = Gst.parse_launch(
+            f"rtspsrc location={frame_source} latency=0 ! decodebin ! videoconvert ! video/x-raw, format=RGB ! appsink name=sink sync=false")
         self._appSink = self._gstPipeline.get_by_name("sink")
         self._gstPipeline.set_state(Gst.State.PLAYING)
         self._frameCaptureThread = Thread(target=self._capturing)
@@ -51,7 +52,11 @@ class GiCameraFrameCapture(CameraFrameCaptureInterface):
                     continue
 
                 # Process the frame and add it to the image buffer
-                processed_frame = self._process_frame(frame)
+                # The frame itself is in RGB format, so no need to convert it from BGR to RGB.
+                if self._frame_processor:
+                    processed_frame = self._frame_processor.process_frame(frame)
+                else:
+                    processed_frame = frame
                 self._addImageToBuffer(processed_frame)
             except Exception as e:
                 print(e)
@@ -75,10 +80,6 @@ class GiCameraFrameCapture(CameraFrameCaptureInterface):
         # Clean up the buffer mapping
         buffer.unmap(map_info)
         return frame
-
-    def _process_frame(self, frame):
-        processed_frame = cv2.rectangle(frame, (50, 50), (200, 200), (0, 255, 0), 3)
-        return processed_frame
 
     def stop(self):
         rospy.loginfo("Stopping the video capture thread...")

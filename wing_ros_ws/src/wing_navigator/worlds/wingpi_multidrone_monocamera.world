@@ -1734,6 +1734,14 @@
             <udpHost>192.168.1.3</udpHost>
             <udpPort>8500</udpPort>
           </plugin>
+          <!-- Uncomment this section for loading another object gstreamer camera plugin for the case you also need the rtsp stream in the simulation PC. in this case you also have to run udp2rtsp.py node in simulation PC to get the rtsp stream. -->
+          <!-- <plugin name="GstCameraPluginSimPC" filename="libgazebo_gst_camera_plugin.so"> -->
+            <!-- <robotNamespace></robotNamespace> -->
+            <!-- udpHost is the IP of the simulation PC or localhost. -->
+            <!-- <udpHost>127.0.0.1</udpHost> -->
+            <!-- <udpPort>8500</udpPort> -->
+          <!-- </plugin> -->
+          <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
           <plugin name="zoom_camera_plugin" filename="libZoomCameraPlugin.so">
             <zoom_speed>10.0</zoom_speed>
             <min_zoom_factor>1.0</min_zoom_factor>

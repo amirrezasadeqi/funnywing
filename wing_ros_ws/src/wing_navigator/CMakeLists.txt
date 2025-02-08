@@ -60,7 +60,12 @@ catkin_python_setup()
 
 # Generate messages in the 'msg' folder add_message_files( FILES Message1.msg
 # Message2.msg )
-add_message_files(FILES MissionCommand.msg GLOBAL_POSITION_INT.msg)
+add_message_files(
+    FILES
+    MissionCommand.msg
+    GLOBAL_POSITION_INT.msg
+    Track.msg
+)
 
 # Generate services in the 'srv' folder add_service_files( FILES Service1.srv
 # Service2.srv )
@@ -78,6 +83,7 @@ add_service_files(
   SetSimpleTrackerSettings.srv
   RunTestScenario.srv
   SetDouble.srv
+  LockOnOff.srv
 )
 
 # Generate actions in the 'action' folder add_action_files( FILES Action1.action

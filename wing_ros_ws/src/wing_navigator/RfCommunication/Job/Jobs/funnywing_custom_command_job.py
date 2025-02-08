@@ -1,9 +1,10 @@
 import rospy
 from pymavlink import mavutil
-from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
-from wing_navigator.srv import SetDouble, SetDoubleRequest, SetDoubleResponse
+from std_srvs.srv import SetBool, SetBoolRequest
+from wing_navigator.msg import Track
+from wing_navigator.srv import SetDouble, SetDoubleRequest
 from wing_navigator.srv import SetSimpleTrackerSettings, SetSimpleTrackerSettingsRequest, \
-    SetSimpleTrackerSettingsResponse, RunTestScenario, RunTestScenarioRequest, RunTestScenarioResponse
+    RunTestScenario, RunTestScenarioRequest, LockOnOff, LockOnOffRequest
 
 from RfCommunication.Job.Interface.JobInterface import JobInterface
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
@@ -15,26 +16,29 @@ def setSimpleTrackerSettingsHandler(mavMsg):
     request = SetSimpleTrackerSettingsRequest()
     request.waypointRadius = mavMsg.float_params[0]
     request.wingAsVirtualCenter = mavMsg.bool_params[1]
-    response = SetSimpleTrackerSettingsResponse()
-    proxy = funnywing_custom_command_job._setSimpleTrackerSettingsProxy
-    return request, response, proxy
+    proxy = funnywing_custom_command_job.setSimpleTrackerSettingsProxy
+    response = proxy(request)
+    rospy.loginfo(f"{response}")
+    return
 
 
 def setSimpleTrackerActivationHandler(mavMsg):
     request = SetBoolRequest()
     request.data = mavMsg.bool_params[0]
-    response = SetBoolResponse()
-    proxy = funnywing_custom_command_job._activeSimpleTrackerProxy
-    return request, response, proxy
+    proxy = funnywing_custom_command_job.activeSimpleTrackerProxy
+    response = proxy(request)
+    rospy.loginfo(f"{response}")
+    return
 
 
 def setTestScenarioActivation(mavMsg):
     request = RunTestScenarioRequest()
     request.scenarioIdx = mavMsg.int_params[0]
     request.active = mavMsg.bool_params[0]
-    response = RunTestScenarioResponse()
-    proxy = funnywing_custom_command_job._runTestScenarioProxy
-    return request, response, proxy
+    proxy = funnywing_custom_command_job.runTestScenarioProxy
+    response = proxy(request)
+    rospy.loginfo(f"{response}")
+    return
 
 
 def setCameraPresetIndexHandler(mavMsg):
@@ -42,26 +46,57 @@ def setCameraPresetIndexHandler(mavMsg):
     request = SetDoubleRequest()
     # [0-100] preset index converted to float to be able to use the SetDouble service.
     request.data = float(mavMsg.int_params[0])
-    response = SetDoubleResponse()
-    proxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
-    return request, response, proxy
+    proxy = funnywing_custom_command_job.setCameraPresetIndexProxy
+    response = proxy(request)
+    rospy.loginfo(f"{response}")
+    return
+
+
+def getTrackInfoHandler(mavMsg):
+    rosMsg = Track()
+    rosMsg.time_stamp = mavMsg.int_params[0]
+    rosMsg.track_id = mavMsg.int_params[1]
+    rosMsg.frame_count = mavMsg.int_params[2]
+    rosMsg.track_state = Track.TRACK_STATE_LOCKED if mavMsg.bool_params[0] else Track.TRACK_STATE_UNLOCKED
+    rosMsg.rect_top_x = mavMsg.float_params[0]
+    rosMsg.rect_top_y = mavMsg.float_params[1]
+    rosMsg.rect_bottom_x = mavMsg.float_params[2]
+    rosMsg.rect_bottom_y = mavMsg.float_params[3]
+    # publish the track to the frame processor
+    funnywing_custom_command_job.trackInfoPublisher.publish(rosMsg)
+    return
+
+
+def lockOnTrackHandler(mavMsg):
+    request = LockOnOffRequest()
+    request.lock_on = bool(mavMsg.bool_params[0])
+    request.track_id = int(mavMsg.int_params[0])
+    proxy = funnywing_custom_command_job.lockOnOffProxy
+    response = proxy(request)
+    rospy.loginfo(f"{response}")
+    return
 
 
 funnywingCustomCommandHandlerMapping = {
     mavutil.mavlink.SET_SIMPLE_TRACKER_SETTINGS: setSimpleTrackerSettingsHandler,
     mavutil.mavlink.SET_SIMPLE_TRACKER_ACTIVATION: setSimpleTrackerActivationHandler,
     mavutil.mavlink.SET_TEST_SCENARIO_ACTIVATION: setTestScenarioActivation,
-    mavutil.mavlink.SET_CAMERA_PRESET_INDEX: setCameraPresetIndexHandler
+    mavutil.mavlink.SET_CAMERA_PRESET_INDEX: setCameraPresetIndexHandler,
+    mavutil.mavlink.GET_TRACK_INFO: getTrackInfoHandler,
+    mavutil.mavlink.LOCK_ON_TRACK: lockOnTrackHandler
 }
 
 
 class funnywing_custom_command_job(JobInterface):
     # TODO: Rethink about the design for creating these proxies and check that they works correctly. Specially the way
     #   we have created them in the constructor.
-    _activeSimpleTrackerProxy = rospy.ServiceProxy("/funnywing/activeSimpleTracker", SetBool)
-    _setSimpleTrackerSettingsProxy = rospy.ServiceProxy("/funnywing/setSimpleTrackerSettings", SetSimpleTrackerSettings)
-    _runTestScenarioProxy = rospy.ServiceProxy("/funnywing/runTestScenario", RunTestScenario)
-    _setCameraPresetIndexProxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
+    activeSimpleTrackerProxy = rospy.ServiceProxy("/funnywing/activeSimpleTracker", SetBool)
+    setSimpleTrackerSettingsProxy = rospy.ServiceProxy("/funnywing/setSimpleTrackerSettings", SetSimpleTrackerSettings)
+    runTestScenarioProxy = rospy.ServiceProxy("/funnywing/runTestScenario", RunTestScenario)
+    setCameraPresetIndexProxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
+    lockOnOffProxy = rospy.ServiceProxy("/funnywing/lock_on_off", LockOnOff)
+    # TODO: queue_size may need to be tuned to not drop the important tracks and to not have delay in track display
+    trackInfoPublisher = rospy.Publisher("/funnywing/track", Track, queue_size=5)
 
     def __init__(self, message, rfConnection: ConnectionInterface, system, component):
         """
@@ -69,31 +104,33 @@ class funnywing_custom_command_job(JobInterface):
         @type message: MAVLink_funnywing_custom_command_message
         """
         super().__init__(message, rfConnection, system, component)
-        if funnywing_custom_command_job._activeSimpleTrackerProxy is None:
+        if funnywing_custom_command_job.activeSimpleTrackerProxy is None:
             rospy.wait_for_service("/funnywing/activeSimpleTracker")
-            funnywing_custom_command_job._activeSimpleTrackerProxy = rospy.ServiceProxy(
+            funnywing_custom_command_job.activeSimpleTrackerProxy = rospy.ServiceProxy(
                 "/funnywing/activeSimpleTracker", SetBool)
-        elif funnywing_custom_command_job._setSimpleTrackerSettingsProxy is None:
+        elif funnywing_custom_command_job.setSimpleTrackerSettingsProxy is None:
             rospy.wait_for_service("/funnywing/setSimpleTrackerSettings")
-            funnywing_custom_command_job._setSimpleTrackerSettingsProxy = rospy.ServiceProxy(
+            funnywing_custom_command_job.setSimpleTrackerSettingsProxy = rospy.ServiceProxy(
                 "/funnywing/setSimpleTrackerSettings", SetSimpleTrackerSettings)
-        elif funnywing_custom_command_job._runTestScenarioProxy is None:
+        elif funnywing_custom_command_job.runTestScenarioProxy is None:
             rospy.wait_for_service("/funnywing/runTestScenario")
-            funnywing_custom_command_job._runTestScenarioProxy = rospy.ServiceProxy(
+            funnywing_custom_command_job.runTestScenarioProxy = rospy.ServiceProxy(
                 "/funnywing/runTestScenario", RunTestScenario)
-        elif funnywing_custom_command_job._setCameraPresetIndexProxy is None:
+        elif funnywing_custom_command_job.setCameraPresetIndexProxy is None:
             rospy.wait_for_service("/funnywing/camera/set_preset_index")
-            funnywing_custom_command_job._setCameraPresetIndexProxy = rospy.ServiceProxy(
+            funnywing_custom_command_job.setCameraPresetIndexProxy = rospy.ServiceProxy(
                 "/funnywing/camera/set_preset_index", SetDouble)
+        elif funnywing_custom_command_job.lockOnOffProxy is None:
+            rospy.wait_for_service("/funnywing/lock_on_off")
+            funnywing_custom_command_job.lockOnOffProxy = rospy.ServiceProxy(
+                "/funnywing/lock_on_off", LockOnOff)
 
         self._handler = funnywingCustomCommandHandlerMapping[self.getMessage().command]
-        self._request, self._response, self._proxy = self._handler(self.getMessage())
         return
 
     def _doJob(self):
         try:
-            self._response = self._proxy(self._request)
-            rospy.loginfo(f"{self._response}")
-        except rospy.ServiceException as e:
-            rospy.logwarn(f"Service call failed: {e}")
+            self._handler(self.getMessage())
+        except Exception as e:
+            rospy.logwarn(f"Exception occurred by funnywing_custom_command handler: {e}")
         return

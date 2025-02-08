@@ -14,6 +14,7 @@ class CameraFrameCaptureInterface(QObject):
         # frame size: (width, height)
         self._frame_size = frame_size
         self._image_buffer = deque(maxlen=image_buffer_size)
+        self._frame_processor = None
         return
 
     def get_frame(self):
@@ -25,6 +26,10 @@ class CameraFrameCaptureInterface(QObject):
 
     def stop(self):
         raise NotImplementedError(f"{self.__class__.__name__} must implement method 'stop'")
+
+    def set_frame_processor(self, frame_processor):
+        self._frame_processor = frame_processor
+        return
 
     def _addImageToBuffer(self, processed_frame):
         self._image_buffer.append(processed_frame)

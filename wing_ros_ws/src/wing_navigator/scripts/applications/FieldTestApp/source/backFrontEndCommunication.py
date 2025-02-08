@@ -31,6 +31,7 @@ class backFrontEndCommunication(QObject):
     setArduplaneParamSignal = Signal(str, float)
     closeBackendSignal = Signal()
     setZoomPercentageSignal = Signal(int)
+    trackLockSignal = Signal(bool, int)
 
     def __init__(self):
         super().__init__()
@@ -88,4 +89,9 @@ class backFrontEndCommunication(QObject):
     @Slot(int)
     def setZoomPercentage(self, zoom_percentage):
         self.setZoomPercentageSignal.emit(zoom_percentage)
+        return
+
+    @Slot(bool, int)
+    def setTrackLockState(self, locked, track_id):
+        self.trackLockSignal.emit(locked, track_id)
         return

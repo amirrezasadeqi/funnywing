@@ -1,0 +1,4 @@
+bool lock_on  # whether to lock on a track or off from currently locked track
+uint32 track_id  # Id of the track to lock on in the case of lock_on = true
+---
+bool success

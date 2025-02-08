@@ -73,6 +73,7 @@ Window {
     }
 
     // Ignore the Invalid property name "onClosing". (M16) error. This is a bug of the IDE.
+    // TODO: uncomment here after adding lock on/off
     onClosing: function(close) {
         // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
         // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
@@ -461,6 +462,133 @@ Window {
                                                             Keys.onReturnPressed: {
                                                                 cameraMonitorZoomSpinBox.stepSize = parseInt(cameraMonitorZoomStepSizeTextInput.text, 10);
                                                             }
+                                                        }
+                                                    }
+
+                                                    RoundButton {
+                                                        id: trackerConfigBtn
+                                                        width: 50
+                                                        height: 50
+                                                        opacity: 0.9
+                                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                                        anchors {
+                                                            verticalCenter: parent.verticalCenter
+                                                            left: parent.left
+                                                            leftMargin: 1
+                                                        }
+                                                        icon {
+                                                            source: "../images/png_images/trackerSettingsIcon.png"
+                                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                                            width: 50
+                                                            height: 50
+                                                        }
+                                                        onClicked: {
+                                                            map.mapCenter = map.wingLocation
+                                                        }
+                                                    }
+
+                                                    RoundButton {
+                                                        id: guiderConfigBtn
+                                                        width: 50
+                                                        height: 50
+                                                        opacity: 0.9
+                                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                                        anchors {
+                                                            verticalCenter: parent.verticalCenter
+                                                            left: trackerConfigBtn.right
+                                                            leftMargin: 1
+                                                        }
+                                                        text: qsTr("Wing")
+                                                        icon {
+                                                            source: "../images/png_images/cameraBasedGuiderIcon.png"
+                                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                                            width: 50
+                                                            height: 50
+                                                        }
+                                                        onClicked: {
+                                                            map.mapCenter = map.wingLocation
+                                                        }
+                                                    }
+
+                                                    Rectangle {
+                                                        id: trackIdFieldContainer
+                                                        width: 30
+                                                        height: 30
+                                                        anchors {
+                                                            left: guiderConfigBtn.right
+                                                            verticalCenter: parent.verticalCenter
+                                                            leftMargin: 5
+                                                        }
+                                                        border.width: 1
+                                                        border.color: ThemeManager.m3["outlineVariant"]
+                                                        color: ThemeManager.m3["surfaceContainerHighest"]
+                                                        radius: 5
+                                                        TextInput {
+                                                            id: trackIdTextInput
+                                                            anchors.fill: parent
+                                                            inputMethodHints: Qt.ImhFormattedNumbersOnly
+                                                            color: ThemeManager.m3["onSurface"]
+                                                            selectByMouse: true
+                                                            topPadding: 5
+                                                            leftPadding: 3
+                                                            clip: true
+                                                            maximumLength: 3
+                                                            validator: IntValidator {
+                                                                bottom: 1
+                                                            }
+                                                            HoverHandler {
+                                                                id: trackIdHoverHandler
+                                                            }
+                                                            ToolTip.visible: trackIdHoverHandler.hovered
+                                                            ToolTip.text: qsTr("Enter track id of the object on which you want to lock. Integer starting from 1.")
+                                                            ToolTip.delay: 1000
+                                                            ToolTip.timeout: 3000
+                                                        }
+                                                    }
+
+                                                    RoundButton {
+                                                        id: trackLockBtn
+                                                        width: 50
+                                                        height: 50
+                                                        opacity: 0.9
+                                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                                        anchors {
+                                                            verticalCenter: parent.verticalCenter
+                                                            left: trackIdFieldContainer.right
+                                                            leftMargin: 2
+                                                        }
+                                                        text: qsTr("Wing")
+                                                        icon {
+                                                            source: "../images/png_images/targetLockedIcon.png"
+                                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                                            width: 50
+                                                            height: 50
+                                                        }
+                                                        onClicked: {
+                                                            backFrontConnections.setTrackLockState(true, parseInt(trackIdTextInput.text, 10));
+                                                        }
+                                                    }
+
+                                                    RoundButton {
+                                                        id: trackUnlockBtn
+                                                        width: 50
+                                                        height: 50
+                                                        opacity: 0.9
+                                                        Material.background: ThemeManager.m3["tertiaryContainer"]
+                                                        anchors {
+                                                            verticalCenter: parent.verticalCenter
+                                                            left: trackLockBtn.right
+                                                            leftMargin: 3
+                                                        }
+                                                        text: qsTr("Wing")
+                                                        icon {
+                                                            source: "../images/png_images/targetUnlockedIcon.png"
+                                                            color: ThemeManager.m3["onTertiaryContainer"]
+                                                            width: 50
+                                                            height: 50
+                                                        }
+                                                        onClicked: {
+                                                            backFrontConnections.setTrackLockState(false, 0);
                                                         }
                                                     }
                                                 }

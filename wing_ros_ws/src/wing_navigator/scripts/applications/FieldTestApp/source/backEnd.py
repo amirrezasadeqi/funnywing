@@ -37,6 +37,7 @@ class backEnd(QObject):
         self._backFrontConnection.setArduplaneParamSignal.connect(self.setArduplaneParameter)
         self._backFrontConnection.closeBackendSignal.connect(self.closeBackend)
         self._backFrontConnection.setZoomPercentageSignal.connect(self.setZoomPercentage)
+        self._backFrontConnection.trackLockSignal.connect(self.sendLockOnTrackCommand)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -194,6 +195,21 @@ class backEnd(QObject):
         int_params[0] = zoom_percentage
         mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
                                                                           mavutil.mavlink.SET_CAMERA_PRESET_INDEX,
+                                                                          int_params, bool_params, float_params)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(bool, int)
+    def sendLockOnTrackCommand(self, locked, track_id):
+        int_params = [0] * 5
+        bool_params = [False] * 5
+        float_params = [0.0] * 5
+        bool_params[0] = locked
+        int_params[0] = track_id
+        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
+                                                                          mavutil.mavlink.LOCK_ON_TRACK,
                                                                           int_params, bool_params, float_params)
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)

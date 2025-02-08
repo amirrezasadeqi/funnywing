@@ -21,6 +21,7 @@ from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvCam
     OpencvCameraFrameCapture
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvGstBackedCameraFrameCapture import \
     OpencvGstBackedCameraFrameCapture
+from wing_modules.CameraInterface.FrameProcessor import FrameProcessor
 
 if __name__ == "__main__":
 
@@ -63,6 +64,7 @@ if __name__ == "__main__":
     # otherwise the signals emitted by provider to the front-end, cause segfault error, since their
     # corresponding QML sides are not loaded and actually this leads to accessing to (I think!) uninitialized
     # memory parts and so segfault error.
+    frame_processor = FrameProcessor(track_topic="/funnywing/track")
     # TODO: clean up here after through field tests
     # For gazebo simulation camera use: rtsp://127.0.0.1:8554/test
     # Uncomment or select capture based on your camera
@@ -85,6 +87,7 @@ if __name__ == "__main__":
     # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
     # For univision camera
     # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
+    cameraFrameCapture.set_frame_processor(frame_processor)
     backend.createAndSetupFrameProvider(cameraFrameCapture, app)
     ################################################################################################
     sys.exit(app.exec_())

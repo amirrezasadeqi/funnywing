@@ -70,3 +70,8 @@ class TamronCameraController(CameraControlInterface):
             for row in reader:
                 self._preset_table.append({"preset_name": row[0], "zoom": int(row[1], 16), "focus": int(row[2], 16)})
         return
+
+    def set_focus_mode(self, focus_mode):
+        # TODO: Implement this method
+        rospy.logwarn("This method is not implemented for Tamron camera controller yet.")
+        return

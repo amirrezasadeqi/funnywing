@@ -7,7 +7,8 @@
       "HOME_POSITION",
       "BATTERY_STATUS",
       "VIRTUAL_TARGET_GLOBAL_POSITION_INT",
-      "RESCUE_STATUS"
+      "RESCUE_STATUS",
+      "FUNNYWING_CUSTOM_COMMAND"
     ],
     "blackList": []
   },
