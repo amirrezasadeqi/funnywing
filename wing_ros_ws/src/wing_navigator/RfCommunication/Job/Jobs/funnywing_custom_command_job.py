@@ -1,7 +1,6 @@
 import rospy
 from pymavlink import mavutil
 from std_srvs.srv import SetBool, SetBoolRequest
-from wing_navigator.msg import Track
 from wing_navigator.srv import SetDouble, SetDoubleRequest
 from wing_navigator.srv import SetSimpleTrackerSettings, SetSimpleTrackerSettingsRequest, \
     RunTestScenario, RunTestScenarioRequest, LockOnOff, LockOnOffRequest
@@ -52,21 +51,6 @@ def setCameraPresetIndexHandler(mavMsg):
     return
 
 
-def getTrackInfoHandler(mavMsg):
-    rosMsg = Track()
-    rosMsg.time_stamp = mavMsg.int_params[0]
-    rosMsg.track_id = mavMsg.int_params[1]
-    rosMsg.frame_count = mavMsg.int_params[2]
-    rosMsg.track_state = Track.TRACK_STATE_LOCKED if mavMsg.bool_params[0] else Track.TRACK_STATE_UNLOCKED
-    rosMsg.rect_top_x = mavMsg.float_params[0]
-    rosMsg.rect_top_y = mavMsg.float_params[1]
-    rosMsg.rect_bottom_x = mavMsg.float_params[2]
-    rosMsg.rect_bottom_y = mavMsg.float_params[3]
-    # publish the track to the frame processor
-    funnywing_custom_command_job.trackInfoPublisher.publish(rosMsg)
-    return
-
-
 def lockOnTrackHandler(mavMsg):
     request = LockOnOffRequest()
     request.lock_on = bool(mavMsg.bool_params[0])
@@ -82,7 +66,6 @@ funnywingCustomCommandHandlerMapping = {
     mavutil.mavlink.SET_SIMPLE_TRACKER_ACTIVATION: setSimpleTrackerActivationHandler,
     mavutil.mavlink.SET_TEST_SCENARIO_ACTIVATION: setTestScenarioActivation,
     mavutil.mavlink.SET_CAMERA_PRESET_INDEX: setCameraPresetIndexHandler,
-    mavutil.mavlink.GET_TRACK_INFO: getTrackInfoHandler,
     mavutil.mavlink.LOCK_ON_TRACK: lockOnTrackHandler
 }
 
@@ -95,8 +78,6 @@ class funnywing_custom_command_job(JobInterface):
     runTestScenarioProxy = rospy.ServiceProxy("/funnywing/runTestScenario", RunTestScenario)
     setCameraPresetIndexProxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
     lockOnOffProxy = rospy.ServiceProxy("/funnywing/lock_on_off", LockOnOff)
-    # TODO: queue_size may need to be tuned to not drop the important tracks and to not have delay in track display
-    trackInfoPublisher = rospy.Publisher("/funnywing/track", Track, queue_size=5)
 
     def __init__(self, message, rfConnection: ConnectionInterface, system, component):
         """

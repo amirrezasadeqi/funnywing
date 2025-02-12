@@ -39,3 +39,6 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.virtual_target_gl
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.rescue_status_to_std_msgs_Bool import \
     rescue_status_to_std_msgs_Bool
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.track_status_to_wing_navigator_Track import \
+    track_status_to_wing_navigator_Track

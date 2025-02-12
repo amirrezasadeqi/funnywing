@@ -8,7 +8,7 @@
       "BATTERY_STATUS",
       "VIRTUAL_TARGET_GLOBAL_POSITION_INT",
       "RESCUE_STATUS",
-      "FUNNYWING_CUSTOM_COMMAND"
+      "TRACK_STATUS"
     ],
     "blackList": []
   },

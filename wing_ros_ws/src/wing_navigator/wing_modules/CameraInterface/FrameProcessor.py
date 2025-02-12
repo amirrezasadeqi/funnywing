@@ -19,7 +19,8 @@ class FrameProcessor(object):
         """
         # TODO: It may be necessary to tune the queue_size of the subscriber to not drop tracks or to not have delay.
         self._track_sub = rospy.Subscriber(track_topic, Track, callback=self._track_sub_callback)
-        self._tracks = []  # list of dictionaries. Each dictionary contains tracks corresponding to a same frame.
+        # list of dictionaries. Each dictionary contains tracks corresponding to a same frame.
+        self._tracks = []
         return
 
     def _track_sub_callback(self, msg: Track):
@@ -45,9 +46,9 @@ class FrameProcessor(object):
                 color = (255, 0, 0) if track["track_locked"] else (0, 255, 0)
                 x0, y0 = int(track["bounding_box"][0][0] * width), int(track["bounding_box"][0][1] * height)
                 x1, y1 = int(track["bounding_box"][1][0] * width), int(track["bounding_box"][1][1] * height)
-                frame = cv2.rectangle(frame, (x0, y0), (x1, y1), color, 1)
-                frame = cv2.putText(frame, f"id:{track['track_id']}", (x0, y0 - 2), cv2.FONT_HERSHEY_COMPLEX,
-                                    fontScale=0.5, color=color, thickness=1)
+                frame = cv2.rectangle(frame, (x0, y0), (x1, y1), color, 3)
+                frame = cv2.putText(frame, f"id:{track['track_id']}", (x0, y0 - 5), cv2.FONT_HERSHEY_COMPLEX,
+                                    fontScale=2, color=color, thickness=5)
         processed_frame = frame
         return processed_frame
 
@@ -55,7 +56,7 @@ class FrameProcessor(object):
         self._tracks[-1]["tracks"].append({
             "track_id": track.track_id,
             "track_locked": track.track_state,
-            "bounding_box": [(track.rect_top_x, track.rect_top_y), (track.rect_bottom_x, track.rect_bottom_y)]
+            "bounding_box": [(track.top_left_x, track.top_left_y), (track.bottom_right_x, track.bottom_right_y)]
         })
         return
 
@@ -65,7 +66,7 @@ class FrameProcessor(object):
             "tracks": [{
                 "track_id": track.track_id,
                 "track_locked": track.track_state,
-                "bounding_box": [(track.rect_top_x, track.rect_top_y), (track.rect_bottom_x, track.rect_bottom_y)]
+                "bounding_box": [(track.top_left_x, track.top_left_y), (track.bottom_right_x, track.bottom_right_y)]
             }]
         })
         return

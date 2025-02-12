@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+import signal
+import sys
+
 import rospy
 import tf.transformations
+from PySide2.QtCore import QObject, Slot, QCoreApplication
 from mavros_msgs.msg import AttitudeTarget
-from PySide2.QtCore import QObject, Slot
 
 from wing_modules.CameraBasedGuider import CameraBasedGuider
 from wing_modules.CameraBasedGuiderSensorBlock import CameraBasedGuiderSensorBlock
@@ -22,6 +25,10 @@ class FinalPhaseGuider(QObject):
         # When track is lost, the guidance PIDs will be reset to prevent wierd behaviors on the next track lock duo to
         # the accumulation of the integral parts of errors.
         self._cam_based_sensor_block.track_lost.connect(self.reset_guidance)
+        return
+
+    def __del__(self):
+        self._cam_based_sensor_block.stop()
         return
 
     @Slot(tuple, int)
@@ -54,20 +61,27 @@ class FinalPhaseGuider(QObject):
         return
 
 
+def handle_interrupt(*args):
+    QCoreApplication.instance().quit()
+    return
+
+
 def main():
     rospy.init_node('final_phase_guider', anonymous=True)
-    guider = CameraBasedGuider([0.045, 0, 0.01], [0.12, 0, 0.01], "constant",
+    finalPhaseGuiderApp = QCoreApplication(sys.argv)
+    # guider = CameraBasedGuider([0.045, 0, 0.01], [0.12, 0, 0.01], "constant",
+    #                            [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
+    guider = CameraBasedGuider([0.005, 0, 0.0], [0., 0, 0.0], "constant",
                                [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
     frame_capture = RosImageTopicCameraFrameCapture("/front_camera_ns/image_raw")
     cam_based_sensor_block = CameraBasedGuiderSensorBlock(frame_capture, detection_model_file="funnyYolo100K8m.pt",
                                                           frame_size=(1920, 1080))
     final_phase_guider = FinalPhaseGuider(guider, cam_based_sensor_block, "/mavros/setpoint_raw/attitude")
-    rospy.spin()
+
+    signal.signal(signal.SIGINT, handle_interrupt)
+    finalPhaseGuiderApp.exec_()
     return
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        rospy.loginfo("Shutting down final phase guider node by keyboard interrupt!")
+    main()

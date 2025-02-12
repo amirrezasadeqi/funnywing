@@ -124,5 +124,15 @@
     "rate": 1,
     "queueSize": 1,
     "onMessage": "RESCUE_STATUS"
+  },
+  {
+    "name": "trackStatusPublisher",
+    "enable": true,
+    "topicName": "/funnywing/track",
+    "msgPack": "wing_navigator",
+    "msgType": "Track",
+    "rate": 30,
+    "queueSize": 5,
+    "onMessage": "TRACK_STATUS"
   }
 ]

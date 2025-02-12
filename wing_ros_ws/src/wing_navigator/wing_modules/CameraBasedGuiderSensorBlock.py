@@ -3,15 +3,15 @@ import threading
 import numpy as np
 import rospy
 from PySide2.QtCore import QObject, Signal, Slot
-from norfair import Detection, Tracker
-from rospkg import RosPack as rospack
-from ultralytics import YOLO
 from mavros import mavlink
 from mavros_msgs.msg import Mavlink
+from norfair import Detection, Tracker
 from pymavlink import mavutil
+from rospkg import RosPack as rospack
+from ultralytics import YOLO
 from wing_navigator.srv import LockOnOff, LockOnOffRequest, LockOnOffResponse
 
-from CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
+from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 
 
 class CameraBasedGuiderSensorBlock(QObject):
@@ -41,11 +41,18 @@ class CameraBasedGuiderSensorBlock(QObject):
                                                   self._lock_on_off_service_handler)
         # TODO: This should be updated on the change of camera zoom level
         self._zoom_level = 1
+        self._track_sender_running = True
         self._track_sender_buffer = []
         self._track_sender_thread = threading.Thread(target=self._send_tracks_to_gcs)
         # Connecting the new frame signal to the methods doing the sensing after all the initializations are done.
         self._frame_capture.newFrameCaptured.connect(self.on_new_frame_captured)
         self._track_sender_thread.start()
+        return
+
+    def stop(self):
+        self._track_sender_running = False
+        self._track_sender_thread.join()
+        self._frame_capture.stop()
         return
 
     @Slot()
@@ -123,12 +130,21 @@ class CameraBasedGuiderSensorBlock(QObject):
         confidences = detections.boxes.conf.tolist()
         classes = detections.boxes.cls.tolist()
         for detection in zip(boxes, confidences, classes):
-            centroid = np.array([detection[0][0], detection[0][1]])
-            scores = np.array([detection[1]])
+            x, y, w, h = detection[0]
+            # Points to track are the points of the bounding box and I think we track two logically seperated points!
+            points = np.array(
+                [
+                    [int(x - w // 2), int(y - h // 2)],
+                    [int(x + w // 2), int(y + h // 2)]
+                ]
+            )
+            # since we want to track bounding boxes, so we have two points to track with the same score, and score would
+            # have two elements for each bounding box, not one and if you use one, there will be some dimension errors.
+            scores = np.array([detection[1], detection[1]])
             label = int(detection[2])
             norfair_detections.append(
                 Detection(
-                    points=centroid,
+                    points=points,
                     scores=scores,
                     label=label
                 ))
@@ -141,7 +157,7 @@ class CameraBasedGuiderSensorBlock(QObject):
         # autopilot.
         track_to_gcs_publisher = rospy.Publisher("/mavlink/from", Mavlink, queue_size=3)
         frame_count = 0
-        while not rospy.is_shutdown():
+        while self._track_sender_running:
             if len(self._track_sender_buffer):
                 frame_count += 1
                 frame_tracks = self._track_sender_buffer.pop(0)
@@ -162,22 +178,18 @@ class CameraBasedGuiderSensorBlock(QObject):
         top_left, bottom_right = tuple(track_box[0]), tuple(track_box[1])
         width, height = self._frame_size
 
-        int_params = [0] * 5
-        bool_params = [False] * 5
-        float_params = [0.0] * 5
-        int_params[0] = int(rospy.Time.now().secs)
-        int_params[1] = int(track.id)
-        int_params[2] = int(frame_count)
-        bool_params[0] = True if track_locked else False
-        float_params[0] = float(top_left[0] / width)
-        float_params[1] = float(top_left[1] / height)
-        float_params[2] = float(bottom_right[0] / width)
-        float_params[3] = float(bottom_right[1] / height)
+        mavMsgFields = [
+            int(rospy.Time.now().secs),
+            track.id,
+            frame_count,
+            mavutil.mavlink.TRACK_STATE_LOCKED if track_locked else mavutil.mavlink.TRACK_STATE_UNLOCKED,
+            float(top_left[0] / width),
+            float(top_left[1] / height),
+            float(bottom_right[0] / width),
+            float(bottom_right[1] / height)
+        ]
 
-        # Always sending to the GCS
-        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(mavutil.mavlink.MAV_TYPE_GCS, 1,
-                                                                          mavutil.mavlink.GET_TRACK_INFO,
-                                                                          int_params, bool_params, float_params)
+        mavMsg = mavutil.mavlink.MAVLink_track_status_message(*mavMsgFields)
         mavMsg.pack(protocol_obj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         track_to_gcs_publisher.publish(rosMsg)
