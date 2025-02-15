@@ -73,13 +73,26 @@ Window {
     }
 
     // Ignore the Invalid property name "onClosing". (M16) error. This is a bug of the IDE.
-    // TODO: uncomment here after adding lock on/off
     onClosing: function(close) {
         // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
         // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
         close.accepted = false
         // QQmlApplicationEngine does not send quit signal automaticaly, so send it to close the back-end.
         backFrontConnections.closeBackend()
+    }
+
+    TrackerConfigWindow {
+        id: trackerConfigWindow
+        onApplyTrackerSettingsBtnSignal: {
+            backFrontConnections.setVisualTrackerSettings(distThresh, initDelay, hitCountMax);
+        }
+    }
+
+    CameraBasedGuiderConfigWindow {
+        id: cameraBasedGuiderConfigWindow
+        onCameraBasedGuiderApplyConfigsSignal: {
+            backFrontConnections.setCameraBasedGuiderConfigs(configs);
+        }
     }
 
     Rectangle {
@@ -483,7 +496,7 @@ Window {
                                                             height: 50
                                                         }
                                                         onClicked: {
-                                                            map.mapCenter = map.wingLocation
+                                                            trackerConfigWindow.visible = true;
                                                         }
                                                     }
 
@@ -506,7 +519,7 @@ Window {
                                                             height: 50
                                                         }
                                                         onClicked: {
-                                                            map.mapCenter = map.wingLocation
+                                                            cameraBasedGuiderConfigWindow.visible = true;
                                                         }
                                                     }
 

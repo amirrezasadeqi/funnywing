@@ -2,6 +2,8 @@ import math
 
 import rospy
 from simple_pid import PID
+from wing_navigator.srv import SetCameraBasedGuiderConfigs, SetCameraBasedGuiderConfigsRequest, \
+    SetCameraBasedGuiderConfigsResponse
 
 
 class CameraBasedGuider(object):
@@ -44,6 +46,9 @@ class CameraBasedGuider(object):
         self._y_pid_consts = y_pid_consts
         self._x_pid = PID(*self._x_pid_consts)
         self._y_pid = PID(*self._y_pid_consts)
+        self._set_guider_configs_service = rospy.Service("/funnywing/set_cam_based_guider_configs",
+                                                         SetCameraBasedGuiderConfigs,
+                                                         self._set_cam_based_guider_configs_handler)
         return
 
     def loop_once(self, pixel_error: tuple, tg_size: int):
@@ -114,7 +119,7 @@ class CameraBasedGuider(object):
         """
         if "constant" == self._throttle_profile:
             throttle = self._const_throttle
-        elif "customSigmoid" == self._throttle_profile:
+        elif "custom_sigmoid" == self._throttle_profile:
             throttle = self._sigmoid_profile()
         else:
             rospy.logwarn(f"The profile {self._throttle_profile} is not supported. Falling back to constant throttle.")
@@ -142,3 +147,28 @@ class CameraBasedGuider(object):
                 throttle = 1.0 / (
                         1 + math.exp(self._sigmoid_constants["a"] * (self._tg_size - self._sigmoid_constants["b"])))
         return throttle
+
+    def _set_cam_based_guider_configs_handler(self, req: SetCameraBasedGuiderConfigsRequest):
+        # I think we must reset the PID controllers when the configs are changed to see the actual effect of the
+        # changes, otherwise things like accumulated integral parts of the errors may affect the control output, and
+        # we will not be able to see the exact effects of the new configs. In future check the correctness of this
+        # assumption.
+        self.reset()
+        if SetCameraBasedGuiderConfigsRequest.PROFILE_TYPE_CUSTOM_SIGMOID == req.profile_type:
+            self.set_throttle_profile("custom_sigmoid")
+        else:
+            self.set_throttle_profile("constant")
+        self.set_const_throttle(req.const_throttle)
+        self.set_x_pid_consts(req.x_pids)
+        self.set_y_pid_consts(req.y_pids)
+        self._sigmoid_constants = {
+            "a": req.a,
+            "b": req.b,
+            "size_threshold": req.size_threshold,
+            "wing_too_below_threshold": req.wing_too_below_threshold,
+            "wing_too_below_throttle": req.wing_too_below_throttle,
+            "wing_too_above_threshold": req.wing_too_above_threshold,
+            "wing_too_above_throttle": req.wing_too_above_throttle,
+            "wing_tg_at_same_level_throttle": req.wing_tg_at_same_level_throttle
+        }
+        return SetCameraBasedGuiderConfigsResponse(True)

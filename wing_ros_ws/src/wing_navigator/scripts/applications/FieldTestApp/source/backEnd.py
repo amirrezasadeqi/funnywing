@@ -1,3 +1,5 @@
+import math
+
 import rospy
 from PySide2.QtCore import QObject, Slot
 from PySide2.QtQml import QQmlApplicationEngine
@@ -38,6 +40,8 @@ class backEnd(QObject):
         self._backFrontConnection.closeBackendSignal.connect(self.closeBackend)
         self._backFrontConnection.setZoomPercentageSignal.connect(self.setZoomPercentage)
         self._backFrontConnection.trackLockSignal.connect(self.sendLockOnTrackCommand)
+        self._backFrontConnection.setVisualTrackerSettingsSignal.connect(self.setVisualTrackerSettings)
+        self._backFrontConnection.setCameraBasedGuiderConfigsSignal.connect(self.setCameraBasedGuiderConfigs)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -211,6 +215,57 @@ class backEnd(QObject):
         mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
                                                                           mavutil.mavlink.LOCK_ON_TRACK,
                                                                           int_params, bool_params, float_params)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(float, int, int)
+    def setVisualTrackerSettings(self, distThresh, initDelay, hitCountMax):
+        int_params = [0] * 5
+        bool_params = [False] * 5
+        float_params = [0.0] * 5
+        int_params[0] = initDelay
+        int_params[1] = hitCountMax
+        float_params[0] = distThresh
+        mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
+                                                                          mavutil.mavlink.SET_TRACKER_CONFIGS,
+                                                                          int_params, bool_params, float_params)
+        mavMsg.pack(self._protocolObj)
+        rosMsg = mavlink.convert_to_rosmsg(mavMsg)
+        self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot('QVariantMap')
+    def setCameraBasedGuiderConfigs(self, configs):
+        profile_type = mavutil.mavlink.CUSTOM_SIGMOID if int(configs.get("profile_type")) else mavutil.mavlink.CONSTANT
+        const_throttle = float(configs.get("const_throttle"))
+        const_throttle = const_throttle if (not math.isnan(const_throttle)) and (0 <= const_throttle <= 1) else 0.5
+        x_pids = configs.get("x_pids")
+        y_pids = configs.get("y_pids")
+        a = configs.get("a")
+        b = configs.get("b")
+        wing_too_below_throttle = configs.get("wing_too_below_throttle")
+        wing_too_above_throttle = configs.get("wing_too_above_throttle")
+        wing_tg_at_same_level_throttle = configs.get("wing_tg_at_same_level_throttle")
+        size_threshold = int(configs.get("size_threshold"))
+        wing_too_below_threshold = int(configs.get("wing_too_below_threshold"))
+        wing_too_above_threshold = int(configs.get("wing_too_above_threshold"))
+        mavMsgFields = [
+            profile_type,
+            const_throttle,
+            x_pids,
+            y_pids,
+            a,
+            b,
+            wing_too_below_throttle,
+            wing_too_above_throttle,
+            wing_tg_at_same_level_throttle,
+            size_threshold,
+            wing_too_below_threshold,
+            wing_too_above_threshold
+        ]
+        mavMsg = mavutil.mavlink.MAVLink_set_cam_based_guidance_configs_message(*mavMsgFields)
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         self._toRfComPublisher.publish(rosMsg)

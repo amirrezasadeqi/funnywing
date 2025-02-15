@@ -1,22 +1,26 @@
 import rospy
 from numpy import interp
-from wing_navigator.srv import SetDouble, SetDoubleRequest
+from wing_navigator.srv import SetDouble, SetDoubleRequest, GetDouble, GetDoubleRequest
 
 from wing_modules.CameraInterface.CameraControlInterface import CameraControlInterface
 
 
 class GazeboROSCameraController(CameraControlInterface):
-    def __init__(self, zoom_range: tuple, set_camera_zoom_service_name):
+    def __init__(self, zoom_range: tuple, set_camera_zoom_service_name, get_camera_zoom_service_name):
         """
         @param zoom_range: tuple of two elements, which represent the range of zoom values, like (1, 10).
         I think the tuple first value should not be less than 1, for example 0 is wrong, because the zoom
         level starts from 1, for example 1X(1 times), 2X and so on.
         @param set_camera_zoom_service_name: name of the service provided by the camera zoom plugin.
         format of the service name is: /<camera_name_in_sdf>/<plugin_name_in_sdf>/set_camera_zoom
+        @param get_camera_zoom_service_name: name of the service provided by the camera zoom plugin.
+        format of the service name is: /<camera_name_in_sdf>/<plugin_name_in_sdf>/get_camera_zoom
         """
         super().__init__(zoom_range)
         rospy.wait_for_service(set_camera_zoom_service_name)
         self._set_camera_zoom_proxy = rospy.ServiceProxy(set_camera_zoom_service_name, SetDouble)
+        rospy.wait_for_service(get_camera_zoom_service_name)
+        self._get_camera_zoom_proxy = rospy.ServiceProxy(get_camera_zoom_service_name, GetDouble)
         return
 
     def set_zoom(self, zoom):
@@ -32,6 +36,14 @@ class GazeboROSCameraController(CameraControlInterface):
         except rospy.ServiceException as e:
             rospy.logwarn("Service call failed: %s" % e)
             return False
+
+    def get_zoom(self):
+        try:
+            zoom_resp = self._get_camera_zoom_proxy(GetDoubleRequest())
+            return zoom_resp.data
+        except rospy.ServiceException as e:
+            rospy.logwarn("Service call for getting camera zoom level failed: %s" % e)
+            return None
 
     def set_focus(self, focus):
         """

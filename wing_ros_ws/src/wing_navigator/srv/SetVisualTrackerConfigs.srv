@@ -1,0 +1,5 @@
+float32 dist_thresh
+uint16 init_delay
+uint16 hit_count_max
+---
+bool success

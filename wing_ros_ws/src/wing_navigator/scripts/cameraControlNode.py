@@ -4,7 +4,8 @@ from argparse import ArgumentParser
 
 import rospy
 from rospkg import RosPack as rospack
-from wing_navigator.srv import SetDouble, SetDoubleRequest, SetDoubleResponse
+from wing_navigator.srv import SetDouble, SetDoubleRequest, SetDoubleResponse, GetDouble, GetDoubleRequest, \
+    GetDoubleResponse
 
 from wing_modules.CameraInterface.CameraControlInterface import CameraControlInterface
 from wing_modules.CameraInterface.CameraControlInterfaceImplementation.GazeboROSCameraController import \
@@ -18,10 +19,20 @@ class CameraControllerProxy:
         self._camera_controller = camera_controller
         self._set_preset_index_service = rospy.Service("/funnywing/camera/set_preset_index", SetDouble,
                                                        self._set_preset_index_service_handler)
+        self._get_camera_zoom_service = rospy.Service("/funnywing/camera/get_camera_zoom", GetDouble,
+                                                      self._get_camera_zoom_service_handler)
         return
 
     def _set_preset_index_service_handler(self, request: SetDoubleRequest):
         return SetDoubleResponse(self._camera_controller.set_preset_at_idx(request.data))
+
+    def _get_camera_zoom_service_handler(self, request: GetDoubleRequest):
+        camera_zoom = self._camera_controller.get_zoom()
+        if camera_zoom is None:
+            # camera zoom is not available.
+            return GetDoubleResponse(-1)
+        else:
+            return GetDoubleResponse(camera_zoom)
 
 
 def main():
@@ -34,7 +45,8 @@ def main():
                             help="Path of the CSV file containing the preset table.")
     args = arg_parser.parse_args()
     if "gazebo_ros" == args.camera_type:
-        camera_controller = GazeboROSCameraController((1, 10), "/front_camera/zoom_camera_plugin/set_camera_zoom")
+        camera_controller = GazeboROSCameraController((1, 10), "/front_camera/zoom_camera_plugin/set_camera_zoom",
+                                                      "/front_camera/zoom_camera_plugin/get_camera_zoom")
     elif "tamron" == args.camera_type:
         camera_controller = TamronCameraController((1, 10), port="/dev/ttyUSB0", baudrate=9600,
                                                    preset_table_file=args.preset_table_file)

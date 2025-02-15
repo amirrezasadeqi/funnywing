@@ -13,3 +13,4 @@ from RfCommunication.Job.Jobs.rescue_status_job import rescue_status_job
 from RfCommunication.Job.Jobs.rescue_set_state_job import rescue_set_state_job
 from RfCommunication.Job.Jobs.funnywing_custom_command_job import funnywing_custom_command_job
 from RfCommunication.Job.Jobs.param_set_job import param_set_job
+from RfCommunication.Job.Jobs.set_cam_based_guidance_configs_job import set_cam_based_guidance_configs_job

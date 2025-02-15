@@ -7,7 +7,8 @@
       "POSITION_TARGET_GLOBAL_INT",
       "RESCUE_SET_STATE",
       "FUNNYWING_CUSTOM_COMMAND",
-      "PARAM_SET"
+      "PARAM_SET",
+      "SET_CAM_BASED_GUIDANCE_CONFIGS"
     ],
     "blackList": []
   },

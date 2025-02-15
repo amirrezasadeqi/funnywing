@@ -32,6 +32,8 @@ class backFrontEndCommunication(QObject):
     closeBackendSignal = Signal()
     setZoomPercentageSignal = Signal(int)
     trackLockSignal = Signal(bool, int)
+    setVisualTrackerSettingsSignal = Signal(float, int, int)
+    setCameraBasedGuiderConfigsSignal = Signal('QVariantMap')
 
     def __init__(self):
         super().__init__()
@@ -94,4 +96,14 @@ class backFrontEndCommunication(QObject):
     @Slot(bool, int)
     def setTrackLockState(self, locked, track_id):
         self.trackLockSignal.emit(locked, track_id)
+        return
+
+    @Slot(float, int, int)
+    def setVisualTrackerSettings(self, distThresh, initDelay, hitCountMax):
+        self.setVisualTrackerSettingsSignal.emit(distThresh, initDelay, hitCountMax)
+        return
+
+    @Slot('QVariantMap')
+    def setCameraBasedGuiderConfigs(self, configs):
+        self.setCameraBasedGuiderConfigsSignal.emit(configs)
         return

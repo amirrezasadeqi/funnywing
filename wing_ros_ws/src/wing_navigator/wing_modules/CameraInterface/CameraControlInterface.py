@@ -21,6 +21,16 @@ class CameraControlInterface(ABC):
         pass
 
     @abstractmethod
+    def get_zoom(self):
+        """
+        This method returns the current zoom level of the camera as a float number. For example, if the zoom level is
+        2X it should return 2.0. So we can use this value in the determination of the camera based guidance input error
+        at the reference zoom level. returns None if the zoom level is not available.
+        @return:
+        """
+        pass
+
+    @abstractmethod
     def set_focus(self, focus):
         """
         This methode implements changing of the camera focus level.

@@ -9,7 +9,8 @@ from norfair import Detection, Tracker
 from pymavlink import mavutil
 from rospkg import RosPack as rospack
 from ultralytics import YOLO
-from wing_navigator.srv import LockOnOff, LockOnOffRequest, LockOnOffResponse
+from wing_navigator.srv import LockOnOff, LockOnOffRequest, LockOnOffResponse, SetVisualTrackerConfigs, \
+    SetVisualTrackerConfigsRequest, SetVisualTrackerConfigsResponse, GetDouble
 
 from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 
@@ -39,8 +40,10 @@ class CameraBasedGuiderSensorBlock(QObject):
         self._locked_track_id = 0
         self._lock_on_off_service = rospy.Service("/funnywing/lock_on_off", LockOnOff,
                                                   self._lock_on_off_service_handler)
-        # TODO: This should be updated on the change of camera zoom level
-        self._zoom_level = 1
+        self._set_tracker_configs_service = rospy.Service("/funnywing/setTrackerConfigs", SetVisualTrackerConfigs,
+                                                          self._set_tracker_configs_service_handler)
+        rospy.wait_for_service("/funnywing/camera/get_camera_zoom")
+        self._get_zoom_level_proxy = rospy.ServiceProxy("/funnywing/camera/get_camera_zoom", GetDouble)
         self._track_sender_running = True
         self._track_sender_buffer = []
         self._track_sender_thread = threading.Thread(target=self._send_tracks_to_gcs)
@@ -57,6 +60,13 @@ class CameraBasedGuiderSensorBlock(QObject):
 
     @Slot()
     def on_new_frame_captured(self):
+        # Getting the zoom level corresponded to the frame used in the current invocation of this method. actually zoom
+        # level must be synchronized with the frame and this can be achieved by getting it at the time of frame
+        # capturing, but at the moment, it is not possible and here is the nearest time spot to the frame capturing. I
+        # think for achieving this we must modify the capture interface to record some metadata like, zoom level for
+        # each frame, or even design other capture interfaces for this task.
+        # TODO: in the future implement a capture interface that considers the zoom level of the captured frame.
+        zoom_level = self._get_zoom_level_proxy().data
         # get the frame from the frame capture interface
         frame = self._frame_capture.get_frame()
         if frame is not None:
@@ -71,9 +81,14 @@ class CameraBasedGuiderSensorBlock(QObject):
                 if self._is_locked_track_still_available(tracked_objects):
                     # flag the track as locked
                     locked_track_flag = True
-                    pixel_error, bb_area_feedback = self._get_feedback_values(tracked_objects)
-                    # Signal the final phase guider to loop the guidance. the signal contains the feedback values.
-                    self.trigger_guidance_loop.emit(pixel_error, int(bb_area_feedback))
+                    if zoom_level >= 1:
+                        # if zoom level is unavailable, then we can't calculate the feedback values, and we can't
+                        # trigger the guidance loop. So, we determine the feedback values and trigger the loop only if
+                        # the zoom_level is >= 1 (i.e. the zoom level is available), otherwise, we just have locked on
+                        # the track.
+                        pixel_error, bb_area_feedback = self._get_feedback_values(tracked_objects, zoom_level)
+                        # Signal the final phase guider to loop the guidance. the signal contains the feedback values.
+                        self.trigger_guidance_loop.emit(pixel_error, int(bb_area_feedback))
                 else:
                     # Interested track is lost, so disable the triggering of the guidance loop.
                     self._lock_on_track = False
@@ -102,10 +117,11 @@ class CameraBasedGuiderSensorBlock(QObject):
                 return track
         return None
 
-    def _get_feedback_values(self, tracked_objects):
+    def _get_feedback_values(self, tracked_objects, zoom_level):
         """
         This method calculates the feedback values for the guidance loop of the final phase guider. The feedback values
         are the pixel error and the bounding box area feedback at the reference zoom level.
+        @param zoom_level: Zoom level(zoom_level >= 1) corresponding to the frame of the tracked_objects.
         @param tracked_objects:
         @return:
         """
@@ -115,8 +131,8 @@ class CameraBasedGuiderSensorBlock(QObject):
         cx, cy, bb_area = (top_left[0] + bottom_right[0]) // 2, (top_left[1] + bottom_right[1]) // 2, (
                 bottom_right[0] - top_left[0]) * (bottom_right[1] - top_left[1])
         pixel_error_at_ref_zoom_level = (
-            (self._point_ref[0] - cx) / self._zoom_level, (self._point_ref[1] - cy) / self._zoom_level)
-        bb_area_feedback_at_ref_zoom_level = bb_area / (self._zoom_level ** 2)
+            (self._point_ref[0] - cx) / zoom_level, (self._point_ref[1] - cy) / zoom_level)
+        bb_area_feedback_at_ref_zoom_level = bb_area / (zoom_level ** 2)
         return pixel_error_at_ref_zoom_level, bb_area_feedback_at_ref_zoom_level
 
     def _ultralytics_to_norfair_detections(self, detections):
@@ -205,3 +221,9 @@ class CameraBasedGuiderSensorBlock(QObject):
             # To reset the guider PIDs for the next track lock
             self.track_lost.emit()
         return LockOnOffResponse(True)
+
+    def _set_tracker_configs_service_handler(self, request: SetVisualTrackerConfigsRequest):
+        self._tracker.distance_threshold = request.dist_thresh
+        self._tracker.initialization_delay = request.init_delay
+        self._tracker.hit_counter_max = request.hit_count_max
+        return SetVisualTrackerConfigsResponse(True)

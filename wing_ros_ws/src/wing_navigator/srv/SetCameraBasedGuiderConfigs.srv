@@ -1,0 +1,17 @@
+uint8 PROFILE_TYPE_CONSTANT = 0
+uint8 PROFILE_TYPE_CUSTOM_SIGMOID = 1
+
+uint8 profile_type
+float32 const_throttle
+float32[3] x_pids
+float32[3] y_pids
+float32 a
+float32 b
+float32 wing_too_below_throttle
+float32 wing_too_above_throttle
+float32 wing_tg_at_same_level_throttle
+uint16 size_threshold
+uint16 wing_too_below_threshold
+uint16 wing_too_above_threshold
+---
+bool success

@@ -3,7 +3,8 @@ from pymavlink import mavutil
 from std_srvs.srv import SetBool, SetBoolRequest
 from wing_navigator.srv import SetDouble, SetDoubleRequest
 from wing_navigator.srv import SetSimpleTrackerSettings, SetSimpleTrackerSettingsRequest, \
-    RunTestScenario, RunTestScenarioRequest, LockOnOff, LockOnOffRequest
+    RunTestScenario, RunTestScenarioRequest, LockOnOff, LockOnOffRequest, SetVisualTrackerConfigs, \
+    SetVisualTrackerConfigsRequest
 
 from RfCommunication.Job.Interface.JobInterface import JobInterface
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
@@ -61,12 +62,24 @@ def lockOnTrackHandler(mavMsg):
     return
 
 
+def setTrackerConfigsHandler(mavMsg):
+    request = SetVisualTrackerConfigsRequest()
+    request.dist_thresh = float(mavMsg.float_params[0])
+    request.init_delay = int(mavMsg.int_params[0])
+    request.hit_count_max = int(mavMsg.int_params[1])
+    proxy = funnywing_custom_command_job.setTrackerConfigsProxy
+    response = proxy(request)
+    rospy.loginfo(f"{response}")
+    return
+
+
 funnywingCustomCommandHandlerMapping = {
     mavutil.mavlink.SET_SIMPLE_TRACKER_SETTINGS: setSimpleTrackerSettingsHandler,
     mavutil.mavlink.SET_SIMPLE_TRACKER_ACTIVATION: setSimpleTrackerActivationHandler,
     mavutil.mavlink.SET_TEST_SCENARIO_ACTIVATION: setTestScenarioActivation,
     mavutil.mavlink.SET_CAMERA_PRESET_INDEX: setCameraPresetIndexHandler,
-    mavutil.mavlink.LOCK_ON_TRACK: lockOnTrackHandler
+    mavutil.mavlink.LOCK_ON_TRACK: lockOnTrackHandler,
+    mavutil.mavlink.SET_TRACKER_CONFIGS: setTrackerConfigsHandler
 }
 
 
@@ -78,6 +91,7 @@ class funnywing_custom_command_job(JobInterface):
     runTestScenarioProxy = rospy.ServiceProxy("/funnywing/runTestScenario", RunTestScenario)
     setCameraPresetIndexProxy = rospy.ServiceProxy("/funnywing/camera/set_preset_index", SetDouble)
     lockOnOffProxy = rospy.ServiceProxy("/funnywing/lock_on_off", LockOnOff)
+    setTrackerConfigsProxy = rospy.ServiceProxy("/funnywing/setTrackerConfigs", SetVisualTrackerConfigs)
 
     def __init__(self, message, rfConnection: ConnectionInterface, system, component):
         """
@@ -105,6 +119,10 @@ class funnywing_custom_command_job(JobInterface):
             rospy.wait_for_service("/funnywing/lock_on_off")
             funnywing_custom_command_job.lockOnOffProxy = rospy.ServiceProxy(
                 "/funnywing/lock_on_off", LockOnOff)
+        elif funnywing_custom_command_job.setTrackerConfigsProxy is None:
+            rospy.wait_for_service("/funnywing/setTrackerConfigs")
+            funnywing_custom_command_job.setTrackerConfigsProxy = rospy.ServiceProxy(
+                "/funnywing/setTrackerConfigs", SetVisualTrackerConfigs)
 
         self._handler = funnywingCustomCommandHandlerMapping[self.getMessage().command]
         return

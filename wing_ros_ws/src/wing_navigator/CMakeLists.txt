@@ -83,7 +83,10 @@ add_service_files(
   SetSimpleTrackerSettings.srv
   RunTestScenario.srv
   SetDouble.srv
+  GetDouble.srv
   LockOnOff.srv
+  SetVisualTrackerConfigs.srv
+  SetCameraBasedGuiderConfigs.srv
 )
 
 # Generate actions in the 'action' folder add_action_files( FILES Action1.action
