@@ -399,6 +399,47 @@ Window {
                                                 anchors.fill: parent
                                                 color: "transparent"
 
+                                                Rectangle {
+                                                    id: camDataDisplayerContainer
+                                                    width: 150
+                                                    height: 30
+                                                    z: 1
+                                                    color: ThemeManager.m3["surfaceContainer"]
+                                                    opacity: 0.6
+                                                    border {
+                                                        color: ThemeManager.m3["outlineVariant"]
+                                                        width: 3
+                                                    }
+                                                    clip: true
+                                                    anchors {
+                                                        right: parent.right
+                                                        top: parent.top
+                                                        rightMargin: 5
+                                                        topMargin: 5
+                                                    }
+                                                    Label {
+                                                        id: distToTgLabel
+                                                        text: qsTr("Target Dist: ")
+                                                        color: ThemeManager.m3["onSurface"]
+                                                        anchors {
+                                                            left: parent.left
+                                                            top: parent.top
+                                                            leftMargin: 5
+                                                            topMargin: 5
+                                                        }
+                                                    }
+                                                    Label {
+                                                        id: distToTgValueLabel
+                                                        text: mainWindow.distToTg.toFixed(2)
+                                                        color: ThemeManager.m3["onSurface"]
+                                                        anchors {
+                                                            left: distToTgLabel.right
+                                                            verticalCenter: distToTgLabel.verticalCenter
+                                                            leftMargin: 5
+                                                        }
+                                                    }
+                                                }
+
                                                 Image {
                                                     id: cameraMonitorOutPut
                                                     property bool frameFlipper: false

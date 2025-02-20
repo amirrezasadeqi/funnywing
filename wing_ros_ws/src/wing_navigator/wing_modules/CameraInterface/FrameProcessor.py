@@ -49,6 +49,8 @@ class FrameProcessor(object):
                 frame = cv2.rectangle(frame, (x0, y0), (x1, y1), color, 3)
                 frame = cv2.putText(frame, f"id:{track['track_id']}", (x0, y0 - 5), cv2.FONT_HERSHEY_COMPLEX,
                                     fontScale=2, color=color, thickness=5)
+        frame = cv2.drawMarker(frame, (width // 2, height // 2), (255, 0, 0), markerType=cv2.MARKER_CROSS,
+                               markerSize=50, thickness=2, line_type=cv2.LINE_AA)
         processed_frame = frame
         return processed_frame
 
