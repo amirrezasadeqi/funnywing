@@ -34,6 +34,7 @@ class backFrontEndCommunication(QObject):
     trackLockSignal = Signal(bool, int)
     setVisualTrackerSettingsSignal = Signal(float, int, int)
     setCameraBasedGuiderConfigsSignal = Signal('QVariantMap')
+    setLastTrackIdSignal = Signal(int)  # back-end internal signal
 
     def __init__(self):
         super().__init__()

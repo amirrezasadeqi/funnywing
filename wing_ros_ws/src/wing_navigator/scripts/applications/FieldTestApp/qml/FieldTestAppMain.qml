@@ -325,20 +325,6 @@ Window {
                                         Material.background: ThemeManager.materialTheme === Material.Light ? Qt.lighter(ThemeManager.m3["secondaryContainer"], 2.5) : ThemeManager.m3["secondaryContainer"]
                                         Material.accent: ThemeManager.m3["tertiary"]
                                         TabButton{
-                                            id: primaryDataMonitorBtn
-                                            anchors {
-                                                top: parent.top
-                                                bottom: parent.bottom
-                                            }
-                                            contentItem: Text {
-                                                id: primaryDataMonitorBtnText
-                                                horizontalAlignment: Text.AlignHCenter
-                                                text: qsTr("Primary Data")
-                                                font.bold: true
-                                                color: ThemeManager.m3["onSecondaryContainer"]
-                                            }
-                                        }
-                                        TabButton{
                                             id: cameraMonitorBtn
                                             anchors {
                                                 top: parent.top
@@ -348,6 +334,20 @@ Window {
                                                 id: cameraMonitorBtnText
                                                 horizontalAlignment: Text.AlignHCenter
                                                 text: qsTr("Camera")
+                                                font.bold: true
+                                                color: ThemeManager.m3["onSecondaryContainer"]
+                                            }
+                                        }
+                                        TabButton{
+                                            id: primaryDataMonitorBtn
+                                            anchors {
+                                                top: parent.top
+                                                bottom: parent.bottom
+                                            }
+                                            contentItem: Text {
+                                                id: primaryDataMonitorBtnText
+                                                horizontalAlignment: Text.AlignHCenter
+                                                text: qsTr("Primary Data")
                                                 font.bold: true
                                                 color: ThemeManager.m3["onSecondaryContainer"]
                                             }
@@ -368,30 +368,6 @@ Window {
                                         anchors.fill: parent
                                         currentIndex: monitorBtnBar.currentIndex
                                         clip: true
-                                        Item {
-                                            id: primaryDataMonitorTab
-                                            clip: true
-                                            PrimaryDataView{
-                                                id: primaryDataView
-                                                anchors.fill: parent
-                                                heading: mainWindow.wingHdg
-                                                wingFlightState: mainWindow.wingFlightState
-                                                wingRelativeAlt: mainWindow.wingRelAlt
-                                                wingGpsLatVal: mainWindow.wingGPS.lat
-                                                wingGpsLonVal: mainWindow.wingGPS.lon
-                                                wingGpsAltVal: mainWindow.wingGPS.alt
-                                                wingVelValX: mainWindow.wingVel.vx
-                                                wingVelValY: mainWindow.wingVel.vy
-                                                wingVelValZ: mainWindow.wingVel.vz
-                                                tgGpsLatVal: mainWindow.tgGPS.lat
-                                                tgGpsLonVal: mainWindow.tgGPS.lon
-                                                tgGpsAltVal: mainWindow.tgGPS.alt
-                                                distToTg: mainWindow.distToTg
-                                                tgRecvDataRate: mainWindow.tgRecvDataRate
-                                                tgRelAlt: mainWindow.tgRelAlt
-                                            }
-                                        }
-
                                         Item {
                                             id: cameraMonitorTab
                                             Rectangle{
@@ -645,7 +621,85 @@ Window {
                                                             backFrontConnections.setTrackLockState(false, 0);
                                                         }
                                                     }
+
+                                                    Button {
+                                                        id: lastIdTrackLockBtn
+                                                        width: 125
+                                                        height: 50
+                                                        opacity: 0.9
+                                                        text: qsTr("Auto Lock")
+                                                        icon {
+                                                            width: 32
+                                                            height: 32
+                                                            source: "../images/png_images/targetLockedIcon.png"
+                                                        }
+                                                        display: AbstractButton.TextBesideIcon
+                                                        leftPadding: 4
+                                                        rightPadding: 8
+                                                        anchors {
+                                                            verticalCenter: parent.verticalCenter
+                                                            left: trackUnlockBtn.right
+                                                            leftMargin: 3
+                                                        }
+                                                        contentItem: Row {
+                                                            spacing: 4
+
+                                                            Image {
+                                                                source: lastIdTrackLockBtn.icon.source
+                                                                width: lastIdTrackLockBtn.icon.width
+                                                                height: lastIdTrackLockBtn.icon.height
+                                                                anchors.verticalCenter: parent.verticalCenter
+                                                                layer.enabled: true
+                                                                layer.effect: ColorOverlay {
+                                                                    color: lastIdTrackLockBtn.down ? Qt.darker(ThemeManager.m3["onErrorContainer"], 1.1) : ThemeManager.m3["onErrorContainer"]
+                                                                    cached: true
+                                                                }
+                                                            }
+
+                                                            Text {
+                                                                text: lastIdTrackLockBtn.text
+                                                                font: lastIdTrackLockBtn.font
+                                                                color: lastIdTrackLockBtn.down ? Qt.darker(ThemeManager.m3["onErrorContainer"], 1.1) : ThemeManager.m3["onErrorContainer"]
+                                                                anchors.verticalCenter: parent.verticalCenter
+                                                            }
+                                                        }
+                                                        background: Rectangle {
+                                                            implicitWidth: lastIdTrackLockBtn.width
+                                                            implicitHeight: lastIdTrackLockBtn.height
+                                                            color: lastIdTrackLockBtn.down ? Qt.darker(ThemeManager.m3["errorContainer"], 1.1) : ThemeManager.m3["errorContainer"]
+                                                            border.color: ThemeManager.m3["outline"]
+                                                            border.width: 1
+                                                            radius: 4
+                                                        }
+                                                        onClicked: {
+                                                            // using -1 for track id indicates locking on the last track in the frame.
+                                                            backFrontConnections.setTrackLockState(true, -1);
+                                                        }
+                                                    }
                                                 }
+                                            }
+                                        }
+                                        Item {
+                                            id: primaryDataMonitorTab
+                                            clip: true
+                                            PrimaryDataView{
+                                                id: primaryDataView
+                                                anchors.fill: parent
+                                                heading: mainWindow.wingHdg
+                                                wingFlightState: mainWindow.wingFlightState
+                                                wingRelativeAlt: mainWindow.wingRelAlt
+                                                wingGpsLatVal: mainWindow.wingGPS.lat
+                                                wingGpsLonVal: mainWindow.wingGPS.lon
+                                                wingGpsAltVal: mainWindow.wingGPS.alt
+                                                wingVelValX: mainWindow.wingVel.vx
+                                                wingVelValY: mainWindow.wingVel.vy
+                                                wingVelValZ: mainWindow.wingVel.vz
+                                                tgGpsLatVal: mainWindow.tgGPS.lat
+                                                tgGpsLonVal: mainWindow.tgGPS.lon
+                                                tgGpsAltVal: mainWindow.tgGPS.alt
+                                                distToTg: mainWindow.distToTg
+                                                tgRecvDataRate: mainWindow.tgRecvDataRate
+                                                tgRelAlt: mainWindow.tgRelAlt
                                             }
                                         }
                                     }

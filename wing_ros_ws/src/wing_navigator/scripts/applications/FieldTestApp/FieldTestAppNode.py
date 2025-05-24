@@ -65,6 +65,9 @@ if __name__ == "__main__":
     # corresponding QML sides are not loaded and actually this leads to accessing to (I think!) uninitialized
     # memory parts and so segfault error.
     frame_processor = FrameProcessor(track_topic="/funnywing/track")
+    # This is necessary to get the last track id which is determined in the FrameProcessor, so we can lock on the last
+    # track.
+    backend.setupConnectionWithFrameProcessor(frame_processor)
     # TODO: clean up here after through field tests
     # For gazebo simulation camera use: rtsp://127.0.0.1:8554/test
     # Uncomment or select capture based on your camera

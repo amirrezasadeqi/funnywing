@@ -10,6 +10,7 @@ from pymavlink import mavutil
 
 from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 from wing_modules.CameraInterface.CameraMonitorFrameProvider import CameraMonitorFrameProvider
+from wing_modules.CameraInterface.FrameProcessor import FrameProcessor
 from .backFrontEndCommunication import backFrontEndCommunication
 from .dataUpdater import dataUpdater
 
@@ -25,6 +26,9 @@ class backEnd(QObject):
         self._tgSystemID = tgSystemID
         self._tgComponentID = tgComponentID
         self._cameraMonitorFrameProvider = None
+        # Initialize with -1, so if there has been no tracks, the sensor block does not lock, since track_id -1 can't be
+        # existed.
+        self._lastTrackId = -1
 
         # Setup signals and connections
         self._backFrontConnection = backFrontEndCommunication()
@@ -42,6 +46,7 @@ class backEnd(QObject):
         self._backFrontConnection.trackLockSignal.connect(self.sendLockOnTrackCommand)
         self._backFrontConnection.setVisualTrackerSettingsSignal.connect(self.setVisualTrackerSettings)
         self._backFrontConnection.setCameraBasedGuiderConfigsSignal.connect(self.setCameraBasedGuiderConfigs)
+        self._backFrontConnection.setLastTrackIdSignal.connect(self.setLastTrackId)
 
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
@@ -78,6 +83,10 @@ class backEnd(QObject):
         # we need to close the app using its quit slot, after the camera monitor frame provider was stopped.
         # Note: we may move this line in future to the FieldTestAppNode for better logic!!!
         self._cameraMonitorFrameProvider.cameraMonitorFrameProviderQuited.connect(qtApplication.quit)
+        return
+
+    def setupConnectionWithFrameProcessor(self, frame_processor: FrameProcessor):
+        frame_processor.setQtCommunicator(self._backFrontConnection)
         return
 
     @Slot(bool)
@@ -211,7 +220,9 @@ class backEnd(QObject):
         bool_params = [False] * 5
         float_params = [0.0] * 5
         bool_params[0] = locked
-        int_params[0] = track_id
+        # Locking on the last track if the signal contains -1 as the track_id argument, otherwise locking
+        # on the commanded track_id.
+        int_params[0] = track_id if track_id != -1 else self._lastTrackId
         mavMsg = mavutil.mavlink.MAVLink_funnywing_custom_command_message(self._tgSystemID, self._tgComponentID,
                                                                           mavutil.mavlink.LOCK_ON_TRACK,
                                                                           int_params, bool_params, float_params)
@@ -269,4 +280,9 @@ class backEnd(QObject):
         mavMsg.pack(self._protocolObj)
         rosMsg = mavlink.convert_to_rosmsg(mavMsg)
         self._toRfComPublisher.publish(rosMsg)
+        return
+
+    @Slot(int)
+    def setLastTrackId(self, lastTrackId):
+        self._lastTrackId = lastTrackId
         return
