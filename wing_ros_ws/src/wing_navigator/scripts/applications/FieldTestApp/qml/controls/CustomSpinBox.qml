@@ -11,6 +11,21 @@ Item {
     property real stepSize: 1
     signal cameraMonitorSpinBoxSignal(int zoom_percentage)
 
+    function increase() {
+        spinBox.increase();
+        root.cameraMonitorSpinBoxSignal(parseInt(spinBoxTextInput.text, 10));
+    }
+
+    function decrease() {
+        spinBox.decrease();
+        root.cameraMonitorSpinBoxSignal(parseInt(spinBoxTextInput.text, 10));
+    }
+
+    function resetZoom() {
+        spinBox.value = 0;
+        root.cameraMonitorSpinBoxSignal(parseInt(spinBoxTextInput.text, 10));
+    }
+
     SpinBox {
         id: spinBox
         value: 0

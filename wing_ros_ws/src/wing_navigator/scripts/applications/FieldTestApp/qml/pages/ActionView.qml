@@ -151,8 +151,16 @@ Item {
                         anchors.topMargin: 5
                         btnLabel: "Return to Home"
                         defaultColor: defaultColorBg
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Ctrl+H")
+                        ToolTip.delay: 2000
+                        ToolTip.timeout: 2000
                         onClicked: {
                             actionView.modeChangerBtnsSignal(qsTr("RTL"))
+                        }
+                        Shortcut {
+                            sequence: "Ctrl+H"
+                            onActivated: actionView.modeChangerBtnsSignal(qsTr("RTL"))
                         }
                     }
 
@@ -357,8 +365,16 @@ Item {
                         anchors.topMargin: 5
                         font.pointSize: 9
                         btnLabel: "Active Simple Tracker"
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Ctrl+A")
+                        ToolTip.delay: 2000
+                        ToolTip.timeout: 2000
                         onClicked: {
                             actionView.simpleTrackerBtnsSignal(true)
+                        }
+                        Shortcut {
+                            sequence: "Ctrl+A"
+                            onActivated: actionView.simpleTrackerBtnsSignal(true)
                         }
                     }
 
@@ -372,8 +388,16 @@ Item {
                         anchors.topMargin: 5
                         font.pointSize: 9
                         btnLabel: "Deactive Simple Tracker"
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Ctrl+Shift+A")
+                        ToolTip.delay: 2000
+                        ToolTip.timeout: 2000
                         onClicked: {
                             actionView.simpleTrackerBtnsSignal(false)
+                        }
+                        Shortcut {
+                            sequence: "Ctrl+Shift+A"
+                            onActivated: actionView.simpleTrackerBtnsSignal(false)
                         }
                     }
 

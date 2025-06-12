@@ -453,6 +453,21 @@ Window {
                                                         onCameraMonitorSpinBoxSignal: {
                                                             backFrontConnections.setZoomPercentage(zoom_percentage);
                                                         }
+
+                                                        Shortcut {
+                                                            sequence: "Ctrl+="
+                                                            onActivated: cameraMonitorZoomSpinBox.increase()
+                                                        }
+
+                                                        Shortcut {
+                                                            sequence: "Ctrl+-"
+                                                            onActivated: cameraMonitorZoomSpinBox.decrease()
+                                                        }
+
+                                                        Shortcut {
+                                                            sequence: "Ctrl+0"
+                                                            onActivated: cameraMonitorZoomSpinBox.resetZoom()
+                                                        }
                                                     }
 
                                                     Rectangle {
@@ -617,8 +632,16 @@ Window {
                                                             width: 50
                                                             height: 50
                                                         }
+                                                        ToolTip.visible: hovered
+                                                        ToolTip.text: qsTr("Ctrl+Shift+L")
+                                                        ToolTip.delay: 2000
+                                                        ToolTip.timeout: 1000
                                                         onClicked: {
                                                             backFrontConnections.setTrackLockState(false, 0);
+                                                        }
+                                                        Shortcut {
+                                                            sequence: "Ctrl+Shift+L"
+                                                            onActivated: backFrontConnections.setTrackLockState(false, 0);
                                                         }
                                                     }
 
@@ -641,6 +664,10 @@ Window {
                                                             left: trackUnlockBtn.right
                                                             leftMargin: 3
                                                         }
+                                                        ToolTip.visible: hovered
+                                                        ToolTip.text: qsTr("Ctrl+L")
+                                                        ToolTip.delay: 2000
+                                                        ToolTip.timeout: 1000
                                                         contentItem: Row {
                                                             spacing: 4
 
@@ -674,6 +701,12 @@ Window {
                                                         onClicked: {
                                                             // using -1 for track id indicates locking on the last track in the frame.
                                                             backFrontConnections.setTrackLockState(true, -1);
+                                                        }
+
+                                                        Shortcut {
+                                                            sequence: "Ctrl+L"
+                                                            // using -1 for track id indicates locking on the last track in the frame.
+                                                            onActivated: backFrontConnections.setTrackLockState(true, -1);
                                                         }
                                                     }
                                                 }
