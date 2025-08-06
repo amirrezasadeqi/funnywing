@@ -71,7 +71,7 @@ def main():
     finalPhaseGuiderApp = QCoreApplication(sys.argv)
     # guider = CameraBasedGuider([0.045, 0, 0.01], [0.12, 0, 0.01], "constant",
     #                            [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
-    guider = CameraBasedGuider([0.005, 0, 0.0], [0., 0, 0.0], "constant",
+    guider = CameraBasedGuider([0.005, 0, 0.0], [-0.087, 0.087], [0., 0, 0.0], [-0.035, 0.035], "constant",
                                [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
     frame_capture = RosImageTopicCameraFrameCapture("/front_camera_ns/image_raw")
     cam_based_sensor_block = CameraBasedGuiderSensorBlock(frame_capture, detection_model_file="funnyYolo100K8m.pt",

@@ -4,7 +4,9 @@ uint8 PROFILE_TYPE_CUSTOM_SIGMOID = 1
 uint8 profile_type
 float32 const_throttle
 float32[3] x_pids
+float32[2] xpid_saturations
 float32[3] y_pids
+float32[2] ypid_saturations
 float32 a
 float32 b
 float32 wing_too_below_throttle

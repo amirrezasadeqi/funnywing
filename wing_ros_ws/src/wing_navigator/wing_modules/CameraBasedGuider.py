@@ -7,8 +7,8 @@ from wing_navigator.srv import SetCameraBasedGuiderConfigs, SetCameraBasedGuider
 
 
 class CameraBasedGuider(object):
-    def __init__(self, x_pid_consts: list, y_pid_consts: list, throttle_profile: str,
-                 throttle_sigmoid_profile_constants: list, const_throttle: float):
+    def __init__(self, x_pid_consts: list, xpid_saturations: list, y_pid_consts: list, ypid_saturations: list,
+                 throttle_profile: str, throttle_sigmoid_profile_constants: list, const_throttle: float):
         """
         This class implement the PID based control loop for the final phase guider that it is using the camera as the
         sensor. Note that the feedback values, such as errors and bounding box size, are calculated in the reference
@@ -29,7 +29,11 @@ class CameraBasedGuider(object):
         too below of the target or if the wing and the target are approximately at the same level.
 
         @param x_pid_consts: A list with 3 elements that define the PID constants for the X axis in camera frame.
+        @param xpid_saturations: A list with 2 elements defining the low and high saturation thresholds of the _x_pid
+        in radians.
         @param y_pid_consts: A list with 3 elements that define the PID constants for the Y axis in camera frame.
+        @param ypid_saturations: A list with 2 elements defining the low and high saturation thresholds of the _y_pid
+        in radians.
         @param throttle_profile: "constant" or "custom_sigmoid"
         @param throttle_sigmoid_profile_constants: A list with 8 elements that defines the sigmoid profile used as the
         throttle profile.
@@ -45,7 +49,9 @@ class CameraBasedGuider(object):
         self._x_pid_consts = x_pid_consts
         self._y_pid_consts = y_pid_consts
         self._x_pid = PID(*self._x_pid_consts)
+        self.set_xpid_saturations(xpid_saturations)
         self._y_pid = PID(*self._y_pid_consts)
+        self.set_ypid_saturations(ypid_saturations)
         self._set_guider_configs_service = rospy.Service("/funnywing/set_cam_based_guider_configs",
                                                          SetCameraBasedGuiderConfigs,
                                                          self._set_cam_based_guider_configs_handler)
@@ -61,6 +67,7 @@ class CameraBasedGuider(object):
         @param tg_size: Size of the bounding box of the target in the reference zoom level. This can be determined by
         BB_Area / zoom_level^2.
         @return: returns roll, pitch, yaw and throttle values that must be sent to the drone as AttitudeTarget command.
+        Note that simple PID object automatically applies saturation thresholds on roll and pitch values.
         """
         self._pixel_error = pixel_error
         self._tg_size = tg_size
@@ -86,9 +93,19 @@ class CameraBasedGuider(object):
         self._x_pid.tunings = self._x_pid_consts
         return
 
+    def set_xpid_saturations(self, xpid_saturations):
+        self._xpid_saturations = xpid_saturations
+        self._x_pid.output_limits = self._xpid_saturations
+        return
+
     def set_y_pid_consts(self, y_pid_consts: list):
         self._y_pid_consts = y_pid_consts
         self._y_pid.tunings = self._y_pid_consts
+        return
+
+    def set_ypid_saturations(self, ypid_saturations):
+        self._ypid_saturations = ypid_saturations
+        self._y_pid.output_limits = self._ypid_saturations
         return
 
     def set_throttle_profile(self, throttle_profile: str):
@@ -160,7 +177,9 @@ class CameraBasedGuider(object):
             self.set_throttle_profile("constant")
         self.set_const_throttle(req.const_throttle)
         self.set_x_pid_consts(req.x_pids)
+        self.set_xpid_saturations(req.xpid_saturations)
         self.set_y_pid_consts(req.y_pids)
+        self.set_ypid_saturations(req.ypid_saturations)
         self._sigmoid_constants = {
             "a": req.a,
             "b": req.b,

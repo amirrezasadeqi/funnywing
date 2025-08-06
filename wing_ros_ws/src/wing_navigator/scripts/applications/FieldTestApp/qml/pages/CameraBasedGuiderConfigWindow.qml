@@ -7,8 +7,8 @@ import "../theme" 1.0
 
 Window {
     id: configWindow
-    width: 800
-    height: 800
+    width: 900
+    height: 850
     title: "Camera Based Guidance Configuration"
     color: ThemeManager.m3["surface"]
     modality: Qt.NonModal  // Ensures it doesn't block the main window
@@ -24,7 +24,7 @@ Window {
 
     Rectangle {
         id: formContainer
-        width: parent.width * 0.9
+        width: parent.width * 0.98
         height: parent.height * 0.8
         radius: 10
         border.color: ThemeManager.m3["outline"]
@@ -105,8 +105,8 @@ Window {
 
         GroupBox {
             id: xpidGroupBox
-            width: parent.width * 0.45
-            height: 320
+            width: parent.width * 0.48
+            height: 360
             title: qsTr("X PIDs")
             anchors {
                 top: profileSwitchContainer.bottom
@@ -173,11 +173,99 @@ Window {
             }
 
             Rectangle {
+                id: xpidSaturationLowContainer
+                width: parent.width * 0.48
+                height: parent.height * 0.15
+                anchors {
+                    top: xpidDisableCheckBox.bottom
+                    topMargin: 3
+                    left: xpidContainer.left
+
+                }
+
+                color: ThemeManager.m3["surfaceDim"]
+                border.color: ThemeManager.m3["outlineVariant"]
+                radius: 5
+                Label {
+                    id: xpidSaturationLowLabel
+                    text: qsTr("saturation low")
+                    color: ThemeManager.m3["onSurface"]
+                    anchors {
+                        verticalCenter: parent.verticalCenter
+                        left: parent.left
+                        leftMargin: 5
+                    }
+                }
+
+                CustomTextField {
+                    id: xpidSaturationLowTextField
+                    width: parent.width * 0.28
+                    height: parent.height * 0.9
+                    leftPadding: 5
+                    rightPadding: 5
+                    bottomPadding: 2
+                    topPadding: 2
+                    anchors {
+                        right: parent.right
+                        rightMargin: 2
+                        verticalCenter: parent.verticalCenter
+                    }
+                    placeholderText: qsTr("")
+                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                    validator: DoubleValidator {}
+                }
+            }
+
+            Rectangle {
+                id: xpidSaturationHighContainer
+                width: parent.width * 0.48
+                height: parent.height * 0.15
+                anchors {
+                    top: xpidDisableCheckBox.bottom
+                    topMargin: 3
+                    left: xpidSaturationLowContainer.right
+                    leftMargin: 5
+                }
+
+                color: ThemeManager.m3["surfaceDim"]
+                border.color: ThemeManager.m3["outlineVariant"]
+                radius: 5
+                Label {
+                    id: xpidSaturationHighLabel
+                    text: qsTr("saturation High")
+                    color: ThemeManager.m3["onSurface"]
+                    anchors {
+                        verticalCenter: parent.verticalCenter
+                        left: parent.left
+                        leftMargin: 5
+                    }
+                }
+
+                CustomTextField {
+                    id: xpidSaturationHighTextField
+                    width: parent.width * 0.28
+                    height: parent.height * 0.9
+                    leftPadding: 5
+                    rightPadding: 5
+                    bottomPadding: 2
+                    topPadding: 2
+                    anchors {
+                        right: parent.right
+                        rightMargin: 2
+                        verticalCenter: parent.verticalCenter
+                    }
+                    placeholderText: qsTr("")
+                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                    validator: DoubleValidator {}
+                }
+            }
+
+            Rectangle {
                 id: xpidContainer
                 width: parent.width
                 color: "transparent"
                 anchors {
-                    top: xpidLockCheckBox.bottom
+                    top: xpidSaturationHighContainer.bottom
                     topMargin: 5
                     bottom: parent.bottom
                     bottomMargin: 5
@@ -204,8 +292,8 @@ Window {
 
         GroupBox {
             id: ypidGroupBox
-            width: parent.width * 0.45
-            height: 320
+            width: parent.width * 0.48
+            height: 360
             title: qsTr("Y PIDs")
             anchors {
                 top: profileSwitchContainer.bottom
@@ -271,11 +359,99 @@ Window {
             }
 
             Rectangle {
+                id: ypidSaturationLowContainer
+                width: parent.width * 0.48
+                height: parent.height * 0.15
+                anchors {
+                    top: ypidDisableCheckBox.bottom
+                    topMargin: 3
+                    left: ypidContainer.left
+
+                }
+
+                color: ThemeManager.m3["surfaceDim"]
+                border.color: ThemeManager.m3["outlineVariant"]
+                radius: 5
+                Label {
+                    id: ypidSaturationLowLabel
+                    text: qsTr("saturation low")
+                    color: ThemeManager.m3["onSurface"]
+                    anchors {
+                        verticalCenter: parent.verticalCenter
+                        left: parent.left
+                        leftMargin: 5
+                    }
+                }
+
+                CustomTextField {
+                    id: ypidSaturationLowTextField
+                    width: parent.width * 0.28
+                    height: parent.height * 0.9
+                    leftPadding: 5
+                    rightPadding: 5
+                    bottomPadding: 2
+                    topPadding: 2
+                    anchors {
+                        right: parent.right
+                        rightMargin: 2
+                        verticalCenter: parent.verticalCenter
+                    }
+                    placeholderText: qsTr("")
+                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                    validator: DoubleValidator {}
+                }
+            }
+
+            Rectangle {
+                id: ypidSaturationHighContainer
+                width: parent.width * 0.48
+                height: parent.height * 0.15
+                anchors {
+                    top: ypidDisableCheckBox.bottom
+                    topMargin: 3
+                    left: ypidSaturationLowContainer.right
+                    leftMargin: 5
+                }
+
+                color: ThemeManager.m3["surfaceDim"]
+                border.color: ThemeManager.m3["outlineVariant"]
+                radius: 5
+                Label {
+                    id: ypidSaturationHighLabel
+                    text: qsTr("saturation High")
+                    color: ThemeManager.m3["onSurface"]
+                    anchors {
+                        verticalCenter: parent.verticalCenter
+                        left: parent.left
+                        leftMargin: 5
+                    }
+                }
+
+                CustomTextField {
+                    id: ypidSaturationHighTextField
+                    width: parent.width * 0.28
+                    height: parent.height * 0.9
+                    leftPadding: 5
+                    rightPadding: 5
+                    bottomPadding: 2
+                    topPadding: 2
+                    anchors {
+                        right: parent.right
+                        rightMargin: 2
+                        verticalCenter: parent.verticalCenter
+                    }
+                    placeholderText: qsTr("")
+                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                    validator: DoubleValidator {}
+                }
+            }
+
+            Rectangle {
                 id: ypidContainer
                 width: parent.width
                 color: "transparent"
                 anchors {
-                    top: ypidLockCheckBox.bottom
+                    top: ypidSaturationLowContainer.bottom
                     topMargin: 5
                     bottom: parent.bottom
                     bottomMargin: 5
@@ -419,10 +595,18 @@ Window {
                             configWindow.pidControllers[0][1].value,
                             configWindow.pidControllers[0][2].value,
                         ];
+                    let xpidSaturations = [
+                            parseFloat(xpidSaturationLowTextField.text),
+                            parseFloat(xpidSaturationHighTextField.text)
+                        ];
                     let ypids = [
                             configWindow.pidControllers[1][0].value,
                             configWindow.pidControllers[1][1].value,
                             configWindow.pidControllers[1][2].value,
+                        ];
+                    let ypidSaturations = [
+                            parseFloat(ypidSaturationLowTextField.text),
+                            parseFloat(ypidSaturationHighTextField.text)
                         ];
                     let sigmoidCoeff = [
                             parseFloat(configWindow.sigmoidCoefficients[0].coefficientTextValue),
@@ -439,7 +623,9 @@ Window {
                         "profile_type": profileType,
                         "const_throttle": constThrottle,
                         "x_pids": (!xpidDisableCheckBox.checked) ? xpids : [0, 0, 0],
+                        "xpid_saturations": xpidSaturations,
                         "y_pids": (!ypidDisableCheckBox.checked) ? ypids : [0, 0, 0],
+                        "ypid_saturations": ypidSaturations,
                         "a": sigmoidCoeff[0],
                         "b": sigmoidCoeff[1],
                         "size_threshold": sigmoidCoeff[2],

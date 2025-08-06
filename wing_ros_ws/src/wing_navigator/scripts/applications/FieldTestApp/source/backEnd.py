@@ -253,7 +253,9 @@ class backEnd(QObject):
         const_throttle = float(configs.get("const_throttle"))
         const_throttle = const_throttle if (not math.isnan(const_throttle)) and (0 <= const_throttle <= 1) else 0.5
         x_pids = configs.get("x_pids")
+        xpid_saturations = configs.get("xpid_saturations")
         y_pids = configs.get("y_pids")
+        ypid_saturations = configs.get("ypid_saturations")
         a = configs.get("a")
         b = configs.get("b")
         wing_too_below_throttle = configs.get("wing_too_below_throttle")
@@ -266,7 +268,9 @@ class backEnd(QObject):
             profile_type,
             const_throttle,
             x_pids,
+            xpid_saturations,
             y_pids,
+            ypid_saturations,
             a,
             b,
             wing_too_below_throttle,

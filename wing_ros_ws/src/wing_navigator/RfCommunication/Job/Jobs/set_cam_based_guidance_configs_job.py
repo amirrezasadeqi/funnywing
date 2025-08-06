@@ -37,7 +37,9 @@ class set_cam_based_guidance_configs_job(JobInterface):
         request.profile_type = mavMsg.profile_type
         request.const_throttle = mavMsg.const_throttle
         request.x_pids = mavMsg.x_pids
+        request.xpid_saturations = mavMsg.xpid_saturations
         request.y_pids = mavMsg.y_pids
+        request.ypid_saturations = mavMsg.ypid_saturations
         request.a = mavMsg.a
         request.b = mavMsg.b
         request.wing_too_below_throttle = mavMsg.wing_too_below_throttle
