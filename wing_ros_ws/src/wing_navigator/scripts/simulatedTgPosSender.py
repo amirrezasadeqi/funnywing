@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument("--server_port", default=60006)
     parser.add_argument("--sitl_connection_string", default="tcp:localhost:5773")
     parser.add_argument("--pos_stream_freq", default=5)
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     server = PosServer(args.server_ip, args.server_port, args.sitl_connection_string, args.pos_stream_freq)
     try:
         server.start_server()

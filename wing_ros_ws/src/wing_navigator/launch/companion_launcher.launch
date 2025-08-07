@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="fcu_url" default="/dev/ttyACM1:115200"/>
+    <arg name="gcs_ip" default="192.168.1.3"/>
+    <arg name="gcs_port" default="11111"/>
+
+    <include file="$(find mavros)/launch/apm.launch">
+        <arg name="fcu_url" value="$(arg fcu_url)"/>
+    </include>
+
+    <!-- TODO: add the frame publisher node like gst_pipeline_cv_publisher.py which is on the jetson for using ros frame capture in jetson. -->
+    <node pkg="mavros" type="mavsys" name="mavsys" args="rate --position 5" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="RfConnectionTest.py" name="RfConnectionTest" args="-p udpout:$(arg gcs_ip):$(arg gcs_port) -s RPI" output="log" respawn="false" respawn_delay="0"/>
+    <node pkg="wing_navigator" type="cameraControlNode.py" name="cameraControlNode" args="-t 'tamron'" output="log" respawn="false" respawn_delay="0"/>
+    <node pkg="wing_navigator" type="navigatorNode.py" name="navigatorNode" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="simpleTrackerNode.py" name="simpleTrackerNode" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="finalPhaseGuider.py" name="finalPhaseGuider" output="log" respawn="false" respawn_delay="0" />
+
+</launch>

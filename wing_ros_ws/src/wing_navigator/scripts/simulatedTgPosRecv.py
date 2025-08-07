@@ -78,7 +78,7 @@ if "__main__" == __name__:
     parser.add_argument("--server_port", default=60006)
     parser.add_argument("--gpsTopicName", default="/target/globalPosition")
     parser.add_argument("--rfConnectionTopicName", default="/GCS/from")
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     posClient = PosClient(args.server_ip, args.server_port,
                           args.gpsTopicName, args.rfConnectionTopicName)
     posClient.run()

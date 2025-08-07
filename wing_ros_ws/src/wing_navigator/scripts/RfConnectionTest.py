@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--connection_string", default="udp:localhost:14550")
     parser.add_argument("-b", "--baudrate", default=115200)
     parser.add_argument("-d", "--dialect", default="funnywing")
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     publisherConfigPath = rospack().get_path("wing_navigator")
     filterConfigPath = rospack().get_path("wing_navigator")

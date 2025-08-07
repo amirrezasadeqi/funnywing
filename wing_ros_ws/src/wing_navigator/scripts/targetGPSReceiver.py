@@ -131,7 +131,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--baudrate", default=115200)
     parser.add_argument("-t", "--gpsTopicName", default="/target/globalPosition")
     parser.add_argument("-r", "--rfConnectionTopicName", default="/GCS/from")
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     gpsDataReceiver = GPSDataReceiver(args.serial_port, args.baudrate, args.gpsTopicName, args.rfConnectionTopicName, 5)
     # Note: Receiver loop blocks the main thread execution.

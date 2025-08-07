@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="fcu_url" default="tcp://localhost:5763"/>
+    <arg name="gcs_ip" default="192.168.1.3"/>
+    <arg name="gcs_port" default="11111"/>
+    <arg name="rpi_ip" default="192.168.1.8"/>
+
+    <include file="$(find mavros)/launch/apm.launch">
+        <arg name="fcu_url" value="$(arg fcu_url)"/>
+    </include>
+
+    <node pkg="mavros" type="mavsys" name="mavsys" args="rate --position 5" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="RfConnectionTest.py" name="RfConnectionTest" args="-p udpout:$(arg gcs_ip):$(arg gcs_port) -s RPI" output="log" respawn="false" respawn_delay="0"/>
+    <node pkg="wing_navigator" type="cameraControlNode.py" name="cameraControlNode" args="-t 'gazebo_ros'" output="log" respawn="false" respawn_delay="0"/>
+    <node pkg="wing_navigator" type="simulatedTgPosSender.py" name="simulatedTgPosSender" args="--server_ip $(arg rpi_ip)" output="log" respawn="false" respawn_delay="0" />    
+    <node pkg="wing_navigator" type="navigatorNode.py" name="navigatorNode" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="simpleTrackerNode.py" name="simpleTrackerNode" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="finalPhaseGuider.py" name="finalPhaseGuider" output="log" respawn="false" respawn_delay="0" />
+
+</launch>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="gcs_ip" default="192.168.1.3"/>
+    <arg name="gcs_port" default="11111"/>
+    <arg name="rpi_ip" default="192.168.1.8"/>
+
+    <node pkg="wing_navigator" type="RfConnectionTest.py" name="RfConnectionTest" args="-p udpin:$(arg gcs_ip):$(arg gcs_port) -s GCS" output="log" respawn="false" respawn_delay="0"/>
+    <node pkg="wing_navigator" type="udp2rtsp.py" name="udp2rtsp" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="simulatedTgPosRecv.py" name="simulatedTgPosRecv" args="--server_ip $(arg rpi_ip)" output="log" respawn="false" respawn_delay="0" />
+    <node pkg="wing_navigator" type="FieldTestAppNode.py" name="FieldTestAppNode" output="log" respawn="false" respawn_delay="0" />
+
+</launch>

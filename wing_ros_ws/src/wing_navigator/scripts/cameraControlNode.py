@@ -43,7 +43,7 @@ def main():
     arg_parser.add_argument("-p", "--preset_table_file", type=str,
                             default=rospack().get_path("wing_navigator") + "/Configs/tamron_preset_table.csv",
                             help="Path of the CSV file containing the preset table.")
-    args = arg_parser.parse_args()
+    args, unknown = arg_parser.parse_known_args()
     if "gazebo_ros" == args.camera_type:
         camera_controller = GazeboROSCameraController((1, 10), "/front_camera/zoom_camera_plugin/set_camera_zoom",
                                                       "/front_camera/zoom_camera_plugin/get_camera_zoom")

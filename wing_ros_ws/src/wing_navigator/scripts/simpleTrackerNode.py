@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--system", default="GCS")
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     if "GCS" == args.system:
         wingGPSTopic = "/funnywing/globalPosition"
