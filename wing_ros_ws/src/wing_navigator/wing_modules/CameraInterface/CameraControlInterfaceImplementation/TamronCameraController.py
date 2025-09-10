@@ -45,7 +45,10 @@ class TamronCameraController(CameraControlInterface):
         you need autofocus mode somewhere else.
         """
         # Set focus mode to manual to be able to set presets, since a preset is a combination of zoom and focus.
-        self.set_focus_mode("manual")
+        # self.set_focus_mode("manual")
+        # for now, using auto-focus, since creating the preset table for tamron camera is not possible at the moment and
+        # I think the auto-focus may be sufficient for doing my job.
+        self.set_focus_mode("auto")
         if do_mapping:
             # mapping from 0-100 to the preset index in the preset table.
             step_size = 100 / (len(self._preset_table) - 1)

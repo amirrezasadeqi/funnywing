@@ -1,6 +1,5 @@
 import threading
 
-import numpy as np
 import rospy
 from PySide2.QtCore import QObject, Signal, Slot
 from mavros import mavlink
@@ -13,6 +12,9 @@ from wing_navigator.srv import LockOnOff, LockOnOffRequest, LockOnOffResponse, S
     SetVisualTrackerConfigsRequest, SetVisualTrackerConfigsResponse, GetDouble
 
 from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
+# Importing numpy here, to prevent the error that was like 'something numpy._core'. The solution was importing numpy
+# after cv_bridge or something else which I can't remember. importing it here solved the issue.
+import numpy as np
 
 
 class CameraBasedGuiderSensorBlock(QObject):
