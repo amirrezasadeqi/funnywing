@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import signal
 import sys
+from argparse import ArgumentParser
 
 import rospy
 import tf.transformations
@@ -11,6 +12,8 @@ from wing_modules.CameraBasedGuider import CameraBasedGuider
 from wing_modules.CameraBasedGuiderSensorBlock import CameraBasedGuiderSensorBlock
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.RosImageTopicCameraFrameCapture import \
     RosImageTopicCameraFrameCapture
+from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvGstBackedCameraFrameCapture import \
+    OpencvGstBackedCameraFrameCapture
 
 
 class FinalPhaseGuider(QObject):
@@ -69,12 +72,28 @@ def handle_interrupt(*args):
 def main():
     rospy.init_node('final_phase_guider', anonymous=True)
     finalPhaseGuiderApp = QCoreApplication(sys.argv)
-    # guider = CameraBasedGuider([0.045, 0, 0.01], [0.12, 0, 0.01], "constant",
-    #                            [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
-    guider = CameraBasedGuider([0.005, 0, 0.0], [-0.087, 0.087], [0., 0, 0.0], [-0.035, 0.035], "constant",
-                               [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
-    frame_capture = RosImageTopicCameraFrameCapture("/front_camera_ns/image_raw")
-    cam_based_sensor_block = CameraBasedGuiderSensorBlock(frame_capture, detection_model_file="funnyYolo100K8m.pt",
+
+    parser = ArgumentParser()
+    parser.add_argument("-s", "--simulation", type=bool, default=False,
+                        help="Specifies if the node will be ran in simulation environment or in real test.")
+    parser.add_argument("-m", "--model_file", type=str, default="funnyYolo100K8m.pt",
+                        help="Name of the .pt file located in the: "
+                             "/path_to->/wing_navigator/scripts/objectDetectionModels")
+    parser.add_argument("-i", "--input_stream", type=str, default="rtsp://admin:12345@192.168.1.150:554/stream0",
+                        help="Address of the camera stream(typically RTSP stream) used for creation of the "
+                             "frame_capture object in real test.")
+    args, unknown_args = parser.parse_known_args()
+
+    if args.simulation:  # simulation test.
+        guider = CameraBasedGuider([0.005, 0, 0.0], [-0.087, 0.087], [0., 0, 0.0], [-0.035, 0.035], "constant",
+                                   [0.003, 850.0, 917, 30, 0.65, -30, 0.3, 0.45], 0.5)
+        frame_capture = RosImageTopicCameraFrameCapture("/front_camera_ns/image_raw")
+    else:  # real test. using minimum size (1) for the image buffer, to minimize the delay of processing the frame.
+        guider = CameraBasedGuider([0.0, 0.0, 0.0], [-0.087, 0.087], [0.0, 0.0, 0.0], [-0.035, 0.035], "constant",
+                                   [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 0.5)
+        frame_capture = OpencvGstBackedCameraFrameCapture(frame_source=args.input_stream, image_buffer_size=1,
+                                                          use_nvidia=True)
+    cam_based_sensor_block = CameraBasedGuiderSensorBlock(frame_capture, detection_model_file=args.model_file,
                                                           frame_size=(1920, 1080))
     final_phase_guider = FinalPhaseGuider(guider, cam_based_sensor_block, "/mavros/setpoint_raw/attitude")
 
