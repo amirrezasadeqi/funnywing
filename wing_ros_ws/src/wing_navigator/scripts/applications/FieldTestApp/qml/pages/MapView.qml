@@ -25,6 +25,7 @@ Item {
     property var wingGoToLocation: QtPositioning.coordinate(35.745, 51.615)
     property real wingGoToAlt: 50.0
     property real wingHdg: 0
+    // TODO
     property bool gotoMarkerVisibility: false
 
     signal sendGoToCommandToBackEnd(real lat, real lon, real alt)

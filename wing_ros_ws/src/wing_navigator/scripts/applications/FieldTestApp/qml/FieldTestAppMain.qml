@@ -14,15 +14,17 @@ Window {
     height: 680
     visible: true
     color: "#00000000"
-    minimumHeight: 400
-    minimumWidth: 800
+    minimumHeight: 1200
+    minimumWidth: 1200
     title: qsTr("Field Test App")
+
 
     property var tgGPS: {'lat': 35.7480, 'lon': 51.603, 'alt': 1382.454545}
     property var virtTgGPS: {'lat': 35.7481, 'lon': 51.603, 'alt': 1382.454545}
     property var wingGPS: {'lat': 35.7471, 'lon': 51.603, 'alt': 1382.454545}
     property var wingVel: {'vx': -11.454646, 'vy': 2.8777544, 'vz': 0.4565454}
-    property real wingHdg: 90
+    property var wingAttitude: {'roll': 0, 'pitch': 0, 'yaw': 0}
+    property real wingHdg: 0
     property string wingFlightState: "GUIDED"
     property real wingRelAlt: 100.432
     property real distToTg: 54.12
@@ -42,6 +44,9 @@ Window {
         }
         function onSetWingGPS(lat, lon, alt){
             mainWindow.wingGPS = {'lat': lat, 'lon': lon, 'alt': alt}
+        }
+        function onSetWingAttitude(roll, pitch, yaw){
+            mainWindow.wingAttitude = {'roll': roll, 'pitch': pitch, 'yaw': yaw}
         }
         function onSetWingVelocity(vx, vy, vz){
             mainWindow.wingVel = {'vx': vx, 'vy': vy, 'vz': vz}
@@ -73,13 +78,13 @@ Window {
     }
 
     // Ignore the Invalid property name "onClosing". (M16) error. This is a bug of the IDE.
-    onClosing: function(close) {
-        // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
-        // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
-        close.accepted = false
-        // QQmlApplicationEngine does not send quit signal automaticaly, so send it to close the back-end.
-        backFrontConnections.closeBackend()
-    }
+//    onClosing: function(close) {
+//        // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
+//        // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
+//        close.accepted = false
+//        // QQmlApplicationEngine does not send quit signal automaticaly, so send it to close the back-end.
+//        backFrontConnections.closeBackend()
+//    }
 
     TrackerConfigWindow {
         id: trackerConfigWindow
@@ -123,7 +128,7 @@ Window {
 
                 Rectangle {
                     id: appIconContainer
-                    width: 50
+                    width: 70
                     anchors {
                         left: parent.left
                         leftMargin: 10
@@ -234,7 +239,7 @@ Window {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: dataDisplaySideContainer.bottom
-                        anchors.topMargin: 0
+                        anchors.topMargin: 5
                     }
 
                     Rectangle {
@@ -306,7 +311,7 @@ Window {
 
                             Rectangle {
                                 id: dataDisplayContainer
-                                width: baseContentTopContainer.width * 0.45
+                                width: baseContentTopContainer.width * 0.58
                                 color: "transparent"
                                 anchors.left: parent.left
                                 anchors.top: parent.top
@@ -443,8 +448,8 @@ Window {
 
                                                     CustomSpinBox {
                                                         id: cameraMonitorZoomSpinBox
-                                                        height: 60
-                                                        width: 100
+                                                        height: 70
+                                                        width: 150
                                                         anchors {
                                                             verticalCenter: parent.verticalCenter
                                                             right: parent.right
@@ -472,8 +477,8 @@ Window {
 
                                                     Rectangle {
                                                         id: cameraMonitorZoomStepSizeFieldContainer
-                                                        width: 30
-                                                        height: 30
+                                                        width: 40
+                                                        height: 40
                                                         anchors {
                                                             right: cameraMonitorZoomSpinBox.left
                                                             verticalCenter: parent.verticalCenter
@@ -485,6 +490,8 @@ Window {
                                                         radius: 5
                                                         TextInput {
                                                             id: cameraMonitorZoomStepSizeTextInput
+                                                            horizontalAlignment: TextInput.AlignHCenter
+                                                            verticalAlignment: TextInput.AlignVCenter
                                                             anchors.fill: parent
                                                             inputMethodHints: Qt.ImhFormattedNumbersOnly
                                                             color: ThemeManager.m3["onSurface"]
@@ -512,8 +519,8 @@ Window {
 
                                                     RoundButton {
                                                         id: trackerConfigBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -524,8 +531,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/trackerSettingsIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         onClicked: {
                                                             trackerConfigWindow.visible = true;
@@ -534,8 +541,8 @@ Window {
 
                                                     RoundButton {
                                                         id: guiderConfigBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -547,8 +554,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/cameraBasedGuiderIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         onClicked: {
                                                             cameraBasedGuiderConfigWindow.visible = true;
@@ -557,8 +564,8 @@ Window {
 
                                                     Rectangle {
                                                         id: trackIdFieldContainer
-                                                        width: 30
-                                                        height: 30
+                                                        width: 40
+                                                        height: 40
                                                         anchors {
                                                             left: guiderConfigBtn.right
                                                             verticalCenter: parent.verticalCenter
@@ -570,6 +577,8 @@ Window {
                                                         radius: 5
                                                         TextInput {
                                                             id: trackIdTextInput
+                                                            horizontalAlignment: TextInput.AlignHCenter
+                                                            verticalAlignment: TextInput.AlignVCenter
                                                             anchors.fill: parent
                                                             inputMethodHints: Qt.ImhFormattedNumbersOnly
                                                             color: ThemeManager.m3["onSurface"]
@@ -593,8 +602,8 @@ Window {
 
                                                     RoundButton {
                                                         id: trackLockBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -606,8 +615,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/targetLockedIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         onClicked: {
                                                             backFrontConnections.setTrackLockState(true, parseInt(trackIdTextInput.text, 10));
@@ -616,8 +625,8 @@ Window {
 
                                                     RoundButton {
                                                         id: trackUnlockBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -629,8 +638,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/targetUnlockedIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         ToolTip.visible: hovered
                                                         ToolTip.text: qsTr("Ctrl+Shift+L")
@@ -647,13 +656,13 @@ Window {
 
                                                     Button {
                                                         id: lastIdTrackLockBtn
-                                                        width: 125
-                                                        height: 50
+                                                        width: 150
+                                                        height: 60
                                                         opacity: 0.9
                                                         text: qsTr("Auto Lock")
                                                         icon {
-                                                            width: 32
-                                                            height: 32
+                                                            width: 40
+                                                            height: 40
                                                             source: "../images/png_images/targetLockedIcon.png"
                                                         }
                                                         display: AbstractButton.TextBesideIcon
@@ -779,8 +788,8 @@ Window {
                                     }
                                     RoundButton {
                                         id: moveToWingBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -792,8 +801,8 @@ Window {
                                         icon {
                                             source: "../images/svg_images/switchblade_inair_icon.svg"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 50
-                                            height: 50
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             map.mapCenter = map.wingLocation
@@ -802,8 +811,8 @@ Window {
 
                                     RoundButton {
                                         id: moveToTgBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -814,8 +823,8 @@ Window {
                                         icon {
                                             source: "../images/svg_images/goToTargetIcon.svg"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 40
-                                            height: 40
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             map.mapCenter = map.tgLocation
@@ -824,8 +833,8 @@ Window {
 
                                     RoundButton {
                                         id: clearBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -836,8 +845,8 @@ Window {
                                         icon {
                                             source: "../images/png_images/clearIcon.png"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 20
-                                            height: 20
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             map.clearMap();
@@ -846,8 +855,8 @@ Window {
 
                                     RoundButton {
                                         id: rescueOnBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -858,8 +867,8 @@ Window {
                                         icon {
                                             source: "../images/png_images/protectedIcon.png"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 20
-                                            height: 20
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(true);
@@ -868,8 +877,8 @@ Window {
 
                                     RoundButton {
                                         id: rescueOffBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -880,8 +889,8 @@ Window {
                                         icon {
                                             source: "../images/png_images/unprotectedIcon.png"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 20
-                                            height: 20
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(false);
@@ -1012,7 +1021,7 @@ Window {
                         Rectangle {
                             id: baseContentBottomContainer
                             y: 334
-                            height: parent.height * 0.4
+                            height: parent.height * 0.25
                             color: "#00ffffff"
                             anchors.left: parent.left
                             anchors.right: parent.right
@@ -1020,7 +1029,7 @@ Window {
 
                             Rectangle {
                                 id: baseContentSeparator
-                                height: 20
+                                height: 10
                                 color: "#232323"
                                 anchors.left: parent.left
                                 anchors.right: parent.right
@@ -1111,6 +1120,7 @@ Window {
                                             id: stateActionTab
                                             ActionView{
                                                 id: actionView
+                                                wingAtt: mainWindow.wingAttitude
                                                 anchors.fill: parent
                                                 onArmDisarmBtnSignal: {
                                                     backFrontConnections.setArmState(arming);
@@ -1118,61 +1128,25 @@ Window {
                                                 onModeChangerBtnsSignal: {
                                                     backFrontConnections.setFlightMode(mode);
                                                 }
+                                                onSimpleTrackerBtnsSignal: {
+                                                    backFrontConnections.setSimpleTrackerActivation(active);
+                                                }
+                                            }
+                                        }
+
+                                        Item {
+                                            id: stateConfigurationTab
+                                            ConfigurationView{
+                                                id: configurationView
+                                                anchors.fill: parent
                                                 onTestScenarioBtnSignal: {
                                                     backFrontConnections.handleTestScenario(scenarioIdx, active);
                                                 }
                                                 onSetSettingsBtnSignal: {
                                                     backFrontConnections.setSimpleTrackerSettings(waypointRadius, local, wingAsVirtualCenter);
                                                 }
-                                                onSimpleTrackerBtnsSignal: {
-                                                    backFrontConnections.setSimpleTrackerActivation(active);
-                                                }
                                                 onSetApParamBtnSignal: {
                                                     backFrontConnections.setArduplaneParam(paramName, paramValue);
-                                                }
-                                            }
-                                        }
-
-                                        Item {
-                                            id: configurationView
-                                            Rectangle{
-                                                id: configurationContainer
-                                                anchors.fill: parent
-                                                color: "transparent"
-
-                                                Button {
-                                                    id: testButton
-                                                    text: qsTr("Material themed Button")
-                                                    anchors.centerIn: parent
-                                                    width: 300
-                                                    height: 100
-                                                    Component.onCompleted: {
-                                                        ThemeManager.register(testButton);
-                                                    }
-                                                }
-
-                                                Button {
-                                                    id: anotherTestBtn
-                                                    width: 200
-                                                    height: 30
-                                                    anchors {
-                                                        left: testButton.right
-                                                        verticalCenter: testButton.verticalCenter
-                                                        leftMargin: 10
-                                                    }
-
-                                                    background: Rectangle {
-                                                        id: anotherTestBtnRect
-                                                        anchors.fill: parent
-                                                        color: ThemeManager.m3["secondary"]
-                                                        Text {
-                                                            id: textTest
-                                                            anchors.centerIn: parent
-                                                            text: qsTr("Another Material Button")
-                                                            font.styleName: "Bold"
-                                                            color: ThemeManager.m3["onSecondary"]
-                                                        }
-                                                    }
                                                 }
                                             }
                                         }

@@ -7,11 +7,13 @@ from pathlib import Path
 import rospy
 from PySide2.QtQml import QQmlApplicationEngine
 from PySide2.QtWidgets import QApplication
+from PySide2.QtGui import QIcon
 from geometry_msgs.msg import TwistStamped
 from mavros_msgs.msg import State
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
+from sensor_msgs.msg import Imu
 
 from source.backEnd import backEnd
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.FfmpegCameraFrameCapture import \
@@ -30,6 +32,10 @@ if __name__ == "__main__":
     os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
 
     app = QApplication(sys.argv)
+    qml_path = Path(__file__).resolve().parent / "qml"
+    app_icon = QIcon()
+    app_icon.addFile(str(qml_path / "icon_app.svg"))
+    app.setWindowIcon(app_icon)
     engine = QQmlApplicationEngine()
 
     qml_file = Path(__file__).resolve().parent / "qml/FieldTestAppMain.qml"
@@ -55,7 +61,8 @@ if __name__ == "__main__":
         {"topicName": "/target/globalPosition", "dataType": NavSatFix, "callbackType": "targetGlobalPosition"},
         {"topicName": "/virtualTarget/globalPosition", "dataType": NavSatFix,
          "callbackType": "virtualTargetGlobalPosition"},
-        {"topicName": "/funnywing/rescueStatus", "dataType": Bool, "callbackType": "rescueStatus"}
+        {"topicName": "/funnywing/rescueStatus", "dataType": Bool, "callbackType": "rescueStatus"},
+        {"topicName": "/funnywing/orientation", "dataType": Imu, "callbackType": "funnywingOrientation"}
     ]
 
     backend = backEnd(engine, dataSubscriptionConfig, sysId, compId, tgSysId, tgCompId)

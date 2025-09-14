@@ -1,4 +1,5 @@
 import threading
+import math
 
 import numpy as np
 import pymap3d
@@ -9,6 +10,8 @@ from geometry_msgs.msg import TwistStamped
 from mavros_msgs.msg import State
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
+from sensor_msgs.msg import Imu
+from tf.transformations import euler_from_quaternion
 
 from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
 
@@ -56,6 +59,7 @@ class dataUpdater(QObject):
             "funnywingGpsVelocity": self._gpsVelocityCallback,
             "funnywingGpsHeading": self._gpsHeadingCallback,
             "funnywingGpsRelativeAltitude": self._gpsRelAltCallback,
+            "funnywingOrientation": self._orientationCallback,
             "targetGlobalPosition": self._tgGlobalPositionCallback,
             "virtualTargetGlobalPosition": self._virtTgGlobalPosCallback,
             "rescueStatus": self._rescueStatusCallback
@@ -86,7 +90,20 @@ class dataUpdater(QObject):
                                                   self._lastWingGlobalPose[1],
                                                   self._lastWingGlobalPose[2])
         return
-
+    
+    def _orientationCallback(self, msg: Imu):
+        q = msg.orientation
+        quaternion_list = [q.x, q.y, q.z, q.w]
+        
+        roll_rad, pitch_rad, yaw_rad = euler_from_quaternion(quaternion_list)
+        
+        roll_deg = math.degrees(roll_rad)
+        pitch_deg = -math.degrees(pitch_rad)
+        yaw_deg = -math.degrees(yaw_rad)
+        yaw_deg += 90
+        yaw_deg = (yaw_deg + 360) % 360
+        self._backFrontConnection.setWingAttitude.emit(roll_deg, pitch_deg, yaw_deg)
+           
     def _gpsVelocityCallback(self, msg: TwistStamped):
         self._backFrontConnection.setWingVelocity.emit(msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z)
         return

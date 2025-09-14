@@ -1,6 +1,11 @@
 import math
 
 from PySide2.QtCore import QObject, Signal, Slot
+from geometry_msgs.msg import TwistStamped
+from mavros_msgs.msg import State
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Float64, Bool
+from sensor_msgs.msg import Imu
 
 
 class backFrontEndCommunication(QObject):
@@ -12,6 +17,7 @@ class backFrontEndCommunication(QObject):
     setWingGPS = Signal(float, float, float, arguments=['lat', 'lon', 'alt'])
     setWingVelocity = Signal(float, float, float, arguments=['vx', 'vy', 'vz'])
     setWingHeading = Signal(float, arguments=['hdg'])
+    setWingAttitude = Signal(float, float, float, arguments=['roll', 'pitch', 'yaw'])
     setWingFlightState = Signal(str, arguments=['flightState'])
     setWingRelAlt = Signal(float, arguments=['alt'])
     setDistanceToTarget = Signal(float, arguments=['dist'])
