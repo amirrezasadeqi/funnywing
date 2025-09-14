@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="demo_app" pkg="wing_navigator" type="test_target_getter_demo_app.py" />
+</launch>

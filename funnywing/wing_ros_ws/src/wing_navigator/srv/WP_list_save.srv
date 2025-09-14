@@ -1,0 +1,7 @@
+# TODO: check if you can use the mavros_msgs instead of MissionCommand.msg
+string req_message
+---
+MissionCommand[] waypoints
+float64 home_lat
+float64 home_lon
+float64 home_alt

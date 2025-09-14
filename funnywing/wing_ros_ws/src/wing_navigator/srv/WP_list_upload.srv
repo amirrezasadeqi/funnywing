@@ -1,0 +1,4 @@
+# TODO: check if you can use the mavros_msgs instead of MissionCommand.msg
+MissionCommand[] waypoints
+---
+bool accepted
