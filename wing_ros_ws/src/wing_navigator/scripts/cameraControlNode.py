@@ -48,7 +48,8 @@ def main():
         camera_controller = GazeboROSCameraController((1, 10), "/front_camera/zoom_camera_plugin/set_camera_zoom",
                                                       "/front_camera/zoom_camera_plugin/get_camera_zoom")
     elif "tamron" == args.camera_type:
-        camera_controller = TamronCameraController((1, 10), port="/dev/ttyUSB0", baudrate=9600,
+        # TTL port of jetson always is THS1.
+        camera_controller = TamronCameraController((1, 10), port="/dev/ttyTHS1", baudrate=9600,
                                                    preset_table_file=args.preset_table_file)
     else:
         rospy.logerr(f"{args.camera_type} camera controller is not implemented yet!")
