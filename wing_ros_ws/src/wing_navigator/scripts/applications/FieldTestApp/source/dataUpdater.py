@@ -11,10 +11,8 @@ from mavros_msgs.msg import State
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
 from sensor_msgs.msg import Imu
-from tf.transformations import euler_from_quaternion
-
 from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
-
+from scipy.spatial.transform import Rotation as R
 
 class dataUpdater(QObject):
     def __init__(self, dataSubConfig, backFrontConnection):
@@ -93,17 +91,29 @@ class dataUpdater(QObject):
     
     def _orientationCallback(self, msg: Imu):
         q = msg.orientation
-        quaternion_list = [q.x, q.y, q.z, q.w]
-        
-        roll_rad, pitch_rad, yaw_rad = euler_from_quaternion(quaternion_list)
-        
+        r = R.from_quat([q.x, q.y, q.z, q.w])
+
+        forward_vector = [1, 0, 0]
+        right_vector = [0, 1, 0]
+        down_vector = [0, 0, 1]
+
+        forward_rotated = r.apply(forward_vector)
+        right_rotated = r.apply(right_vector)
+        down_rotated = r.apply(down_vector)
+
+        yaw_rad = math.atan2(right_rotated[2], down_rotated[2])
+        pitch_rad = -math.asin(forward_rotated[2])
+
+        roll_rad = math.atan2(forward_rotated[1], forward_rotated[0])
         roll_deg = math.degrees(roll_rad)
-        pitch_deg = -math.degrees(pitch_rad)
-        yaw_deg = -math.degrees(yaw_rad)
-        yaw_deg += 90
+        pitch_deg = math.degrees(pitch_rad)
+        yaw_deg = math.degrees(yaw_rad)
+    
         yaw_deg = (yaw_deg + 360) % 360
+
         self._backFrontConnection.setWingAttitude.emit(roll_deg, pitch_deg, yaw_deg)
-           
+
+        
     def _gpsVelocityCallback(self, msg: TwistStamped):
         self._backFrontConnection.setWingVelocity.emit(msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z)
         return

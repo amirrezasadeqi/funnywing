@@ -34,7 +34,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     qml_path = Path(__file__).resolve().parent / "qml"
     app_icon = QIcon()
-    app_icon.addFile(str(qml_path / "icon_app.svg"))
+    app_icon.addFile(str(qml_path / "icon.png"))
     app.setWindowIcon(app_icon)
     engine = QQmlApplicationEngine()
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # cameraFrameCapture = OpencvGstBackedCameraFrameCapture(
     #     frame_source="rtsp://admin:admin123456789#@192.168.1.68:554/\#\!/ipc/live")
     # For gazebo simulation camera
-    cameraFrameCapture = OpencvGstBackedCameraFrameCapture(frame_source="rtsp://127.0.0.1:8554/test")
+    cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://127.0.0.1:8554/test")
     # For runcam6 camera
     # cameraFrameCapture = OpencvCameraFrameCapture(frame_source="rtsp://192.168.1.150:554/stream0")
     # For univision camera

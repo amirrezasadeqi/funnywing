@@ -427,7 +427,7 @@ Window {
                                                     source: "image://cameraMonitorFrameProvider/frame"
                                                     anchors.fill: parent
                                                     cache: false
-                                                    fillMode: Image.PreserveAspectFit
+                                                    fillMode: Image.PreserveAspectCrop
 
                                                     function reload() {
                                                         // This is just for change in the source name, to force the image to reload.
