@@ -60,10 +60,10 @@ class dataUpdater(QObject):
             "funnywingOrientation": self._orientationCallback,
             "targetGlobalPosition": self._tgGlobalPositionCallback,
             "virtualTargetGlobalPosition": self._virtTgGlobalPosCallback,
-            "rescueStatus": self._rescueStatusCallback
+            "rescueStatus": self._rescueStatusCallback,
         }
         return
-
+ 
     def _createSubscriptions(self):
         # create ROS listeners to get latest data and send it to frontend
         for config in self._dataSubConfig:

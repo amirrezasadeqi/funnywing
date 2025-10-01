@@ -10,6 +10,16 @@
     "onMessage": "ALL_MESSAGE_TYPES"
   },
   {
+    "name": "joystickPublisher",
+    "enable": true,
+    "topicName": "/funnywing/joy",
+    "msgPack": "sensor_msgs",
+    "msgType": "Joy",
+    "rate": 50,
+    "queueSize": 1,
+    "onMessage": "MANUAL_CONTROL"  
+  },
+  {
     "name": "targetGlobalPositionPublisher",
     "enable": true,
     "topicName": "/funnywing/targetGlobalPosition",

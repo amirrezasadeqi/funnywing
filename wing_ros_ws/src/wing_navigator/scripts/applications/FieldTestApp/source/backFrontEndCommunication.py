@@ -25,6 +25,8 @@ class backFrontEndCommunication(QObject):
     setWingRecvDataRate = Signal(float, arguments=['rate'])
     setTgRecvDataRate = Signal(float, arguments=['rate'])
     updateCameraMonitorFrame = Signal()
+    
+    
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)
@@ -41,7 +43,7 @@ class backFrontEndCommunication(QObject):
     setVisualTrackerSettingsSignal = Signal(float, int, int)
     setCameraBasedGuiderConfigsSignal = Signal('QVariantMap')
     setLastTrackIdSignal = Signal(int)  # back-end internal signal
-
+    
     def __init__(self):
         super().__init__()
         return

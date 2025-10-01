@@ -16,6 +16,7 @@ from std_msgs.msg import Float64, Bool
 from sensor_msgs.msg import Imu
 
 from source.backEnd import backEnd
+from source.joystickHandler import JoystickHandler
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.FfmpegCameraFrameCapture import \
     FfmpegCameraFrameCapture
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.GiCameraFrameCapture import GiCameraFrameCapture

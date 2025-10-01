@@ -2,6 +2,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls.Material 2.15
+import Qt.labs.platform 1.1
+import Qt.labs.settings 1.1
 import "../controls"
 import "../theme" 1.0
 
@@ -14,6 +16,11 @@ Window {
     modality: Qt.NonModal  // Ensures it doesn't block the main window
     visible: false         // Initially hidden
     flags: Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.CustomizeWindowHint
+
+    function safeParseFloat(text, defVal) {
+                var v = parseFloat(text)
+                return isNaN(v) ? defVal : v
+    }
 
     // Stores PID values for both controllers
     property var pidControllers: [[], []]
@@ -107,6 +114,7 @@ Window {
             id: xpidGroupBox
             width: parent.width * 0.48
             height: 360
+            padding: 10
             title: qsTr("X PIDs")
             anchors {
                 top: profileSwitchContainer.bottom
@@ -294,6 +302,7 @@ Window {
             id: ypidGroupBox
             width: parent.width * 0.48
             height: 360
+            padding: 10
             title: qsTr("Y PIDs")
             anchors {
                 top: profileSwitchContainer.bottom
@@ -478,6 +487,7 @@ Window {
         GroupBox {
             id: sigmoidProfileConstsGroupBox
             title: qsTr("Sigmoid Profile Constants")
+            padding: 10
             anchors {
                 top: xpidGroupBox.bottom
                 topMargin: 3
@@ -639,17 +649,135 @@ Window {
                     configWindow.cameraBasedGuiderApplyConfigsSignal(configs);
                 }
             }
+
+            Settings {
+                id: configSettings
+                fileName: StandardPaths.writableLocation(StandardPaths.DocumentsLocation) + "/config.ini"
+
+                property int profile_type
+                property real const_throttle
+                property var x_pids
+                property var y_pids
+                property var xpid_saturations
+                property var ypid_saturations
+                property real a
+                property real b
+                property real size_threshold
+                property real wing_too_below_threshold
+                property real wing_too_below_throttle
+                property real wing_too_above_threshold
+                property real wing_too_above_throttle
+                property real wing_tg_at_same_level_throttle
+                property bool x_disable
+                property bool x_lock
+                property bool y_disable
+                property bool y_lock
+            }
+
             CustomTextBtn {
                 id: saveBtn
                 defaultColor: ThemeManager.m3["secondaryContainer"]
                 btnLabel: qsTr("Save")
                 width: controlContainer.width * 0.2
+                onClicked: {
+                    saveDialog.open()
+                }
             }
+
+            FileDialog {
+                id: saveDialog
+                title: "Save Config As"
+                fileMode: FileDialog.SaveFile
+                nameFilters: ["Config files (*.ini)", "All files (*)"]
+
+                onAccepted: {
+                    var fileUrlString = saveDialog.file.toString()
+                    var path = fileUrlString.replace("file://", "")
+                    configSettings.fileName = path
+                    configSettings.profile_type = profileSwitch.checked ? 1 : 0
+                    configSettings.x_disable = xpidDisableCheckBox.checked
+                    configSettings.x_lock = xpidLockCheckBox.checked
+                    configSettings.y_disable = ypidDisableCheckBox.checked
+                    configSettings.y_lock = ypidLockCheckBox.checked
+                    configSettings.const_throttle = safeParseFloat(constThrottleTextField.text, 0.0)
+                    configSettings.x_pids = (!xpidDisableCheckBox.checked)
+                                            ? [configWindow.pidControllers[0][0].value,
+                                               configWindow.pidControllers[0][1].value,
+                                               configWindow.pidControllers[0][2].value]
+                                            : [0, 0, 0]
+                    configSettings.xpid_saturations = [safeParseFloat(xpidSaturationLowTextField.text, 0.0),
+                                                       safeParseFloat(xpidSaturationHighTextField.text, 0.0)] 
+                    configSettings.y_pids = (!ypidDisableCheckBox.checked)
+                                                      ? [configWindow.pidControllers[1][0].value,
+                                                         configWindow.pidControllers[1][1].value,
+                                                         configWindow.pidControllers[1][2].value]
+                                                      : [0, 0, 0]
+                    configSettings.ypid_saturations = [safeParseFloat(ypidSaturationLowTextField.text, 0.0),
+                                                       safeParseFloat(ypidSaturationHighTextField.text, 0.0)]
+                    configSettings.a = safeParseFloat(configWindow.sigmoidCoefficients[0].coefficientTextValue, 0.0)
+                    configSettings.b = safeParseFloat(configWindow.sigmoidCoefficients[1].coefficientTextValue, 0.0)
+                    configSettings.size_threshold = safeParseFloat(configWindow.sigmoidCoefficients[2].coefficientTextValue, 0.0)
+                    configSettings.wing_too_below_threshold = safeParseFloat(configWindow.sigmoidCoefficients[3].coefficientTextValue, 0.0)
+                    configSettings.wing_too_below_throttle = safeParseFloat(configWindow.sigmoidCoefficients[4].coefficientTextValue, 0.0)
+                    configSettings.wing_too_above_threshold = safeParseFloat(configWindow.sigmoidCoefficients[5].coefficientTextValue, 0.0)
+                    configSettings.wing_too_above_throttle = safeParseFloat(configWindow.sigmoidCoefficients[6].coefficientTextValue, 0.0)
+                    configSettings.wing_tg_at_same_level_throttle = safeParseFloat(configWindow.sigmoidCoefficients[7].coefficientTextValue, 0.0)
+
+                    configSettings.sync()
+                    console.log("Saved config to:", path)
+                }
+            }
+            
             CustomTextBtn {
                 id: loadBtn
                 defaultColor: ThemeManager.m3["secondaryContainer"]
                 btnLabel: qsTr("Load")
                 width: controlContainer.width * 0.2
+               onClicked: {
+                loadDialog.open()
+               }
+            }
+
+            FileDialog {
+                id: loadDialog
+                title: "Load Config"
+                fileMode: FileDialog.openFile
+                nameFilters: ["Config files (*.ini)", "All files (*)"]
+                folder: "file:///"
+
+                onAccepted: {
+                    var fileUrlString = loadDialog.file.toString()
+                    var path = fileUrlString.replace("file://", "")
+                    configSettings.fileName = path
+                    profileSwitch.checked = configSettings.profile_type === 1
+                    constThrottleTextField.text = configSettings.const_throttle.toString()
+                    xpidDisableCheckBox.checked = configSettings.x_disable
+                    xpidLockCheckBox.checked = configSettings.x_lock
+                    ypidDisableCheckBox.checked = configSettings.y_disable
+                    ypidLockCheckBox.checked = configSettings.y_lock
+                    xpidSaturationLowTextField.text = configSettings.xpid_saturations[0].toString()
+                    xpidSaturationHighTextField.text = configSettings.xpid_saturations[1].toString()
+                    ypidSaturationLowTextField.text = configSettings.ypid_saturations[0].toString()
+                    ypidSaturationHighTextField.text = configSettings.ypid_saturations[1].toString()
+
+                    configWindow.pidControllers[0][0].value = configSettings.x_pids[0]
+                    configWindow.pidControllers[0][1].value = configSettings.x_pids[1]
+                    configWindow.pidControllers[0][2].value = configSettings.x_pids[2]
+
+                    configWindow.pidControllers[1][0].value = configSettings.y_pids[0]
+                    configWindow.pidControllers[1][1].value = configSettings.y_pids[1]
+                    configWindow.pidControllers[1][2].value = configSettings.y_pids[2]
+
+                    configWindow.sigmoidCoefficients[0].coefficientTextValue = configSettings.a
+                    configWindow.sigmoidCoefficients[1].coefficientTextValue = configSettings.b
+                    configWindow.sigmoidCoefficients[2].coefficientTextValue = configSettings.size_threshold
+                    configWindow.sigmoidCoefficients[3].coefficientTextValue = configSettings.wing_too_below_threshold
+                    configWindow.sigmoidCoefficients[4].coefficientTextValue = configSettings.wing_too_below_throttle
+                    configWindow.sigmoidCoefficients[5].coefficientTextValue = configSettings.wing_too_above_threshold
+                    configWindow.sigmoidCoefficients[6].coefficientTextValue = configSettings.wing_too_above_throttle
+
+                    console.log("Loaded Config from:", path)
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ from PySide2.QtWidgets import QApplication
 from mavros import mavlink
 from mavros_msgs.msg import Mavlink
 from pymavlink import mavutil
+from mavros_msgs.msg import OverrideRCIn
 
 from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
 from wing_modules.CameraInterface.CameraMonitorFrameProvider import CameraMonitorFrameProvider
@@ -14,11 +15,13 @@ from wing_modules.CameraInterface.FrameProcessor import FrameProcessor
 from .backFrontEndCommunication import backFrontEndCommunication
 from .dataUpdater import dataUpdater
 
-
 class backEnd(QObject):
     def __init__(self, qmlEngine: QQmlApplicationEngine, dataSubscriptionConfig, systemID, componentID, tgSystemID,
                  tgComponentID, gcsFromTopic="/GCS/from"):
         super().__init__()
+        self._rcOverridePublisher = rospy.Publisher("/mavros/rc/override", OverrideRCIn, queue_size=10)
+        self._joystick_subscriber = rospy.Subscriber(gcsFromTopic, OverrideRCIn, self._joystick_callback)
+
         self._qmlEngine = qmlEngine
         self._dataSubscriptionConfig = dataSubscriptionConfig
         self._systemID = systemID
@@ -54,9 +57,11 @@ class backEnd(QObject):
         #   empty string now and if it will be ok delete this, otherwise we must pass the address
         #   of the connection(since MAVLink does not connect to that automatically, I think there
         #   will be no problem about occupied connection).
+        
         self._protocolObj = mavutil.mavlink.MAVLink('', self._systemID, self._componentID)
         # Publisher for sending mavlink Commands and all the data which is needed in the RPI side.
         self._toRfComPublisher = rospy.Publisher(gcsFromTopic, Mavlink, queue_size=10)
+        
         return
 
     ARDUPLANE_MODE_MAP = {
@@ -74,6 +79,11 @@ class backEnd(QObject):
         "LOITER": 12,
         "GUIDED": 15
     }
+    
+    def _joystick_callback(self, msg: OverrideRCIn):
+    # پیام دریافتی را به تاپیک صحیح ارسال می‌کند
+        self._rcOverridePublisher.publish(msg)
+        return
 
     def createAndSetupFrameProvider(self, frameCapture: CameraFrameCaptureInterface, qtApplication: QApplication):
         self._cameraMonitorFrameProvider = CameraMonitorFrameProvider(frame_capture=frameCapture,
