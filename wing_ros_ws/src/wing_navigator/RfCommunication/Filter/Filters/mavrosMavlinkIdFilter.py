@@ -26,12 +26,15 @@ class mavrosMavlinkIdFilter(FilterInterface):
         @return: Returns True if the message type is in allowedList AND not in blackList. So, blackList overrides the
         allowedList.
         """
+        if message.msgid > 255:
+            # Filtering out the MAVLink2 messages(11000 and above) coming from autopilot, like MCU_STATUS with ID 11039.
+            return False
         try:
             messageType = self._mavlink_map[message.msgid].msgname
             return (messageType in self._config["allowedList"]) and (messageType not in self._config["blackList"])
         except KeyError:
-            rospy.logwarn("The message is not existed in the chosen dialect XML file. Check if it is published "
-                          "wrongly or add this message to your custom dialect.")
+            rospy.logwarn(f"The message with ID: {message.msgid} is not existed in the chosen dialect XML file. Check "
+                          f"if it is published wrongly or add this message to your custom dialect.")
             return False
 
     def _readFilterConfig(self, configPath):
