@@ -81,7 +81,6 @@ class backEnd(QObject):
     }
     
     def _joystick_callback(self, msg: OverrideRCIn):
-    # پیام دریافتی را به تاپیک صحیح ارسال می‌کند
         self._rcOverridePublisher.publish(msg)
         return
 

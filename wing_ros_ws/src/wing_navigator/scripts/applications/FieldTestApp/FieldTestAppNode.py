@@ -9,7 +9,7 @@ from PySide2.QtQml import QQmlApplicationEngine
 from PySide2.QtWidgets import QApplication
 from PySide2.QtGui import QIcon
 from geometry_msgs.msg import TwistStamped
-from mavros_msgs.msg import State
+from mavros_msgs.msg import State, VFR_HUD
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
@@ -63,7 +63,8 @@ if __name__ == "__main__":
         {"topicName": "/virtualTarget/globalPosition", "dataType": NavSatFix,
          "callbackType": "virtualTargetGlobalPosition"},
         {"topicName": "/funnywing/rescueStatus", "dataType": Bool, "callbackType": "rescueStatus"},
-        {"topicName": "/funnywing/orientation", "dataType": Imu, "callbackType": "funnywingOrientation"}
+        {"topicName": "/funnywing/orientation", "dataType": Imu, "callbackType": "funnywingOrientation"},
+        {"topicName": "/funnywing/vfrHud", "dataType": VFR_HUD, "callbackType": "funnywingvfrHud"}
     ]
 
     backend = backEnd(engine, dataSubscriptionConfig, sysId, compId, tgSysId, tgCompId)

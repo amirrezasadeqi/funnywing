@@ -25,6 +25,11 @@ class backFrontEndCommunication(QObject):
     setWingRecvDataRate = Signal(float, arguments=['rate'])
     setTgRecvDataRate = Signal(float, arguments=['rate'])
     updateCameraMonitorFrame = Signal()
+    setWingThrottle = Signal(float, arguments=['throttle'])
+    setWingVoltage = Signal(float, arguments=['voltage'])
+    setFlightTime = Signal(str, arguments=['timeStr'])
+    setGroundSpeed = Signal(float, arguments=['groundSpeed'])
+    setAirSpeed = Signal(float, arguments=['airSpeed'])
     
     
 

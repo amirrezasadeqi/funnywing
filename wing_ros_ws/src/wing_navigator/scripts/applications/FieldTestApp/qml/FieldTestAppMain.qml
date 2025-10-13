@@ -32,12 +32,24 @@ Window {
     property real tgRecvDataRate: 5.0
     property real wingRecvDataRate: 10.0
     property real tgRelAlt: 50.0
+    property real throttle: 0.0
+    property real groundSpeed: 0.0
+    property real airSpeed: 0.0
+    property real relativeAltitude: 0.0
+    property real voltage: 0.0
+    property string flightTime: "0:00:00"
 
     Connections{
         target: backFrontConnections
 
         function onSetTargetGPS(lat, lon, alt){
             mainWindow.tgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
+        }
+        function onSetGroundSpeed(speed) {
+            mapWindow.groundSpeed = speed
+        }
+        function onSetAirSpeed(speed) {
+            mapWindow.airSpeed = speed
         }
         function onSetVirtualTargetGPS(lat, lon, alt){
             mainWindow.virtTgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
@@ -74,6 +86,15 @@ Window {
         }
         function onUpdateCameraMonitorFrame(){
             cameraMonitorOutPut.reload()
+        }
+        function onSetWingVoltage(vol) {
+            mapWindow.voltage = vol
+        }
+        function onSetWingThrottle(thr) {
+            mapWindow.throttle = thr
+        }
+        function onSetFlightTime(timeStr) {
+            mapWindow.flightTime = timeStr
         }
     }
 
@@ -772,6 +793,19 @@ Window {
                                     tgLocation: QtPositioning.coordinate(mainWindow.tgGPS.lat, mainWindow.tgGPS.lon)
                                     virtTgLocation: QtPositioning.coordinate(mainWindow.virtTgGPS.lat, mainWindow.virtTgGPS.lon)
                                     wingHdg: mainWindow.wingHdg
+                                    roll: mainWindow.wingAttitude.roll
+                                    pitch: mainWindow.wingAttitude.pitch
+                                    heading: mainWindow.wingAttitude.yaw
+                                    groundSpeed: Math.sqrt(
+                                        Math.pow(mainWindow.wingVel.vx, 2) +
+                                        Math.pow(mainWindow.wingVel.vy, 2) +
+                                        Math.pow(mainWindow.wingVel.vz, 2)
+                                    )
+                                    airSpeed: mainWindow.airSpeed
+                                    throttle: mainWindow.throttle
+                                    relativeAltitude: mainWindow.wingRelAlt
+                                    voltage: mainWindow.voltage
+                                    flightTime: mainWindow.flightTime
                                     onSendGoToCommandToBackEnd: {
                                         backFrontConnections.goToLocation(lat, lon, alt)
                                     }

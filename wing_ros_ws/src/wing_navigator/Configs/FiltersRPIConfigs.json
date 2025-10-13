@@ -9,6 +9,7 @@
       "VIRTUAL_TARGET_GLOBAL_POSITION_INT",
       "RESCUE_STATUS",
       "TRACK_STATUS"
+      "VFR_HUD"
     ],
     "blackList": []
   },

@@ -7,10 +7,10 @@ import rospy
 import rostopic
 from PySide2.QtCore import QObject
 from geometry_msgs.msg import TwistStamped
-from mavros_msgs.msg import State
+from mavros_msgs.msg import State, VFR_HUD
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, BatteryState
 from wing_modules.EllipsoidMSLConversion import EllipsoidMSLConversion
 from scipy.spatial.transform import Rotation as R
 
@@ -41,6 +41,9 @@ class dataUpdater(QObject):
         self._stopSpinnerThread = False
         # start the thread
         self._rosSpinnerThread.start()
+        self._isFlying = False
+        self._flightStartTime = None
+        self._flightTimer = rospy.Timer(rospy.Duration(1.0), self._updateFlightTime)
         return
 
     def stop(self):
@@ -58,6 +61,8 @@ class dataUpdater(QObject):
             "funnywingGpsHeading": self._gpsHeadingCallback,
             "funnywingGpsRelativeAltitude": self._gpsRelAltCallback,
             "funnywingOrientation": self._orientationCallback,
+            "funnywingBatteryState": self._batteryStateCallback,
+            "funnywingvfrHud": self._vfrHudCallback,
             "targetGlobalPosition": self._tgGlobalPositionCallback,
             "virtualTargetGlobalPosition": self._virtTgGlobalPosCallback,
             "rescueStatus": self._rescueStatusCallback,
@@ -76,10 +81,6 @@ class dataUpdater(QObject):
     def _rosSpinnerThreadCallback(self):
         while not rospy.is_shutdown() and not self._stopSpinnerThread:
             rospy.sleep(0.5)
-        return
-
-    def _stateCallback(self, msg: State):
-        self._backFrontConnection.setWingFlightState.emit(msg.mode)
         return
 
     def _globalPositionCallback(self, msg: NavSatFix):
@@ -125,6 +126,16 @@ class dataUpdater(QObject):
     def _gpsRelAltCallback(self, msg: Float64):
         self._backFrontConnection.setWingRelAlt.emit(msg.data)
         return
+    
+    def _vfrHudCallback(self, msg: VFR_HUD):
+        self._backFrontConnection.setAirSpeed.emit(msg.airspeed)
+        self._backFrontConnection.setWingThrottle.emit(float(msg.throttle))
+        self._backFrontConnection.setGroundSpeed.emit(msg.groundspeed)
+        return
+    
+    def _batteryStateCallback(self, msg: BatteryState):
+        self._backFrontConnection.setWingVoltage.emit(msg.voltage)
+        return
 
     def _tgGlobalPositionCallback(self, msg: NavSatFix):
         self._lastTargetGlobalPose = [msg.latitude, msg.longitude, msg.altitude]
@@ -166,6 +177,36 @@ class dataUpdater(QObject):
         self._subscriberList.append(
             rospy.Subscriber("/target/globalPosition", rospy.AnyMsg, self._tgGPSTopicHz.callback_hz,
                              callback_args="/target/globalPosition"))
+        return
+    
+    def _stateCallback(self, msg: State):
+        try:
+            self._backFrontConnection.setWingFlightState.emit(msg.mode)
+        except Exception:
+            rospy.logdebug("Couldn't emit setWingFlightState")
+
+        if getattr(msg, "armed", False) and not self._isFlying:
+            self._isFlying = True
+            self._flightStartTime = rospy.Time.now()
+            rospy.loginfo("Wing armed - flight timer started")
+        elif not getattr(msg, "armed", False) and self._isFlying:
+            self._isFlying = False
+            self._flightStartTime = None
+            self._backFrontConnection.setFlightTime.emit("00:00:00")
+            rospy.loginfo("Wing disarmed - flight timer reset")
+        return
+    
+    def _updateFlightTime(self, event=None):
+        if self._isFlying and self._flightStartTime is not None: 
+            elapsed_time = rospy.Time.now() - self._flightStartTime
+            total_seconds = int(elapsed_time.to_sec())
+            
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            
+            time_str = f"{hours:02}:{minutes:02}:{seconds:02}"
+            self._backFrontConnection.setFlightTime.emit(time_str)
         return
 
     def _updateDataRateMonitors(self, event=None):

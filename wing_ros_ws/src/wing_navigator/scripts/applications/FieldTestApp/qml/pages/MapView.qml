@@ -28,6 +28,16 @@ Item {
     // TODO
     property bool gotoMarkerVisibility: false
 
+    property real throttle: 0.0
+    property real groundSpeed: 0.0
+    property real airSpeed: 0.0
+    property real roll: 0.0
+    property real pitch: 0.0
+    property real heading: 0.0
+    property real relativeAltitude: 0.0
+    property real voltage: 0.0
+    property string flightTime: "0:00:00"
+
     signal sendGoToCommandToBackEnd(real lat, real lon, real alt)
     signal clearMap()
 
@@ -335,6 +345,119 @@ Item {
                 line.width: 3
                 line.color: "#aaff00"
             }
+
+            Rectangle {
+                id: flightDataPanel
+                width: 250
+                height: 450
+
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.rightMargin: 5
+                anchors.topMargin: 5
+
+                color: ThemeManager.m3["surfaceContainerHigh"]
+                radius: 8
+                border.color: ThemeManager.m3["outline"]
+                border.width: 1
+                opacity: 0.9
+
+                Column {
+                    id: dataClumn
+                    anchors.fill: parent
+                    spacing: 8
+
+                    Text {
+                        text: "FLIGHT DATA"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: 24
+                        font.bold: true
+                        color: ThemeManager.m3["onSurface"]
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        width: parent.width
+                    }
+
+                    Rectangle {width: parent.width; height: 1; color: ThemeManager.m3["outline"]; opacity: 0.5}
+
+                    Text {
+                        text: "POWER & SPEED"
+                        font.pointSize: 16
+                        font.bold: true 
+                        color: ThemeManager.m3["primary"]
+                        topPadding: 5
+                        leftPadding: 5
+                        width: parent.width
+                    }
+                    DataRow {
+                        dataLabel: "Throttle"
+                        dataValue: mapWindow.throttle.toFixed(1) + " %"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    DataRow {
+                        dataLabel: "Ground Speed"
+                        dataValue: mapWindow.groundSpeed.toFixed(1) + " m/s"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    DataRow {
+                        dataLabel: "Air Speed"
+                        dataValue: mapWindow.airSpeed.toFixed(1) + " m/s"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    Rectangle {width: parent.width; height: 1; color: ThemeManager.m3["outline"]; opacity: 0.5}
+
+                    Text {
+                        text: "ATTITUDE"
+                        font.pointSize: 16
+                        font.bold: true
+                        color: ThemeManager.m3["primary"]
+                        topPadding: 5
+                        leftPadding: 5
+                        width: parent.width
+                    }
+                    DataRow {
+                        dataLabel: "Roll"
+                        dataValue: mapWindow.roll.toFixed(1) + " deg"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    DataRow {
+                        dataLabel: "pitch"
+                        dataValue: mapWindow.pitch.toFixed(1) + " deg"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    DataRow {
+                        dataLabel: "Heading"
+                        dataValue: mapWindow.heading.toFixed(1) + " deg"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    DataRow {
+                        dataLabel: "Relative Altitude"
+                        dataValue: mapWindow.relativeAltitude.toFixed(1) + " deg"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    Rectangle {width: parent.width; height: 1; color: ThemeManager.m3["outline"]; opacity: 0.5}
+
+                    Text {
+                        text: "SYSTEM & TIME"
+                        font.pointSize: 16
+                        font.bold: true
+                        color: ThemeManager.m3["primary"]
+                        topPadding: 5
+                        leftPadding: 5
+                        width: parent.width
+                    }
+                    DataRow {
+                        dataLabel: "Voltage"
+                        dataValue: mapWindow.voltage.toFixed(1) + " V"
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                    DataRow {
+                        dataLabel: "Flight Time"
+                        dataValue: mapWindow.flightTime
+                        dataColor: ThemeManager.m3["tertiary"]
+                    }
+                }
+            }            
         }
     }
 }
