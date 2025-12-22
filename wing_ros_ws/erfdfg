@@ -1,0 +1,4 @@
+[General]
+distanceThreshold=15
+hitCountMax=23
+initDelay=322
