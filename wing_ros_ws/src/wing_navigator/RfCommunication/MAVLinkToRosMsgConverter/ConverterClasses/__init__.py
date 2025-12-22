@@ -30,8 +30,12 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.position_target_g
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_quaternion_to_sensor_msgs_Imu import \
     attitude_quaternion_to_sensor_msgs_Imu
-from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.manual_control_to_sensor_msgs_Joy import \ 
-    manual_control_to_sensor_msgs_Joy
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.manual_control_to_mavros_msgs_ManualControl import \
+    manual_control_to_mavros_msgs_ManualControl
+
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.vfr_hud_to_mavros_msgs_VFR_HUD import \
+    vfr_hud_to_mavros_msgs_VFR_HUD
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.attitude_to_sensor_msgs_Imu import \
     attitude_to_sensor_msgs_Imu
@@ -44,3 +48,5 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.rescue_status_to_
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.track_status_to_wing_navigator_Track import \
     track_status_to_wing_navigator_Track
+from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.rc_channels_override_to_mavros_msgs_OverrideRCIn import \
+    rc_channels_override_to_OverrideRCIn

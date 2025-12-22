@@ -19,7 +19,7 @@ class battery_status_to_sensor_msgs_BatteryState(object):
         rosMsg = BatteryState()
         rosMsg.header = self._getRosMsgHeader()
         rosMsg.cell_voltage = [milliVolt / 1000.0 for milliVolt in self._message.voltages]  # Voltages are in mV
-        rosMsg.voltage = sum(rosMsg.cell_voltage)
+        rosMsg.voltage = rosMsg.cell_voltage[0] if len(rosMsg.cell_voltage) > 0 else 0.0
         rosMsg.percentage = self._message.battery_remaining
         rosMsg.temperature = self._message.temperature / 100.0  # Temperature is in centi degC
         return rosMsg

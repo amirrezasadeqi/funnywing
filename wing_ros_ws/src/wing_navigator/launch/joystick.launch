@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="joy" type="joy_node" name="joy_node" output="screen">
+    <param name="dev" value="/dev/input/js0" />
+    <param name="deadzone" value="0.1" />
+  </node>
+
+  <node pkg="wing_navigator" type="joystick_rc_override_controller.py" name="joystick_rc_override_controller_node" output="screen" args="--rc-override" />
+</launch>

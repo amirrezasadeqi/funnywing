@@ -3,7 +3,7 @@ from RfCommunication.MAVLinkToRosMsgConverter import ConverterClasses
 from RfCommunication.RfConnection.ConnectionInterface.ConnectionInterface import ConnectionInterface
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses import all_message_types_to_mavros_msgs_Mavlink
 
-
+ConverterClasses.vfr_hud_to_mavros_msgs_VFR_HUD
 class MAVLinkToRosMsgConverter(object):
     def __init__(self, message, rfConnection: ConnectionInterface):
         """
@@ -49,7 +49,8 @@ class MAVLinkToRosMsgConverter(object):
                 return all_message_types_to_mavros_msgs_Mavlink(self._message, self._rfConnection)
             else:
                 return getattr(ConverterClasses, converterClassName)(self._message)
-        except Exception:
+        except Exception as e:
+            print(e)
             raise Exception("Conversion is not available at the moment, Please Implement it!")
 
     def _getConverterClassName(self):

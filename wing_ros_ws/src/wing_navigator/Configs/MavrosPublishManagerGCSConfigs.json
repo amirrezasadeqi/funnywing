@@ -119,8 +119,8 @@
     "name": "vfrHudPublisher",
     "enable": true,
     "topicName": "/funnywing/vfrHud",
-    "msgPack": "std_msgs",
-    "msgType": "ٰVFR_HUD",
+    "msgPack": "mavros_msgs",
+    "msgType": "VFR_HUD",
     "rate": 5,
     "queueSize": 5,
     "onMessage": "VFR_HUD"

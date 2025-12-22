@@ -18,7 +18,8 @@ Item {
 
         Text {
             text: dataRow.dataLabel
-            font.pixelSize: 18
+            font.pixelSize: 15
+            font.bold: false
             color: Qt.lighter(dataRow.dataColor, 1.5)
 
             width: parent.width * 0.4
@@ -28,7 +29,7 @@ Item {
         Text {
             text: dataRow.dataValue
             font.pointSize: 12
-            font.bold: true 
+            font.bold: false
             color: dataRow.dataColor
             width: parent.width * 0.5
             horizontalAlignment: Text.AlignRight

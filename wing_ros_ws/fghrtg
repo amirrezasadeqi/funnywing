@@ -1,0 +1,19 @@
+[General]
+a=3202
+b=4521
+const_throttle=7
+profile_type=0
+size_threshold=74
+wing_tg_at_same_level_throttle=74
+wing_too_above_threshold=74
+wing_too_above_throttle=74
+wing_too_below_threshold=41
+wing_too_below_throttle=74
+x_disable=false
+x_lock=false
+x_pids=0, 0, 0
+xpid_saturations=74, 474
+y_disable=false
+y_lock=false
+y_pids=0, 0, 0
+ypid_saturations=47, 74

@@ -3,8 +3,10 @@
 import os
 import sys
 from pathlib import Path
+import threading
 
 import rospy
+import pygame
 from PySide2.QtQml import QQmlApplicationEngine
 from PySide2.QtWidgets import QApplication
 from PySide2.QtGui import QIcon
@@ -13,10 +15,9 @@ from mavros_msgs.msg import State, VFR_HUD
 from pymavlink import mavutil
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64, Bool
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, BatteryState
 
 from source.backEnd import backEnd
-from source.joystickHandler import JoystickHandler
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.FfmpegCameraFrameCapture import \
     FfmpegCameraFrameCapture
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.GiCameraFrameCapture import GiCameraFrameCapture
@@ -25,13 +26,16 @@ from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvCam
 from wing_modules.CameraInterface.CameraCaptureInterfaceImplementation.OpencvGstBackedCameraFrameCapture import \
     OpencvGstBackedCameraFrameCapture
 from wing_modules.CameraInterface.FrameProcessor import FrameProcessor
+from wing_modules.JoystickRCOverride import JoystickRCOverride
 
 if __name__ == "__main__":
 
     rospy.init_node("FieldTestAppNode", anonymous=True)
     # Avoids the warning of material style is not found.
     os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
-
+    #TODO: integrate the joystick node in to backend class 
+    #joystick_controller = JoystickRCOverride()
+    
     app = QApplication(sys.argv)
     qml_path = Path(__file__).resolve().parent / "qml"
     app_icon = QIcon()
@@ -64,7 +68,8 @@ if __name__ == "__main__":
          "callbackType": "virtualTargetGlobalPosition"},
         {"topicName": "/funnywing/rescueStatus", "dataType": Bool, "callbackType": "rescueStatus"},
         {"topicName": "/funnywing/orientation", "dataType": Imu, "callbackType": "funnywingOrientation"},
-        {"topicName": "/funnywing/vfrHud", "dataType": VFR_HUD, "callbackType": "funnywingvfrHud"}
+        {"topicName": "/funnywing/vfrHud", "dataType": VFR_HUD, "callbackType": "funnywingvfrHud"},
+        {"topicName": "/funnywing/battery", "dataType": BatteryState, "callbackType": "funnywingBatteryState"},
     ]
 
     backend = backEnd(engine, dataSubscriptionConfig, sysId, compId, tgSysId, tgCompId)
@@ -103,3 +108,6 @@ if __name__ == "__main__":
     backend.createAndSetupFrameProvider(cameraFrameCapture, app)
     ################################################################################################
     sys.exit(app.exec_())
+    
+    pygame.quit()
+    sys.exit(exit_code)

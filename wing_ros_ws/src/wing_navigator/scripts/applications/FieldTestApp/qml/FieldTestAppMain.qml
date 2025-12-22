@@ -32,12 +32,12 @@ Window {
     property real tgRecvDataRate: 5.0
     property real wingRecvDataRate: 10.0
     property real tgRelAlt: 50.0
-    property real throttle: 0.0
-    property real groundSpeed: 0.0
-    property real airSpeed: 0.0
+    property real wingThrottle: 0.0
+    property real wingGroundSpeed: 0.0
+    property real wingAirSpeed: 0.0
     property real relativeAltitude: 0.0
-    property real voltage: 0.0
-    property string flightTime: "0:00:00"
+    property real wingVoltage: 0.0
+    property string flightTime: "00:00:00"
 
     Connections{
         target: backFrontConnections
@@ -45,11 +45,13 @@ Window {
         function onSetTargetGPS(lat, lon, alt){
             mainWindow.tgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
         }
-        function onSetGroundSpeed(speed) {
-            mapWindow.groundSpeed = speed
+        function onSetGroundSpeed(groundspeed) {
+            console.log("GroundSpeed recieved:", groundspeed)
+            mainWindow.wingGroundSpeed = groundspeed
         }
-        function onSetAirSpeed(speed) {
-            mapWindow.airSpeed = speed
+        function onSetAirSpeed(airspeed) {
+            console.log("AirSpeed recieved:", airspeed)
+            mainWindow.wingAirSpeed = airspeed
         }
         function onSetVirtualTargetGPS(lat, lon, alt){
             mainWindow.virtTgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
@@ -88,13 +90,16 @@ Window {
             cameraMonitorOutPut.reload()
         }
         function onSetWingVoltage(vol) {
-            mapWindow.voltage = vol
+            console.log("Voltage recieved:", vol)
+            mainWindow.wingVoltage = vol
         }
-        function onSetWingThrottle(thr) {
-            mapWindow.throttle = thr
+        function onSetWingThrottle(throttle) {
+            console.log("Throrrle recieved:", throttle)
+            mainWindow.wingThrottle = throttle
         }
         function onSetFlightTime(timeStr) {
-            mapWindow.flightTime = timeStr
+            console.log("FlightTime Recieved:", timeStr)
+            mainWindow.flightTime = timeStr
         }
     }
 
@@ -796,15 +801,11 @@ Window {
                                     roll: mainWindow.wingAttitude.roll
                                     pitch: mainWindow.wingAttitude.pitch
                                     heading: mainWindow.wingAttitude.yaw
-                                    groundSpeed: Math.sqrt(
-                                        Math.pow(mainWindow.wingVel.vx, 2) +
-                                        Math.pow(mainWindow.wingVel.vy, 2) +
-                                        Math.pow(mainWindow.wingVel.vz, 2)
-                                    )
-                                    airSpeed: mainWindow.airSpeed
-                                    throttle: mainWindow.throttle
+                                    wingGroundSpeed: mainWindow.wingGroundSpeed
+                                    wingAirSpeed: mainWindow.wingAirSpeed
+                                    wingThrottle: mainWindow.wingThrottle
                                     relativeAltitude: mainWindow.wingRelAlt
-                                    voltage: mainWindow.voltage
+                                    wingVoltage: mainWindow.wingVoltage
                                     flightTime: mainWindow.flightTime
                                     onSendGoToCommandToBackEnd: {
                                         backFrontConnections.goToLocation(lat, lon, alt)

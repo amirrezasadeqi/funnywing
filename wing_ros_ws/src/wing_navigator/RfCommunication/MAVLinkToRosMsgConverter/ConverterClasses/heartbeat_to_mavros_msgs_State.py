@@ -1,9 +1,14 @@
 import rospy
 from mavros_msgs.msg import State
 from std_msgs.msg import Header
+import time
 
-# Arduplane mode map to convert integer flight modes into Strings mode codes used in the State message
-# from https://github.com/mavlink/mavros/blob/78b527b831f30df4e44972b75c07294227e313fb/mavros/src/lib/uas_stringify.cpp#L32
+# MAVLink mode flags (from MAV_MODE_FLAG enum)
+MAV_MODE_FLAG_SAFETY_ARMED = 0x80            # (1 << 7)
+MAV_MODE_FLAG_GUIDED_ENABLED = 0x20          # (1 << 5)
+MAV_MODE_FLAG_MANUAL_INPUT_ENABLED = 0x40    # (1 << 6)
+
+# ArduPlane flight mode mapping
 ARDUPLANE_MODE_MAP = {
     0: "MANUAL",
     1: "CIRCLE",
@@ -20,27 +25,55 @@ ARDUPLANE_MODE_MAP = {
     15: "GUIDED"
 }
 
-
 class heartbeat_to_mavros_msgs_State(object):
-    def __init__(self, message):
-        """
+    """
+    Converts MAVLink HEARTBEAT messages to mavros_msgs/State ROS messages,
+    with connection timeout detection and ArduPlane GUIDED fix.
+    """
 
-        @param message: MAVLink_<message type> mavlink message. Here the message is MAVLink_heartbeat_message.
-        """
+    _last_heartbeat_time = 0.0
+    _connection_timeout = 2.0 
+
+    def __init__(self, message=None):
         self._message = message
-        return
 
     def convertToRosMsg(self):
-        """
-        Converts HEARTBEAT mavlink message to mavros_msgs/State message.
-        """
-        # TODO: Set other ROS message fields like header and so on.
         rosMsg = State()
         rosMsg.header = self._getRosMsgHeader()
-        rosMsg.mode = ARDUPLANE_MODE_MAP[self._message.custom_mode]
-        rosMsg.system_status = self._message.system_status
+        now = time.time()
+
+        if self._message is not None:
+            self.__class__._last_heartbeat_time = now
+            connected = True
+        else:
+            connected = (now - self.__class__._last_heartbeat_time) < self._connection_timeout
+
+        rosMsg.connected = connected
+
+        if connected and self._message is not None:
+            base_mode = self._message.base_mode
+            custom_mode = self._message.custom_mode
+
+            rosMsg.armed = bool(base_mode & MAV_MODE_FLAG_SAFETY_ARMED)
+            rosMsg.manual_input = bool(base_mode & MAV_MODE_FLAG_MANUAL_INPUT_ENABLED)
+
+            rosMsg.guided = bool(base_mode & MAV_MODE_FLAG_GUIDED_ENABLED) or (custom_mode == 15)
+
+            rosMsg.mode = ARDUPLANE_MODE_MAP.get(custom_mode, str(custom_mode))
+            rosMsg.system_status = self._message.system_status
+
+        else:
+            rosMsg.armed = False
+            rosMsg.guided = False
+            rosMsg.manual_input = False
+            rosMsg.mode = "DISCONNECTED"
+            rosMsg.system_status = 0
+
         return rosMsg
 
     def _getRosMsgHeader(self) -> Header:
         header = Header()
+        header.stamp = rospy.Time.now()
+        header.frame_id = "base_link"
         return header
+

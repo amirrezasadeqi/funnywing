@@ -9,7 +9,8 @@
       "FUNNYWING_CUSTOM_COMMAND",
       "PARAM_SET",
       "SET_CAM_BASED_GUIDANCE_CONFIGS",
-      "MANUAL_CONTROL"
+      "MANUAL_CONTROL",
+      "RC_CHANNELS_OVERRIDE"
     ],
     "blackList": []
   },

@@ -27,11 +27,9 @@ class backFrontEndCommunication(QObject):
     updateCameraMonitorFrame = Signal()
     setWingThrottle = Signal(float, arguments=['throttle'])
     setWingVoltage = Signal(float, arguments=['voltage'])
-    setFlightTime = Signal(str, arguments=['timeStr'])
-    setGroundSpeed = Signal(float, arguments=['groundSpeed'])
-    setAirSpeed = Signal(float, arguments=['airSpeed'])
-    
-    
+    setFlightTime = Signal(str, arguments=['flightTime'])
+    setGroundSpeed = Signal(float, arguments=['groundspeed'])
+    setAirSpeed = Signal(float, arguments=['airspeed'])
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)

@@ -62,10 +62,26 @@ class RfConnection(ConnectionInterface):
         return
 
     def _recvLoop(self):
+        print("[RF] Starting MAVLink receive loop...", flush=True)
         while not rospy.is_shutdown():
-            inMsg = self._port.recv_match(blocking=True, timeout=1.0)
-            if inMsg and ("BAD_DATA" != inMsg.get_type()):
-                self._inBuf.append(inMsg)
+            try:
+                inMsg = self._port.recv_match(blocking=True, timeout=1.0)
+                if inMsg:
+                    msg_type = inMsg.get_type()
+                    print(f"[RF] Received MAVLink message type: {msg_type}", flush=True)
+                
+                    if msg_type != "BAD_DATA":
+                        if msg_type == "VFR_HUD":
+                            print(f"[RF] VFR_HUD received! Airspeed={inMsg.airspeed:.2f}, Groundspeed={inMsg.groundspeed:.2f}, Throttle={inMsg.throttle}", flush=True)
+                        self._inBuf.append(inMsg)
+                    else:
+                        print("[RF] MAVLink BAD_DATA received and ignored.", flush=True)
+                else:
+                    print("[RF] MAVLink receive timeout (no message).", flush=True)
+
+            except Exception as e:
+                print(f"[RF] Exception in _recvLoop: {e}", flush=True)
+                time.sleep(0.5)
         return
 
     def _sendLoop(self):

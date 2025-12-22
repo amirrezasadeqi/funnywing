@@ -31,6 +31,10 @@ class dataUpdater(QObject):
         self._ellipsoidMSLConverter = EllipsoidMSLConversion()
         self._lastWingGlobalPose = None
         self._lastTargetGlobalPose = None
+        
+        self._isArmed = False
+        self._flightStartTimeSec = 0.0
+        self._currentFlightTimeSec = 0.0
 
         # ROS Timer to update data rate monitors
         self._dataRateUpdaterTimer = rospy.Timer(rospy.Duration(secs=0, nsecs=500000000), self._updateDataRateMonitors)
@@ -41,9 +45,6 @@ class dataUpdater(QObject):
         self._stopSpinnerThread = False
         # start the thread
         self._rosSpinnerThread.start()
-        self._isFlying = False
-        self._flightStartTime = None
-        self._flightTimer = rospy.Timer(rospy.Duration(1.0), self._updateFlightTime)
         return
 
     def stop(self):
@@ -182,33 +183,40 @@ class dataUpdater(QObject):
     def _stateCallback(self, msg: State):
         try:
             self._backFrontConnection.setWingFlightState.emit(msg.mode)
+            self._updateFlightTime(msg)
         except Exception:
             rospy.logdebug("Couldn't emit setWingFlightState")
+        return
 
-        if getattr(msg, "armed", False) and not self._isFlying:
-            self._isFlying = True
-            self._flightStartTime = rospy.Time.now()
-            rospy.loginfo("Wing armed - flight timer started")
-        elif not getattr(msg, "armed", False) and self._isFlying:
-            self._isFlying = False
-            self._flightStartTime = None
-            self._backFrontConnection.setFlightTime.emit("00:00:00")
-            rospy.loginfo("Wing disarmed - flight timer reset")
+    def _updateFlightTime(self, current_state: State):
+        isCurrentlyArmed = current_state.armed
+        
+        if isCurrentlyArmed and not self._isArmed:
+            self._isArmed = True
+            self._flightStartTimeSec = rospy.get_time()
+            self._currentFlightTimeSec = 0.0
+        elif not isCurrentlyArmed and self._isArmed:
+            self._isArmed = False
+            self._flightStartTimeSec = 0.0
+        if self._isArmed and self._flightStartTimeSec > 0:
+            currentTime = rospy.get_time()
+            self._currentFlightTimeSec = currentTime - self._flightStartTimeSec
+            
+            totalSeconds = int(self._currentFlightTimeSec)
+            hours = totalSeconds // 3600
+            minutes = (totalSeconds % 3600) // 60
+            seconds = totalSeconds % 60
+            formattedTime = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            self._backFrontConnection.setFlightTime.emit(formattedTime)
+        elif not self._isArmed:
+            totalSeconds = int(self._currentFlightTimeSec)
+            hours = totalSeconds // 3600
+            minutes = (totalSeconds % 3600) // 60
+            seconds = totalSeconds % 60
+            formattedTime = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            self._backFrontConnection.setFlightTime.emit(formattedTime)
         return
     
-    def _updateFlightTime(self, event=None):
-        if self._isFlying and self._flightStartTime is not None: 
-            elapsed_time = rospy.Time.now() - self._flightStartTime
-            total_seconds = int(elapsed_time.to_sec())
-            
-            hours = total_seconds // 3600
-            minutes = (total_seconds % 3600) // 60
-            seconds = total_seconds % 60
-            
-            time_str = f"{hours:02}:{minutes:02}:{seconds:02}"
-            self._backFrontConnection.setFlightTime.emit(time_str)
-        return
-
     def _updateDataRateMonitors(self, event=None):
         try:
             rate = self._wingTopicHz.get_hz("/funnywing/from")[0]
