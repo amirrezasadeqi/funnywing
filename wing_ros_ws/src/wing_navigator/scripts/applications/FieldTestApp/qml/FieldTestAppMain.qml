@@ -14,8 +14,8 @@ Window {
     height: 680
     visible: true
     color: "#00000000"
-    minimumHeight: 1200
-    minimumWidth: 1200
+    minimumHeight: 600
+    minimumWidth: 800
     title: qsTr("Field Test App")
 
 
@@ -104,13 +104,13 @@ Window {
     }
 
     // Ignore the Invalid property name "onClosing". (M16) error. This is a bug of the IDE.
-//    onClosing: function(close) {
-//        // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
-//        // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
-//        close.accepted = false
-//        // QQmlApplicationEngine does not send quit signal automaticaly, so send it to close the back-end.
-//        backFrontConnections.closeBackend()
-//    }
+    onClosing: function(close) {
+        // If you need to clean up the backend before the window can be closed, so preventing from segfault erros
+        // caused by sending signals from the backend to destroyed frontend slots(I think vice versa.).
+        close.accepted = false
+        // QQmlApplicationEngine does not send quit signal automaticaly, so send it to close the back-end.
+        backFrontConnections.closeBackend()
+    }
 
     TrackerConfigWindow {
         id: trackerConfigWindow
@@ -1055,8 +1055,10 @@ Window {
 
                         Rectangle {
                             id: baseContentBottomContainer
-                            y: 334
-                            height: parent.height * 0.25
+                            height: Math.min(
+                                520,
+                                Math.max(220, parent.height * 0.28)
+                            )
                             color: "#00ffffff"
                             anchors.left: parent.left
                             anchors.right: parent.right

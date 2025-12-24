@@ -43,7 +43,7 @@ Window {
         }
 
         for (let i = 0; i < sigmoidCoefficients.length; i++) {
-            sigmoidCoefficients[i].coefficientTextValue = ""
+            sigmoidCoefficients[i].coefficientTextValue = "0"
         }
     }
 
@@ -661,6 +661,10 @@ Window {
                         for (let i = 0; i < sigmoidRepeater.count; i++) {
                             let it = sigmoidRepeater.itemAt(i)
                             if (it !== null) configWindow.sigmoidCoefficients.push(it)
+                        }
+
+                        for (let i = 0; i < configWindow.sigmoidCoefficients.length; i++) {
+                            configWindow.sigmoidCoefficients[i].coefficientTextValue = "0"
                         }
                     }
                 }
