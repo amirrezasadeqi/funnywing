@@ -48,5 +48,6 @@ from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.rescue_status_to_
 
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.track_status_to_wing_navigator_Track import \
     track_status_to_wing_navigator_Track
+
 from RfCommunication.MAVLinkToRosMsgConverter.ConverterClasses.rc_channels_override_to_mavros_msgs_OverrideRCIn import \
-    rc_channels_override_to_OverrideRCIn
+    rc_channels_override_to_mavros_msgs_OverrideRCIn

@@ -94,13 +94,13 @@ Item {
                                 text: "Arm/Disarm"
                                 color: labelColor
                                 anchors.centerIn: parent
-                                font.pixelSize: 20
+                                font.pixelSize: 25
                             }
                         }
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: 400
+                        Layout.preferredWidth: 440
                         Layout.preferredHeight: 240
                         color: actionRectBg
                         border.color: borderColor
@@ -114,21 +114,22 @@ Item {
                             }
                             CustomComboBox {
                                 id: flightModeComboBox
-                                Layout.preferredWidth: 350
+                                Layout.preferredWidth: 410
                                 Layout.preferredHeight: 60
+                                font.pixelSize: 24
                             }
 
                             RowLayout {
                                 spacing: 10
                                 CustomTextBtn {
-                                    Layout.preferredWidth: 170
+                                    Layout.preferredWidth: 200
                                     Layout.preferredHeight: 80
                                     btnLabel: "Return to Home"
                                     defaultColor: defaultColorBg
                                     onClicked: actionView.modeChangerBtnsSignal("RTL")
                                 }
                                 CustomTextBtn {
-                                    Layout.preferredWidth: 170
+                                    Layout.preferredWidth: 200
                                     Layout.preferredHeight: 80
                                     btnLabel: "Active Mode"
                                     defaultColor: defaultColorBg
@@ -149,7 +150,7 @@ Item {
                                 text: "Flight Mode Actions"
                                 color: labelColor
                                 anchors.centerIn: parent
-                                font.pixelSize: 20
+                                font.pixelSize: 25
                             }
                         }
                     }
@@ -168,14 +169,14 @@ Item {
                                 Layout.preferredHeight: 30
                             }
                             CustomTextBtn {
-                                Layout.preferredWidth: 250
+                                Layout.preferredWidth: 295
                                 Layout.preferredHeight: 80
                                 btnLabel: "Active Simple Tracker"
                                 defaultColor: defaultColorBg
                                 onClicked: actionView.simpleTrackerBtnsSignal(true)
                             }
                             CustomTextBtn {
-                                Layout.preferredWidth: 250
+                                Layout.preferredWidth: 295
                                 Layout.preferredHeight: 80
                                 btnLabel: "Deactive Simple Tracker"
                                 defaultColor: defaultColorBg
@@ -195,7 +196,7 @@ Item {
                                 text: "Simple Tracker Actions"
                                 color: labelColor
                                 anchors.centerIn: parent
-                                font.pixelSize: 20
+                                font.pixelSize: 25
                             }
                         }
                     }
