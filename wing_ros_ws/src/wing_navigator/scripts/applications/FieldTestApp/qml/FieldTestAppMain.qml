@@ -25,12 +25,11 @@ Window {
     property var wingVel: {'vx': -11.454646, 'vy': 2.8777544, 'vz': 0.4565454}
     property var wingAttitude: {'roll': 0, 'pitch': 0, 'yaw': 0}
     property real wingHdg: 0
-    property string wingFlightState: "GUIDED"
-    property real wingRelAlt: 100.432
+    property string wingFlightState: ""
+    property real wingRelAlt: 0.0
     property real distToTg: 54.12
-    property string rescueStatus: "OFF"
-    property real tgRecvDataRate: 5.0
-    property real wingRecvDataRate: 10.0
+    property real tgRecvDataRate: 0.0
+    property real wingRecvDataRate: 0.0
     property real tgRelAlt: 50.0
     property real wingThrottle: 0.0
     property real wingGroundSpeed: 0.0
@@ -807,6 +806,9 @@ Window {
                                     relativeAltitude: mainWindow.wingRelAlt
                                     wingVoltage: mainWindow.wingVoltage
                                     flightTime: mainWindow.flightTime
+                                    wingFlightState: mainWindow.wingFlightState
+                                    wingRecvDataRate: mainWindow.wingRecvDataRate
+                                    tgRecvDataRate: mainWindow.tgRecvDataRate
                                     onSendGoToCommandToBackEnd: {
                                         backFrontConnections.goToLocation(lat, lon, alt)
                                     }
@@ -929,124 +931,6 @@ Window {
                                         }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(false);
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    id: mapDataDisplayerContainer
-                                    width: 160
-                                    height: 115
-                                    color: ThemeManager.m3["surfaceContainer"]
-                                    opacity: 0.8
-                                    border {
-                                        color: ThemeManager.m3["outlineVariant"]
-                                        width: 3
-                                    }
-                                    clip: true
-                                    anchors {
-                                        left: parent.left
-                                        top: parent.top
-                                        leftMargin: 5
-                                        topMargin: 5
-                                    }
-                                    Label {
-                                        id: wingFlightMode
-                                        text: mainWindow.wingFlightState
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: parent.top
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRelAltLabel
-                                        text: "Wing Rel Alt: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingFlightMode.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRelAltValueLabel
-                                        text: mainWindow.wingRelAlt
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingFlightMode.bottom
-                                            topMargin: 5
-                                            left: wingRelAltLabel.right
-                                            leftMargin: 0
-                                        }
-                                    }
-                                    Label {
-                                        id: rescueStateLabel
-                                        text: "Rescue: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRelAltLabel.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: rescueStateValueLabel
-                                        text: mainWindow.rescueStatus
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRelAltLabel.bottom
-                                            topMargin: 5
-                                            left: rescueStateLabel.right
-                                            leftMargin: 0
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRecvDataRateLabel
-                                        text: "Wing Data Rate: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: rescueStateLabel.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRecvDataRateValueLabel
-                                        text: mainWindow.wingRecvDataRate.toFixed(2)
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: rescueStateLabel.bottom
-                                            topMargin: 5
-                                            left: wingRecvDataRateLabel.right
-                                            leftMargin: 0
-                                        }
-                                    }
-                                    Label {
-                                        id: tgRecvDataRateLabel
-                                        text: "Target Data Rate: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRecvDataRateLabel.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: tgRecvDataRateValueLabel
-                                        text: mainWindow.tgRecvDataRate.toFixed(2)
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRecvDataRateLabel.bottom
-                                            topMargin: 5
-                                            left: tgRecvDataRateLabel.right
-                                            leftMargin: 0
                                         }
                                     }
                                 }

@@ -9,6 +9,8 @@ Item {
     property string dataValue: "Value"
     property color dataColor: "white"
 
+    property real fontPx: 13
+
     Row {
         id: content
         width: parent.width
@@ -18,12 +20,13 @@ Item {
 
         Text {
             text: dataRow.dataLabel
-            font.pixelSize: 15
             font.bold: false
             color: Qt.lighter(dataRow.dataColor, 1.5)
 
             width: parent.width * 0.4
             horizontalAlignment: Text.AlignLeft
+
+            font.pixelSize: dataRow.fontPx
         }
         
         Text {
@@ -33,6 +36,8 @@ Item {
             color: dataRow.dataColor
             width: parent.width * 0.5
             horizontalAlignment: Text.AlignRight
+
+            font.pixelSize: dataRow.fontPx
         }
     }
 }
