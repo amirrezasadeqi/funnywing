@@ -1,6 +1,11 @@
 import math
 
 from PySide2.QtCore import QObject, Signal, Slot
+from geometry_msgs.msg import TwistStamped
+from mavros_msgs.msg import State
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Float64, Bool
+from sensor_msgs.msg import Imu
 
 
 class backFrontEndCommunication(QObject):
@@ -12,6 +17,7 @@ class backFrontEndCommunication(QObject):
     setWingGPS = Signal(float, float, float, arguments=['lat', 'lon', 'alt'])
     setWingVelocity = Signal(float, float, float, arguments=['vx', 'vy', 'vz'])
     setWingHeading = Signal(float, arguments=['hdg'])
+    setWingAttitude = Signal(float, float, float, arguments=['roll', 'pitch', 'yaw'])
     setWingFlightState = Signal(str, arguments=['flightState'])
     setWingRelAlt = Signal(float, arguments=['alt'])
     setDistanceToTarget = Signal(float, arguments=['dist'])
@@ -19,6 +25,11 @@ class backFrontEndCommunication(QObject):
     setWingRecvDataRate = Signal(float, arguments=['rate'])
     setTgRecvDataRate = Signal(float, arguments=['rate'])
     updateCameraMonitorFrame = Signal()
+    setWingThrottle = Signal(float, arguments=['throttle'])
+    setWingVoltage = Signal(float, arguments=['voltage'])
+    setFlightTime = Signal(str, arguments=['flightTime'])
+    setGroundSpeed = Signal(float, arguments=['groundspeed'])
+    setAirSpeed = Signal(float, arguments=['airspeed'])
 
     # List of back end internal signals
     setArmStateSignal = Signal(bool)
@@ -35,7 +46,7 @@ class backFrontEndCommunication(QObject):
     setVisualTrackerSettingsSignal = Signal(float, int, int)
     setCameraBasedGuiderConfigsSignal = Signal('QVariantMap')
     setLastTrackIdSignal = Signal(int)  # back-end internal signal
-
+    
     def __init__(self):
         super().__init__()
         return

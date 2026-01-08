@@ -1,0 +1,5 @@
+#NAME=latitude,longitude,absolute-altitude,heading
+#Headings don't work correctly?!
+IKA=35.41323864,51.15932969,1007,0
+MA=35.686830586,51.308165434,1208,0
+SWIT=35.701745,51.084051,1200,0

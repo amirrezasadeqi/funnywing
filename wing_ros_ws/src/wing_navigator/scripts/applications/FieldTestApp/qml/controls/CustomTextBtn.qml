@@ -40,7 +40,7 @@ Button{
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             font.bold: true
-            font.pointSize: 12
+            font.pointSize: 16
             font.family: "Tahoma"
             anchors.horizontalCenter: parent.horizontalCenter
         }

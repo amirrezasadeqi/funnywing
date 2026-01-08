@@ -25,7 +25,21 @@ Item {
     property var wingGoToLocation: QtPositioning.coordinate(35.745, 51.615)
     property real wingGoToAlt: 50.0
     property real wingHdg: 0
+    // TODO
     property bool gotoMarkerVisibility: false
+
+    property real wingThrottle: 0.0
+    property real wingGroundSpeed: 0.0
+    property real wingAirSpeed: 0.0
+    property real roll: 0.0
+    property real pitch: 0.0
+    property real heading: 0.0
+    property real relativeAltitude: 0.0
+    property real wingVoltage: 0.0
+    property string flightTime: "0:00:00"
+    property string wingFlightState: ""
+    property real wingRecvDataRate: 0.0
+    property real tgRecvDataRate: 0.0
 
     signal sendGoToCommandToBackEnd(real lat, real lon, real alt)
     signal clearMap()
@@ -319,6 +333,11 @@ Item {
                             gotoAltInputPopup.close()
                             mapWindow.gotoMarkerVisibility = true
                         }
+                    DataRow {
+                        dataLabel: "Thr"
+                        dataValue: mapWindow.wingThrottle.toFixed(1) + " %"
+                        dataColor: ThemeManager.m3["onSurface"]
+                    }
                     }
                 }
             }
@@ -334,6 +353,122 @@ Item {
                 line.width: 3
                 line.color: "#aaff00"
             }
+
+            Item {
+                id: flightDataWrapper
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.leftMargin: 2
+
+                width: Math.max(100, Math.min(130, map.width * 0.15))
+
+                Item {
+                    id: flightDataContent
+                    width: flightDataWrapper.width
+                    height: flightDataPanel.height 
+
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    transformOrigin: Item.TopLeft
+
+                    property real uiFontPx: Math.max(9, Math.min(11, map.width * 0.018))
+
+                    Rectangle {
+                        id: flightDataPanel
+                        width: flightDataWrapper.width
+                        height: dataClumn.implicitHeight + 16
+
+                        color: ThemeManager.m3["surfaceContainerHigh"]
+                        border.color: ThemeManager.m3["outline"]
+                        border.width: 1
+                        opacity: 0.8
+
+                        Column {
+                            id: dataClumn
+                            anchors {
+                                left: parent.left
+                                right: parent.right
+                                top: parent.top
+                                margins: 4
+                            }
+                            spacing: 3
+
+                            DataRow {
+                                dataLabel: "Mode"
+                                dataValue: mapWindow.wingFlightState
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "Thr"
+                                dataValue: mapWindow.wingThrottle.toFixed(1) + " %"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "GS"
+                                dataValue: mapWindow.wingGroundSpeed.toFixed(1) + " m/s"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "AS"
+                                dataValue: mapWindow.wingAirSpeed.toFixed(1) + " m/s"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "Roll"
+                                dataValue: mapWindow.roll.toFixed(1) + " deg"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "Pitch"
+                                dataValue: mapWindow.pitch.toFixed(1) + " deg"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "HDG"
+                                dataValue: mapWindow.heading.toFixed(1) + " deg"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "Rel Alt"
+                                dataValue: mapWindow.relativeAltitude.toFixed(1) + " m"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "V"
+                                dataValue: mapWindow.wingVoltage.toFixed(2) + " V"
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "Time"
+                                dataValue: mapWindow.flightTime
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "W.freq"
+                                dataValue: mapWindow.wingRecvDataRate.toFixed(2)
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                            DataRow {
+                                dataLabel: "T.freq"
+                                dataValue: mapWindow.tgRecvDataRate.toFixed(2)
+                                dataColor: ThemeManager.m3["onSurface"]
+                                fontPx: flightDataContent.uiFontPx
+                            }
+                        }
+                    }  
+                }
+            }          
         }
     }
 }

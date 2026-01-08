@@ -1,6 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
+import Qt.labs.platform 1.1 
+import QtQuick.Layouts 1.3
+import Qt.labs.settings 1.0
 import "../controls"
 import "../theme" 1.0
 
@@ -132,29 +135,90 @@ Window {
     }
 
     Rectangle {
-        id: controlContainer
-        width: parent.width * 0.85
-        height: parent.height * 0.15
-        radius: 10
-        color: ThemeManager.m3["surfaceContainerLow"]
-        anchors {
-            top: formContainer.bottom
-            topMargin: 5
-            horizontalCenter: parent.horizontalCenter
-        }
+        id: buttonBar
+        width: formContainer.width
+        height: 60
+        color: ThemeManager.m3["surfaceContainer"]
+        radius: 5
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 10
+        anchors.horizontalCenter: parent.horizontalCenter
 
-        CustomTextBtn {
-            id: applyBtn
-            width: parent.width * 0.5
-            height: parent.height * 0.5
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                verticalCenter: parent.verticalCenter
+        RowLayout {
+            anchors.centerIn: parent
+            spacing: 15
+
+            CustomTextBtn {
+                id: applyBtn
+                defaultColor: ThemeManager.m3["secondaryContainer"]
+                btnLabel: qsTr("Apply")
+                Layout.preferredWidth: 120
+                onClicked: {
+                    trackerConfigWindow.applyTrackerSettingsBtnSignal(
+                        parseFloat(distThreshTextField.text),
+                        parseInt(initDelayTextField.text, 10),
+                        parseInt(hitCountMaxTextField.text, 10)
+                    );
+                }
             }
-            btnLabel: qsTr("Apply")
-            onClicked: {
-                applyTrackerSettingsBtnSignal(parseFloat(distThreshTextField.text), parseInt(initDelayTextField.text, 10), parseInt(hitCountMaxTextField.text, 10));
+
+            CustomTextBtn {
+                id: saveBtn
+                defaultColor: ThemeManager.m3["secondaryContainer"]
+                btnLabel: qsTr("Save")
+                Layout.preferredWidth: 120
+                onClicked: { saveDialog.open() }
             }
+
+            CustomTextBtn {
+                id: loadBtn
+                defaultColor: ThemeManager.m3["secondaryContainer"]
+                btnLabel: qsTr("Load")
+                Layout.preferredWidth: 120
+                onClicked: { loadDialog.open() }
+            }
+        }
+    }
+
+    Settings {
+        id: trackerSettings
+        fileName: StandardPaths.writableLocation(StandardPaths.DocumentsLocation) + "/tracker_config.ini"
+        property real distanceThreshold: 0
+        property int initDelay: 0
+        property int hitCountMax: 0
+    }
+
+    FileDialog {
+        id: saveDialog
+        title: "Save Tracker Config"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Config files (*.ini)", "All files (*)"]
+
+        onAccepted: {
+            var path = saveDialog.file.toString().replace("file://", "")
+            trackerSettings.fileName = path
+            trackerSettings.distanceThreshold = parseFloat(distThreshTextField.text)
+            trackerSettings.initDelay = parseInt(initDelayTextField.text, 0)
+            trackerSettings.hitCountMax = parseInt(hitCountMaxTextField.text, 0)
+            trackerSettings.sync()
+            console.log("Saved tracker config to:", path)
+        }
+    }
+
+    FileDialog {
+        id: loadDialog
+        title: "Load Tracker Config"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Config files (*.ini)", "All files (*)"]
+
+        onAccepted: {
+            var path = loadDialog.file.toString().replace("file://", "")
+            trackerSettings.fileName = path
+            trackerSettings.sync()
+            distThreshTextField.text = trackerSettings.distanceThreshold.toString()
+            initDelayTextField.text = trackerSettings.initDelay.toString()
+            hitCountMaxTextField.text = trackerSettings.hitCountMax.toString()
+            console.log("Loaded tracker config from:", path)
         }
     }
 }

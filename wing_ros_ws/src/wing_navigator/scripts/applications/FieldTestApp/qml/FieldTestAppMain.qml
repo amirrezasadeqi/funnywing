@@ -14,22 +14,29 @@ Window {
     height: 680
     visible: true
     color: "#00000000"
-    minimumHeight: 400
+    minimumHeight: 600
     minimumWidth: 800
     title: qsTr("Field Test App")
+
 
     property var tgGPS: {'lat': 35.7480, 'lon': 51.603, 'alt': 1382.454545}
     property var virtTgGPS: {'lat': 35.7481, 'lon': 51.603, 'alt': 1382.454545}
     property var wingGPS: {'lat': 35.7471, 'lon': 51.603, 'alt': 1382.454545}
     property var wingVel: {'vx': -11.454646, 'vy': 2.8777544, 'vz': 0.4565454}
-    property real wingHdg: 90
-    property string wingFlightState: "GUIDED"
-    property real wingRelAlt: 100.432
+    property var wingAttitude: {'roll': 0, 'pitch': 0, 'yaw': 0}
+    property real wingHdg: 0
+    property string wingFlightState: ""
+    property real wingRelAlt: 0.0
     property real distToTg: 54.12
-    property string rescueStatus: "OFF"
-    property real tgRecvDataRate: 5.0
-    property real wingRecvDataRate: 10.0
+    property real tgRecvDataRate: 0.0
+    property real wingRecvDataRate: 0.0
     property real tgRelAlt: 50.0
+    property real wingThrottle: 0.0
+    property real wingGroundSpeed: 0.0
+    property real wingAirSpeed: 0.0
+    property real relativeAltitude: 0.0
+    property real wingVoltage: 0.0
+    property string flightTime: "00:00:00"
 
     Connections{
         target: backFrontConnections
@@ -37,11 +44,22 @@ Window {
         function onSetTargetGPS(lat, lon, alt){
             mainWindow.tgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
         }
+        function onSetGroundSpeed(groundspeed) {
+            console.log("GroundSpeed recieved:", groundspeed)
+            mainWindow.wingGroundSpeed = groundspeed
+        }
+        function onSetAirSpeed(airspeed) {
+            console.log("AirSpeed recieved:", airspeed)
+            mainWindow.wingAirSpeed = airspeed
+        }
         function onSetVirtualTargetGPS(lat, lon, alt){
             mainWindow.virtTgGPS = {'lat': lat, 'lon': lon, 'alt': alt}
         }
         function onSetWingGPS(lat, lon, alt){
             mainWindow.wingGPS = {'lat': lat, 'lon': lon, 'alt': alt}
+        }
+        function onSetWingAttitude(roll, pitch, yaw){
+            mainWindow.wingAttitude = {'roll': roll, 'pitch': pitch, 'yaw': yaw}
         }
         function onSetWingVelocity(vx, vy, vz){
             mainWindow.wingVel = {'vx': vx, 'vy': vy, 'vz': vz}
@@ -69,6 +87,18 @@ Window {
         }
         function onUpdateCameraMonitorFrame(){
             cameraMonitorOutPut.reload()
+        }
+        function onSetWingVoltage(vol) {
+            console.log("Voltage recieved:", vol)
+            mainWindow.wingVoltage = vol
+        }
+        function onSetWingThrottle(throttle) {
+            console.log("Throrrle recieved:", throttle)
+            mainWindow.wingThrottle = throttle
+        }
+        function onSetFlightTime(timeStr) {
+            console.log("FlightTime Recieved:", timeStr)
+            mainWindow.flightTime = timeStr
         }
     }
 
@@ -123,7 +153,7 @@ Window {
 
                 Rectangle {
                     id: appIconContainer
-                    width: 50
+                    width: 70
                     anchors {
                         left: parent.left
                         leftMargin: 10
@@ -234,7 +264,7 @@ Window {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: dataDisplaySideContainer.bottom
-                        anchors.topMargin: 0
+                        anchors.topMargin: 5
                     }
 
                     Rectangle {
@@ -306,7 +336,7 @@ Window {
 
                             Rectangle {
                                 id: dataDisplayContainer
-                                width: baseContentTopContainer.width * 0.45
+                                width: baseContentTopContainer.width * 0.58
                                 color: "transparent"
                                 anchors.left: parent.left
                                 anchors.top: parent.top
@@ -422,7 +452,7 @@ Window {
                                                     source: "image://cameraMonitorFrameProvider/frame"
                                                     anchors.fill: parent
                                                     cache: false
-                                                    fillMode: Image.PreserveAspectFit
+                                                    fillMode: Image.PreserveAspectCrop
 
                                                     function reload() {
                                                         // This is just for change in the source name, to force the image to reload.
@@ -443,8 +473,8 @@ Window {
 
                                                     CustomSpinBox {
                                                         id: cameraMonitorZoomSpinBox
-                                                        height: 60
-                                                        width: 100
+                                                        height: 70
+                                                        width: 150
                                                         anchors {
                                                             verticalCenter: parent.verticalCenter
                                                             right: parent.right
@@ -472,8 +502,8 @@ Window {
 
                                                     Rectangle {
                                                         id: cameraMonitorZoomStepSizeFieldContainer
-                                                        width: 30
-                                                        height: 30
+                                                        width: 40
+                                                        height: 40
                                                         anchors {
                                                             right: cameraMonitorZoomSpinBox.left
                                                             verticalCenter: parent.verticalCenter
@@ -485,6 +515,8 @@ Window {
                                                         radius: 5
                                                         TextInput {
                                                             id: cameraMonitorZoomStepSizeTextInput
+                                                            horizontalAlignment: TextInput.AlignHCenter
+                                                            verticalAlignment: TextInput.AlignVCenter
                                                             anchors.fill: parent
                                                             inputMethodHints: Qt.ImhFormattedNumbersOnly
                                                             color: ThemeManager.m3["onSurface"]
@@ -512,8 +544,8 @@ Window {
 
                                                     RoundButton {
                                                         id: trackerConfigBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -524,8 +556,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/trackerSettingsIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         onClicked: {
                                                             trackerConfigWindow.visible = true;
@@ -534,8 +566,8 @@ Window {
 
                                                     RoundButton {
                                                         id: guiderConfigBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -547,8 +579,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/cameraBasedGuiderIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         onClicked: {
                                                             cameraBasedGuiderConfigWindow.visible = true;
@@ -557,8 +589,8 @@ Window {
 
                                                     Rectangle {
                                                         id: trackIdFieldContainer
-                                                        width: 30
-                                                        height: 30
+                                                        width: 40
+                                                        height: 40
                                                         anchors {
                                                             left: guiderConfigBtn.right
                                                             verticalCenter: parent.verticalCenter
@@ -570,6 +602,8 @@ Window {
                                                         radius: 5
                                                         TextInput {
                                                             id: trackIdTextInput
+                                                            horizontalAlignment: TextInput.AlignHCenter
+                                                            verticalAlignment: TextInput.AlignVCenter
                                                             anchors.fill: parent
                                                             inputMethodHints: Qt.ImhFormattedNumbersOnly
                                                             color: ThemeManager.m3["onSurface"]
@@ -593,8 +627,8 @@ Window {
 
                                                     RoundButton {
                                                         id: trackLockBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -606,8 +640,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/targetLockedIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         onClicked: {
                                                             backFrontConnections.setTrackLockState(true, parseInt(trackIdTextInput.text, 10));
@@ -616,8 +650,8 @@ Window {
 
                                                     RoundButton {
                                                         id: trackUnlockBtn
-                                                        width: 50
-                                                        height: 50
+                                                        width: 70
+                                                        height: 70
                                                         opacity: 0.9
                                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                                         anchors {
@@ -629,8 +663,8 @@ Window {
                                                         icon {
                                                             source: "../images/png_images/targetUnlockedIcon.png"
                                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                                            width: 50
-                                                            height: 50
+                                                            width: 70
+                                                            height: 70
                                                         }
                                                         ToolTip.visible: hovered
                                                         ToolTip.text: qsTr("Ctrl+Shift+L")
@@ -647,13 +681,13 @@ Window {
 
                                                     Button {
                                                         id: lastIdTrackLockBtn
-                                                        width: 125
-                                                        height: 50
+                                                        width: 150
+                                                        height: 60
                                                         opacity: 0.9
                                                         text: qsTr("Auto Lock")
                                                         icon {
-                                                            width: 32
-                                                            height: 32
+                                                            width: 40
+                                                            height: 40
                                                             source: "../images/png_images/targetLockedIcon.png"
                                                         }
                                                         display: AbstractButton.TextBesideIcon
@@ -763,6 +797,18 @@ Window {
                                     tgLocation: QtPositioning.coordinate(mainWindow.tgGPS.lat, mainWindow.tgGPS.lon)
                                     virtTgLocation: QtPositioning.coordinate(mainWindow.virtTgGPS.lat, mainWindow.virtTgGPS.lon)
                                     wingHdg: mainWindow.wingHdg
+                                    roll: mainWindow.wingAttitude.roll
+                                    pitch: mainWindow.wingAttitude.pitch
+                                    heading: mainWindow.wingAttitude.yaw
+                                    wingGroundSpeed: mainWindow.wingGroundSpeed
+                                    wingAirSpeed: mainWindow.wingAirSpeed
+                                    wingThrottle: mainWindow.wingThrottle
+                                    relativeAltitude: mainWindow.wingRelAlt
+                                    wingVoltage: mainWindow.wingVoltage
+                                    flightTime: mainWindow.flightTime
+                                    wingFlightState: mainWindow.wingFlightState
+                                    wingRecvDataRate: mainWindow.wingRecvDataRate
+                                    tgRecvDataRate: mainWindow.tgRecvDataRate
                                     onSendGoToCommandToBackEnd: {
                                         backFrontConnections.goToLocation(lat, lon, alt)
                                     }
@@ -779,8 +825,8 @@ Window {
                                     }
                                     RoundButton {
                                         id: moveToWingBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -792,8 +838,8 @@ Window {
                                         icon {
                                             source: "../images/svg_images/switchblade_inair_icon.svg"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 50
-                                            height: 50
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             map.mapCenter = map.wingLocation
@@ -802,8 +848,8 @@ Window {
 
                                     RoundButton {
                                         id: moveToTgBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -814,8 +860,8 @@ Window {
                                         icon {
                                             source: "../images/svg_images/goToTargetIcon.svg"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 40
-                                            height: 40
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             map.mapCenter = map.tgLocation
@@ -824,8 +870,8 @@ Window {
 
                                     RoundButton {
                                         id: clearBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -836,8 +882,8 @@ Window {
                                         icon {
                                             source: "../images/png_images/clearIcon.png"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 20
-                                            height: 20
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             map.clearMap();
@@ -846,8 +892,8 @@ Window {
 
                                     RoundButton {
                                         id: rescueOnBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -858,8 +904,8 @@ Window {
                                         icon {
                                             source: "../images/png_images/protectedIcon.png"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 20
-                                            height: 20
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(true);
@@ -868,8 +914,8 @@ Window {
 
                                     RoundButton {
                                         id: rescueOffBtn
-                                        width: 50
-                                        height: 50
+                                        width: 70
+                                        height: 70
                                         opacity: 0.9
                                         Material.background: ThemeManager.m3["tertiaryContainer"]
                                         anchors {
@@ -880,129 +926,11 @@ Window {
                                         icon {
                                             source: "../images/png_images/unprotectedIcon.png"
                                             color: ThemeManager.m3["onTertiaryContainer"]
-                                            width: 20
-                                            height: 20
+                                            width: 70
+                                            height: 70
                                         }
                                         onClicked: {
                                             backFrontConnections.sendSetRescueStatus(false);
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    id: mapDataDisplayerContainer
-                                    width: 160
-                                    height: 115
-                                    color: ThemeManager.m3["surfaceContainer"]
-                                    opacity: 0.8
-                                    border {
-                                        color: ThemeManager.m3["outlineVariant"]
-                                        width: 3
-                                    }
-                                    clip: true
-                                    anchors {
-                                        left: parent.left
-                                        top: parent.top
-                                        leftMargin: 5
-                                        topMargin: 5
-                                    }
-                                    Label {
-                                        id: wingFlightMode
-                                        text: mainWindow.wingFlightState
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: parent.top
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRelAltLabel
-                                        text: "Wing Rel Alt: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingFlightMode.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRelAltValueLabel
-                                        text: mainWindow.wingRelAlt
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingFlightMode.bottom
-                                            topMargin: 5
-                                            left: wingRelAltLabel.right
-                                            leftMargin: 0
-                                        }
-                                    }
-                                    Label {
-                                        id: rescueStateLabel
-                                        text: "Rescue: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRelAltLabel.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: rescueStateValueLabel
-                                        text: mainWindow.rescueStatus
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRelAltLabel.bottom
-                                            topMargin: 5
-                                            left: rescueStateLabel.right
-                                            leftMargin: 0
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRecvDataRateLabel
-                                        text: "Wing Data Rate: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: rescueStateLabel.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: wingRecvDataRateValueLabel
-                                        text: mainWindow.wingRecvDataRate.toFixed(2)
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: rescueStateLabel.bottom
-                                            topMargin: 5
-                                            left: wingRecvDataRateLabel.right
-                                            leftMargin: 0
-                                        }
-                                    }
-                                    Label {
-                                        id: tgRecvDataRateLabel
-                                        text: "Target Data Rate: "
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRecvDataRateLabel.bottom
-                                            topMargin: 5
-                                            left: parent.left
-                                            leftMargin: 5
-                                        }
-                                    }
-                                    Label {
-                                        id: tgRecvDataRateValueLabel
-                                        text: mainWindow.tgRecvDataRate.toFixed(2)
-                                        color: ThemeManager.m3["onSurface"]
-                                        anchors {
-                                            top: wingRecvDataRateLabel.bottom
-                                            topMargin: 5
-                                            left: tgRecvDataRateLabel.right
-                                            leftMargin: 0
                                         }
                                     }
                                 }
@@ -1011,8 +939,10 @@ Window {
 
                         Rectangle {
                             id: baseContentBottomContainer
-                            y: 334
-                            height: parent.height * 0.4
+                            height: Math.min(
+                                520,
+                                Math.max(220, parent.height * 0.28)
+                            )
                             color: "#00ffffff"
                             anchors.left: parent.left
                             anchors.right: parent.right
@@ -1020,7 +950,7 @@ Window {
 
                             Rectangle {
                                 id: baseContentSeparator
-                                height: 20
+                                height: 10
                                 color: "#232323"
                                 anchors.left: parent.left
                                 anchors.right: parent.right
@@ -1111,6 +1041,7 @@ Window {
                                             id: stateActionTab
                                             ActionView{
                                                 id: actionView
+                                                wingAtt: mainWindow.wingAttitude
                                                 anchors.fill: parent
                                                 onArmDisarmBtnSignal: {
                                                     backFrontConnections.setArmState(arming);
@@ -1118,61 +1049,25 @@ Window {
                                                 onModeChangerBtnsSignal: {
                                                     backFrontConnections.setFlightMode(mode);
                                                 }
+                                                onSimpleTrackerBtnsSignal: {
+                                                    backFrontConnections.setSimpleTrackerActivation(active);
+                                                }
+                                            }
+                                        }
+
+                                        Item {
+                                            id: stateConfigurationTab
+                                            ConfigurationView{
+                                                id: configurationView
+                                                anchors.fill: parent
                                                 onTestScenarioBtnSignal: {
                                                     backFrontConnections.handleTestScenario(scenarioIdx, active);
                                                 }
                                                 onSetSettingsBtnSignal: {
                                                     backFrontConnections.setSimpleTrackerSettings(waypointRadius, local, wingAsVirtualCenter);
                                                 }
-                                                onSimpleTrackerBtnsSignal: {
-                                                    backFrontConnections.setSimpleTrackerActivation(active);
-                                                }
                                                 onSetApParamBtnSignal: {
                                                     backFrontConnections.setArduplaneParam(paramName, paramValue);
-                                                }
-                                            }
-                                        }
-
-                                        Item {
-                                            id: configurationView
-                                            Rectangle{
-                                                id: configurationContainer
-                                                anchors.fill: parent
-                                                color: "transparent"
-
-                                                Button {
-                                                    id: testButton
-                                                    text: qsTr("Material themed Button")
-                                                    anchors.centerIn: parent
-                                                    width: 300
-                                                    height: 100
-                                                    Component.onCompleted: {
-                                                        ThemeManager.register(testButton);
-                                                    }
-                                                }
-
-                                                Button {
-                                                    id: anotherTestBtn
-                                                    width: 200
-                                                    height: 30
-                                                    anchors {
-                                                        left: testButton.right
-                                                        verticalCenter: testButton.verticalCenter
-                                                        leftMargin: 10
-                                                    }
-
-                                                    background: Rectangle {
-                                                        id: anotherTestBtnRect
-                                                        anchors.fill: parent
-                                                        color: ThemeManager.m3["secondary"]
-                                                        Text {
-                                                            id: textTest
-                                                            anchors.centerIn: parent
-                                                            text: qsTr("Another Material Button")
-                                                            font.styleName: "Bold"
-                                                            color: ThemeManager.m3["onSecondary"]
-                                                        }
-                                                    }
                                                 }
                                             }
                                         }

@@ -10,6 +10,16 @@
     "onMessage": "ALL_MESSAGE_TYPES"
   },
   {
+    "name": "ManualControlPublisher",
+    "enable": true,
+    "topicName": "/funnywing/manual_control",
+    "msgPack": "mavros_msgs",
+    "msgType": "ManualControl",
+    "rate": 50,
+    "queueSize": 1,
+    "onMessage": "MANUAL_CONTROL"  
+  },
+  {
     "name": "targetGlobalPositionPublisher",
     "enable": true,
     "topicName": "/funnywing/targetGlobalPosition",
@@ -38,5 +48,15 @@
       "vy",
       "vz"
     ]
+  },
+  {
+    "name": "rcChannelsOverridePublisher",
+    "enable": true,
+    "topicName": "/mavros/rc/override",
+    "msgPack": "mavros_msgs",
+    "msgType": "OverrideRCIn",
+    "rate": 20,
+    "queueSize": 5,
+    "onMessage": "RC_CHANNELS_OVERRIDE"
   }
 ]

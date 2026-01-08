@@ -16,32 +16,40 @@ Item {
     property alias numOfFlotingPoints: spinBox.numOfFlotingPoints
 
     Row {
-        spacing: 5
+        spacing: 25
         anchors.fill: parent
+        Row {
+            spacing: 3
+            width: 223
+            height: parent.height
 
-        Label {
-            text: labelText
-            width: parent.width * 0.1
-            color: ThemeManager.m3["onSurface"]
-            horizontalAlignment: Text.AlignHCenter
-            anchors.verticalCenter: parent.verticalCenter
-        }
+            Label {
+                text: labelText
+                width: 25
+                font.pixelSize: 18
+                color: ThemeManager.m3["onSurface"]
+                horizontalAlignment: Text.AlignHCenter
+                anchors.verticalCenter: parent.verticalCenter
+            }
 
-        FloatSpinBox {
-            id: spinBox
-            // To load from saved files, set the value of this object:
-            // spinBox.value = loadedValue
-            width: parent.width * 0.6
-            from: 0
-            to: 100
-            numOfFlotingPoints: 5
-            stepSize: parseFloat(stepSizeField.text) || 0.1
+            FloatSpinBox {
+                id: spinBox
+                // To load from saved files, set the value of this object:
+                // spinBox.value = loadedValue
+                width: 180
+                from: 0
+                to: 100
+                numOfFlotingPoints: 5
+                stepSize: parseFloat(stepSizeField.text) || 0.1
+            }
         }
 
         CustomTextField {
             id: stepSizeField
-            width: parent.width * 0.3
+            width: 85
             text: "0.1"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             leftPadding: 5
             rightPadding: 5
             bottomPadding: 2

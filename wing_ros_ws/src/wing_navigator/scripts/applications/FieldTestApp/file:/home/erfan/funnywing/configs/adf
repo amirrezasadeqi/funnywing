@@ -1,0 +1,15 @@
+[General]
+a=1
+b=1
+const_throttle=1
+profile_type=1
+size_threshold=1
+wing_tg_at_same_level_throttle=1
+wing_too_above_threshold=1
+wing_too_above_throttle=1
+wing_too_below_threshold=1
+wing_too_below_throttle=1
+x_pids=0.1, 0.1, 0.1
+xpid_saturations=1, 1
+y_pids=@Invalid()
+ypid_saturations=1, 1

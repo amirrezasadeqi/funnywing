@@ -116,6 +116,16 @@
     "onMessage": "VIRTUAL_TARGET_GLOBAL_POSITION_INT"
   },
   {
+    "name": "vfrHudPublisher",
+    "enable": true,
+    "topicName": "/funnywing/vfrHud",
+    "msgPack": "mavros_msgs",
+    "msgType": "VFR_HUD",
+    "rate": 5,
+    "queueSize": 5,
+    "onMessage": "VFR_HUD"
+  },
+  {
     "name": "rescueStatusPublisher",
     "enable": true,
     "topicName": "/funnywing/rescueStatus",

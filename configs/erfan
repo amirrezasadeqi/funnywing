@@ -1,0 +1,19 @@
+[General]
+a=0
+b=56565
+const_throttle=5655
+profile_type=1
+size_threshold=0
+wing_tg_at_same_level_throttle=0
+wing_too_above_threshold=0
+wing_too_above_throttle=0
+wing_too_below_threshold=0
+wing_too_below_throttle=0
+x_disable=false
+x_lock=false
+x_pids=0, 0, 0
+xpid_saturations=0, 0
+y_disable=false
+y_lock=false
+y_pids=0.4, 0, 0
+ypid_saturations=0, 0

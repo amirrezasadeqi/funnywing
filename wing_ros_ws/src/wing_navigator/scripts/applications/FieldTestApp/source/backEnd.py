@@ -1,11 +1,16 @@
 import math
 
+from threading import Thread
+import time
+import pygame
+
 import rospy
 from PySide2.QtCore import QObject, Slot
 from PySide2.QtQml import QQmlApplicationEngine
 from PySide2.QtWidgets import QApplication
 from mavros import mavlink
-from mavros_msgs.msg import Mavlink
+from mavros_msgs.msg import Mavlink, State, OverrideRCIn
+from std_msgs.msg import String
 from pymavlink import mavutil
 
 from wing_modules.CameraInterface.CameraFrameCaptureInterface import CameraFrameCaptureInterface
@@ -14,11 +19,11 @@ from wing_modules.CameraInterface.FrameProcessor import FrameProcessor
 from .backFrontEndCommunication import backFrontEndCommunication
 from .dataUpdater import dataUpdater
 
-
 class backEnd(QObject):
     def __init__(self, qmlEngine: QQmlApplicationEngine, dataSubscriptionConfig, systemID, componentID, tgSystemID,
                  tgComponentID, gcsFromTopic="/GCS/from"):
         super().__init__()
+
         self._qmlEngine = qmlEngine
         self._dataSubscriptionConfig = dataSubscriptionConfig
         self._systemID = systemID
@@ -47,17 +52,17 @@ class backEnd(QObject):
         self._backFrontConnection.setVisualTrackerSettingsSignal.connect(self.setVisualTrackerSettings)
         self._backFrontConnection.setCameraBasedGuiderConfigsSignal.connect(self.setCameraBasedGuiderConfigs)
         self._backFrontConnection.setLastTrackIdSignal.connect(self.setLastTrackId)
-
         self._dataUpdater = dataUpdater(self._dataSubscriptionConfig, self._backFrontConnection)
         # TODO[test needed]: MAVLink object does not try to connect to the connection string and
         #   I don't know if the connection string is important in de/serialization. So I will use
         #   empty string now and if it will be ok delete this, otherwise we must pass the address
         #   of the connection(since MAVLink does not connect to that automatically, I think there
         #   will be no problem about occupied connection).
+        
         self._protocolObj = mavutil.mavlink.MAVLink('', self._systemID, self._componentID)
         # Publisher for sending mavlink Commands and all the data which is needed in the RPI side.
         self._toRfComPublisher = rospy.Publisher(gcsFromTopic, Mavlink, queue_size=10)
-        return
+        
 
     ARDUPLANE_MODE_MAP = {
         "MANUAL": 0,
@@ -74,7 +79,7 @@ class backEnd(QObject):
         "LOITER": 12,
         "GUIDED": 15
     }
-
+    
     def createAndSetupFrameProvider(self, frameCapture: CameraFrameCaptureInterface, qtApplication: QApplication):
         self._cameraMonitorFrameProvider = CameraMonitorFrameProvider(frame_capture=frameCapture,
                                                                       backFrontConnection=self._backFrontConnection)
@@ -88,6 +93,7 @@ class backEnd(QObject):
     def setupConnectionWithFrameProcessor(self, frame_processor: FrameProcessor):
         frame_processor.setQtCommunicator(self._backFrontConnection)
         return
+    
 
     @Slot(bool)
     def pubArmDisarmCommand(self, armState):
@@ -116,6 +122,7 @@ class backEnd(QObject):
 
     @Slot(float, float, float)
     def pubGoToCommand(self, lat, lon, alt):
+        rospy.loginfo("Authority is AUTO. Sending Go To command...")
         # Scaling lat, lon to use them with MAVLink_command_int_message.
         lat = int(lat * 1e7)
         lon = int(lon * 1e7)
@@ -290,3 +297,5 @@ class backEnd(QObject):
     def setLastTrackId(self, lastTrackId):
         self._lastTrackId = lastTrackId
         return
+    
+   
